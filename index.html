@@ -25,6 +25,8 @@
         body {
             font-family: -apple-system, system-ui, sans-serif;
             background: #f0f2f5; margin: 0; padding: 20px; color: var(--color-text);
+            /* Скрываем контент по умолчанию для защиты паролем */
+            visibility: hidden; 
         }
 
         .container {
@@ -93,6 +95,25 @@
     </style>
 </head>
 <body>
+
+<!-- СКРИПТ ЗАЩИТЫ ПАРОЛЕМ -->
+<script>
+    const correctPassword = "Vilson123"; 
+    // Если пароль неверный, перенаправляем на Google
+    const redirectUrl = "https://google.com";
+
+    let userPass = prompt("Введите пароль для доступа к калькулятору:");
+
+    if (userPass === correctPassword) {
+        // Пароль верный - показываем страницу
+        document.body.style.visibility = 'visible';
+    } else {
+        // Пароль неверный или нажата отмена
+        alert("Пароль неверный! Доступ запрещен.");
+        window.location.href = redirectUrl;
+    }
+</script>
+<!-- КОНЕЦ СКРИПТА ЗАЩИТЫ -->
 
 <div class="container">
     <div class="header">
