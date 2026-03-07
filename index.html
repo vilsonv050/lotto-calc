@@ -25,10 +25,53 @@
         body {
             font-family: -apple-system, system-ui, sans-serif;
             background: #f0f2f5; margin: 0; padding: 20px; color: var(--color-text);
-            /* Скрываем контент по умолчанию для защиты паролем */
-            visibility: hidden; 
         }
 
+        /* --- СТИЛИ ДЛЯ ОКНА ПАРОЛЯ --- */
+        .auth-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: #f0f2f5; /* Фон перекрывает сайт */
+            z-index: 9999; /* Самый верхний слой */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+        .auth-box {
+            background: white;
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+        }
+        .auth-input {
+            padding: 15px;
+            border: 2px solid var(--color-border);
+            border-radius: 8px;
+            font-size: 18px;
+            width: 100%;
+            margin: 20px 0;
+            text-align: center;
+            letter-spacing: 2px; /* Чтобы звездочки были пошире */
+        }
+        .auth-btn {
+            background: var(--color-primary);
+            color: white;
+            border: none;
+            padding: 12px 40px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .auth-btn:hover { opacity: 0.9; }
+        .error-msg { color: var(--color-loss); margin-top: 15px; font-weight: 600; display: none; }
+
+        /* --- ОСНОВНЫЕ СТИЛИ --- */
         .container {
             max-width: 1000px; margin: 0 auto; background: white;
             border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); overflow: hidden;
@@ -96,25 +139,19 @@
 </head>
 <body>
 
-<!-- СКРИПТ ЗАЩИТЫ ПАРОЛЕМ -->
-<script>
-    const correctPassword = "Vilson123"; 
-    // Если пароль неверный, перенаправляем на Google
-    const redirectUrl = "https://google.com";
+<!-- ОКНО ВВОДА ПАРОЛЯ -->
+<div id="authOverlay" class="auth-overlay">
+    <div class="auth-box">
+        <h2 style="margin-bottom:10px;">🔐 Введите пароль</h2>
+        <p style="color:#666; font-size:14px;">Доступ к калькулятору ограничен</p>
+        <!-- type="password" скрывает символы звездочками -->
+        <input type="password" id="passInput" class="auth-input" placeholder="Пароль..." autofocus>
+        <button class="auth-btn" onclick="checkPass()">Войти</button>
+        <div id="errorMsg" class="error-msg">Неверный пароль!</div>
+    </div>
+</div>
 
-    let userPass = prompt("Введите пароль для доступа к калькулятору:");
-
-    if (userPass === correctPassword) {
-        // Пароль верный - показываем страницу
-        document.body.style.visibility = 'visible';
-    } else {
-        // Пароль неверный или нажата отмена
-        alert("Пароль неверный! Доступ запрещен.");
-        window.location.href = redirectUrl;
-    }
-</script>
-<!-- КОНЕЦ СКРИПТА ЗАЩИТЫ -->
-
+<!-- ОСНОВНОЙ САЙТ -->
 <div class="container">
     <div class="header">
         <h1>📊 Калькулятор лотерейных систем</h1>
@@ -457,6 +494,18 @@
 </div>
 
 <script>
+    /* --- ФУНКЦИЯ ПРОВЕРКИ ПАРОЛЯ --- */
+    function checkPass() {
+        const pass = document.getElementById('passInput').value;
+        if (pass === 'Vilson123') {
+            document.getElementById('authOverlay').style.display = 'none'; // Скрываем окно входа
+        } else {
+            document.getElementById('errorMsg').style.display = 'block'; // Показываем ошибку
+            // Опционально: редирект после ошибки (раскомментировать если нужно)
+            // setTimeout(() => { window.location.href = "https://google.com"; }, 1500);
+        }
+    }
+
     function combinations(n, k) {
         if (k < 0 || k > n) return 0;
         if (k === 0 || k === n) return 1;
