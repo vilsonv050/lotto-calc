@@ -1,0 +1,1291 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Генератор и Калькулятор Лотерей v6.9.46 PRO</title>
+<style>
+:root {
+--color-primary: #1a5cff;
+--color-secondary: #2a7f62;
+--color-accent: #c9933e;
+--color-text: #1a1a1a;
+--color-border: #dce0e5;
+--color-surface: #f8f9fa;
+--color-win: #2a7f62;
+--color-loss: #d93025;
+--color-mag8: #8e24aa;
+}
+* { box-sizing: border-box; }
+body {
+font-family: -apple-system, system-ui, sans-serif;
+background: #f0f2f5; margin: 0; padding: 20px; color: var(--color-text);
+display: flex; justify-content: center; min-height: 100vh;
+}
+
+/* --- ПАНЕЛЬ СПРАВА --- */
+#prizeSidebar {
+position: fixed; left: calc(50% + 470px); top: 80px; width: 300px;
+max-height: calc(100vh - 100px); background: white;
+border: 1px solid var(--color-border); border-radius: 12px;
+box-shadow: 0 5px 15px rgba(0,0,0,0.1); z-index: 1000; overflow-y: auto;
+font-size: 14px; display: flex; flex-direction: column;
+}
+.sidebar-header { background: #1a1a1a; color: white; padding: 15px; font-weight: 700; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1; }
+.sidebar-actions { display: flex; gap: 8px; }
+.btn-sidebar { background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); padding: 4px 10px; border-radius: 6px; font-size: 12px; cursor: pointer; transition: 0.2s; font-weight: 600; }
+.btn-sidebar:hover { background: rgba(255,255,255,0.2); }
+.btn-sidebar.active { background: var(--color-secondary); border-color: var(--color-secondary); }
+.sidebar-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; background: white; font-size: 13px; }
+.sidebar-table th { background: #f0f2f5; padding: 8px; font-size: 11px; text-transform: uppercase; color: #555; text-align: left; border-bottom: 1px solid var(--color-border); }
+.sidebar-table th:last-child { text-align: Right; }
+.sidebar-table td { padding: 8px; border-bottom: 1px solid #f1f1f1; }
+.sidebar-table tr:last-child td { border-bottom: none; }
+.sidebar-table .sum-col { text-align: right; font-weight: 700; color: var(--color-secondary); font-variant-numeric: tabular-nums; }
+.sidebar-category-header { font-size: 12px; font-weight: 800; color: #333; margin: 15px 5px 5px 5px; padding-bottom: 5px; border-bottom: 2px solid var(--color-primary); text-transform: uppercase; }
+.edit-input { width: 100%; padding: 4px; border: 1px solid var(--color-primary); border-radius: 4px; text-align: right; font-weight: 700; font-size: 14px; color: var(--color-primary); background: #f0f4ff; }
+@media (max-width: 1300px) { #prizeSidebar { display: none; } body { padding: 10px; } }
+
+/* --- ПАНЕЛЬ СЛЕВА --- */
+#leftSidebar {
+position: fixed; right: calc(50% + 470px); top: 80px; width: 340px;
+max-height: calc(100vh - 100px); background: white;
+border: 1px solid var(--color-border); border-radius: 12px;
+box-shadow: 0 5px 15px rgba(0,0,0,0.1); z-index: 1000; overflow-y: auto;
+font-size: 14px; display: flex; flex-direction: column;
+}
+#leftSidebar .sidebar-header { background: #1a1a1a; color: white; padding: 12px 15px; font-weight: 700; font-size: 13px; position: sticky; top: 0; z-index: 1; border-radius: 12px 12px 0 0; }
+.left-sidebar-section { padding: 0; border-bottom: 1px solid #eee; }
+.left-sidebar-section:last-child { border-bottom: none; }
+/* Генерация режимов в sidebar */
+.left-sidebar-section .gen-modes-container { margin-bottom: 0; border: none; border-radius: 0; border-left: 3px solid #e91e63; padding: 10px 12px; }
+.left-sidebar-section .gen-modes-container .gen-modes-header { cursor: pointer; margin-bottom: 0; display: flex; justify-content: space-between; align-items: center; user-select: none; }
+.left-sidebar-section .gen-modes-container .gen-modes-header:hover { color: #c2185b; }
+.left-sidebar-section .gen-modes-container .gen-modes-body { display: none; margin-top: 10px; }
+.left-sidebar-section .gen-modes-container .gen-modes-body.active { display: block; }
+.left-sidebar-section .gen-modes-row { flex-direction: column; gap: 8px; }
+.left-sidebar-section .mode-card { min-width: unset; }
+/* ГСЧ в sidebar */
+.left-sidebar-section .advanced-rng-container { margin-bottom: 0; border: none; border-radius: 0; border-left: 3px solid var(--color-accent); padding: 10px 12px; }
+.left-sidebar-section .adv-grid { grid-template-columns: 1fr; }
+.left-sidebar-section .adv-row.full-width { grid-column: 1; }
+@media (max-width: 1300px) { #leftSidebar { display: none; } }
+
+
+/* --- ОКНО ПАРОЛЯ --- */
+.auth-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #f0f2f5; z-index: 9999; display: flex; justify-content: center; align-items: center; flex-direction: column; }
+.auth-box { background: white; padding: 40px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center; max-width: 400px; width: 90%; }
+.auth-input { padding: 15px; border: 2px solid var(--color-border); border-radius: 8px; font-size: 18px; width: 100%; margin: 20px 0; text-align: center; letter-spacing: 2px; }
+.auth-btn { background: var(--color-primary); color: white; border: none; padding: 12px 40px; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; }
+.error-msg { color: var(--color-loss); margin-top: 15px; font-weight: 600; display: none; }
+
+/* --- ОСНОВНОЙ ИНТЕРФЕЙС --- */
+.container { max-width: 900px; width: 100%; background: white; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); overflow: hidden; }
+.header { background: #1a1a1a; color: white; padding: 30px; text-align: center; }
+.header h1 { margin: 0 0 10px 0; font-size: 24px; }
+.header p { margin: 0; color: #aaa; font-size: 14px; }
+.settings-panel { padding: 25px; border-bottom: 1px solid #eee; background: #fafafa; }
+.settings-row { display: flex; gap: 20px; margin-bottom: 20px; flex-wrap: wrap; }
+.input-group { flex: 1; min-width: 150px; }
+.input-group label { display: block; font-size: 12px; color: #666; margin-bottom: 5px; text-transform: uppercase; font-weight: 600; }
+select, input[type="number"], input[type="text"] { width: 100%; padding: 10px; border: 2px solid var(--color-border); border-radius: 8px; font-size: 16px; font-weight: 600; background: white; }
+select:focus, input:focus { border-color: var(--color-primary); outline: none; }
+
+/* --- КОНТЕЙНЕР ПОЛЕЙ --- */
+.field-inputs-container {
+background: #f9fafb; border-radius: 8px; padding: 15px; border: 1px dashed #dce0e5;
+display: flex; gap: 20px; align-items: flex-start; margin-bottom: 15px; flex-wrap: wrap;
+}
+
+/* Блок инпутов слева */
+.fields-config-block { display: flex; gap: 15px; align-items: flex-start; }
+.field-block { display: flex; flex-direction: column; gap: 5px; width: auto; }
+.field-label { font-size: 11px; font-weight: 600; color: #555; text-transform: uppercase; }
+.field-input-small { width: 65px; padding: 8px; text-align: center; font-size: 16px; font-weight: 700; border: 2px solid #dce0e5; border-radius: 6px; transition: border-color 0.2s; }
+.field-input-small:focus { border-color: var(--color-primary); outline: none; }
+.field-range { font-size: 11px; color: #888; }
+
+/* Блок включения */
+.inclusion-block {
+display: flex; flex-direction: column; gap: 10px;
+border-left: 1px solid #e0e0e0; padding-left: 15px;
+flex-grow: 1;
+}
+.inclusion-header { font-size: 12px; font-weight: 700; color: var(--color-secondary); text-transform: uppercase; margin-bottom: 5px; }
+.inclusion-row { display: flex; align-items: flex-start; gap: 8px; }
+.inclusion-row label { font-size: 11px; font-weight: 600; color: #555; min-width: 45px; padding-top: 8px; }
+.inclusion-textarea {
+flex: 1; min-height: 34px; max-height: 80px; padding: 6px; border: 1px solid #dce0e5;
+border-radius: 6px; font-size: 13px; font-family: monospace; resize: none; overflow-y: auto; line-height: 1.3;
+border-left: 3px solid var(--color-secondary);
+}
+.inclusion-textarea:focus { border-color: var(--color-secondary); outline: none; }
+
+/* Блок исключений */
+.exclusion-block {
+display: flex; flex-direction: column; gap: 10px;
+border-left: 1px solid #e0e0e0; padding-left: 15px; flex-grow: 1;
+}
+.exclusion-header { font-size: 12px; font-weight: 700; color: var(--color-loss); text-transform: uppercase; margin-bottom: 5px; }
+.exclusion-row { display: flex; align-items: flex-start; gap: 8px; }
+.exclusion-row label { font-size: 11px; font-weight: 600; color: #555; min-width: 45px; padding-top: 8px; }
+.exclusion-textarea {
+flex: 1; min-height: 34px; max-height: 80px; padding: 6px; border: 1px solid #dce0e5;
+border-radius: 6px; font-size: 13px; font-family: monospace; resize: none; overflow-y: auto; line-height: 1.3;
+border-left: 3px solid var(--color-loss);
+}
+.exclusion-textarea:focus { border-color: var(--color-loss); outline: none; }
+
+.cost-info { font-size: 14px; color: var(--color-secondary); font-weight: 600; text-align: right; margin-bottom: 15px; }
+.cost-info.warning { color: var(--color-loss); }
+
+/* --- БЛОК СВОИХ ЧИСЕЛ --- */
+.fixed-numbers-block { width: 100%; margin-top: 10px; padding-top: 10px; border-top: 1px dashed #dce0e5; }
+.fixed-row { display: flex; gap: 15px; width: 100%; }
+.fixed-item { flex: 1; display: flex; flex-direction: column; gap: 5px; }
+.fixed-numbers-header { font-size: 12px; font-weight: 700; color: var(--color-accent); text-transform: uppercase; }
+.fixed-numbers-textarea { width: 100%; min-height: 34px; max-height: 80px; padding: 6px; border: 1px solid #dce0e5; border-radius: 6px; font-size: 13px; font-family: monospace; resize: none; overflow-y: auto; line-height: 1.3; border-left: 3px solid var(--color-accent); }
+.fixed-numbers-textarea:focus { border-color: var(--color-accent); outline: none; }
+
+/* --- НАСТРОЙКИ ФИЛЬТРАЦИИ --- */
+.filter-table { width: 100%; border-collapse: collapse; }
+.filter-table th { font-size: 11px; text-transform: uppercase; color: #666; padding: 5px 8px; text-align: center; border-bottom: 1px solid #eee; }
+.filter-table td { padding: 4px 8px; vertical-align: middle; }
+.filter-label-cell { font-size: 12px; font-weight: 600; color: #555; text-align: right; width: 60px; }
+.filter-val-cell { width: 40%; }
+.filter-val-input { width: 100%; min-height: 30px; padding: 4px 6px; border: 1px solid #dce0e5; border-radius: 4px; font-size: 12px; font-family: monospace; resize: none; line-height: 1.2; }
+.filter-val-input:focus { border-color: var(--color-primary); outline: none; }
+.filter-inc { border-left: 3px solid var(--color-secondary); }
+.filter-exc { border-left: 3px solid var(--color-loss); }
+.filter-act-cell { width: 30px; text-align: center; }
+.btn-reverse { background: #f0f2f5; border: 1px solid #dce0e5; border-radius: 4px; cursor: pointer; font-size: 14px; color: #555; width: 26px; height: 26px; line-height: 1; transition: all 0.2s; }
+.btn-reverse:hover { background: var(--color-primary); color: white; border-color: var(--color-primary); }
+
+/* --- СВОРАЧИВАЕМЫЙ БЛОК --- */
+.collapsible-container { width: 100%; margin-bottom: 15px; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden; }
+.collapsible-header { background: #f0f2f5; padding: 12px 15px; font-weight: 700; cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none; }
+.collapsible-header:hover { background: #e8e8e8; }
+.collapsible-content { display: none; padding: 15px; background: white; }
+.collapsible-content.active { display: block; }
+.arrow-icon { font-size: 10px; transition: transform 0.3s; }
+.collapsible-header.active .arrow-icon { transform: rotate(180deg); }
+
+/* --- БЛОК ВЫБОРА СТАВОК --- */
+.bet-selector-wrapper { margin-top: 0; padding-top: 0; border-top: none; }
+.bet-selector-title { font-size: 14px; font-weight: 700; margin-bottom: 15px; color: #333; text-transform: uppercase; display: flex; align-items: center; gap: 8px; }
+.bet-section-title { font-size: 13px; font-weight: 700; color: #444; margin-bottom: 10px; margin-top: 5px; }
+.bet-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 10px; margin-bottom: 25px; }
+.bet-btn { background: #f8f9fa; border: 2px solid #e0e0e0; border-radius: 8px; padding: 10px 5px; cursor: pointer; display: flex; flex-direction: column; align-items: center; transition: all 0.2s; text-align: center; min-height: 60px; }
+.bet-btn:hover { border-color: var(--color-primary); background: #f0f4ff; }
+.bet-btn.active { background: var(--color-primary); border-color: var(--color-primary); color: white; }
+.bet-btn .val { font-size: 18px; font-weight: 800; line-height: 1.2; }
+.bet-btn .mult { font-size: 11px; font-weight: 600; opacity: 0.7; margin-top: 2px; }
+.bet-btn.active .mult { opacity: 1; color: #fff; }
+
+/* --- ИГРА СУММА --- */
+#sumBetsGrid { grid-template-columns: repeat(auto-fill, minmax(56px, 1fr)); gap: 6px; margin-bottom: 25px; }
+#sumBetsGrid .bet-btn { min-height: 42px; padding: 4px 2px; border-radius: 6px; }
+#sumBetsGrid .val { font-size: 14px; line-height: 1.1; }
+#sumBetsGrid .mult { font-size: 9px; margin-top: 1px; }
+
+/* --- ПОЗИЦИЯ --- */
+.games-row-container { display: flex; gap: 20px; width: 100%; margin-bottom: 25px; align-items: flex-start; }
+.position-col { flex-shrink: 0; width: auto; }
+#positionBetsGrid { display: grid; grid-template-columns: 50px repeat(6, 56px); gap: 6px; width: fit-content; }
+#positionBetsGrid .pos-header { font-size: 11px; text-align: center; padding-bottom: 4px; }
+#positionBetsGrid .pos-row-label { font-size: 10px; height: 42px; display: flex; align-items: center; justify-content: center; background: #f0f2f5; border-radius: 6px; border: 1px solid #e0e0e0; }
+#positionBetsGrid .pos-num { width: 56px !important; height: 42px !important; min-height: 42px !important; padding: 0; font-size: 14px; font-weight: 800; border-radius: 6px; border: 2px solid #e0e0e0; background: #f8f9fa; color: #444; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+#positionBetsGrid .pos-num:hover { border-color: var(--color-secondary); color: var(--color-secondary); background: #fff; }
+#positionBetsGrid .pos-num.active { background: var(--color-secondary); border-color: var(--color-secondary); color: white; box-shadow: 0 2px 5px rgba(42, 127, 98, 0.3); }
+
+/* --- КОМБИНАЦИЯ --- */
+.combo-col { flex-grow: 1; display: flex; flex-direction: column; min-width: 200px; }
+#comboBetsGrid.side-grid { grid-template-columns: repeat(2, 1fr); gap: 6px; margin-bottom: 0; }
+#comboBetsGrid.side-grid .bet-btn { min-height: 42px; padding: 4px 8px; flex-direction: row; justify-content: space-between; }
+#comboBetsGrid.side-grid .val { font-size: 11px; text-align: left; line-height: 1.2; }
+#comboBetsGrid.side-grid .mult { font-size: 9px; margin-top: 0; background: rgba(0,0,0,0.05); padding: 2px 4px; border-radius: 4px; }
+#comboBetsGrid.side-grid .bet-btn.active .mult { background: rgba(255,255,255,0.2); }
+
+/* --- ИТОГ --- */
+.bet-summary { background: #1a1a1a; color: white; padding: 15px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; font-size: 14px; margin-top: 10px; }
+.bet-summary strong { color: var(--color-accent); }
+
+/* --- ГСЧ --- */
+.advanced-rng-container { background: white; border: 1px solid var(--color-border); border-radius: 8px; padding: 12px; margin-bottom: 15px; border-left: 3px solid var(--color-accent); }
+.adv-header { font-size: 12px; font-weight: 700; color: var(--color-accent); text-transform: uppercase; cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none; transition: color 0.2s; }
+.adv-header:hover { color: #a67c32; }
+.toggle-icon { font-size: 18px; font-weight: bold; line-height: 1; transition: transform 0.3s ease; display: inline-block; }
+.adv-grid { display: none; grid-template-columns: repeat(3, minmax(0, 280px)); gap: 8px 12px; margin-top: 12px; }
+.adv-grid.active { display: grid; }
+.adv-row { display: flex; align-items: center; justify-content: flex-start; gap: 8px; padding: 4px 8px; background: #f8f9fa; border-radius: 6px; border: 1px solid #e8e8e8; }
+.adv-row:hover { border-color: var(--color-accent); }
+.adv-left { display: flex; align-items: center; gap: 6px; flex-shrink: 0; min-width: 95px; }
+.adv-check { width: 14px; height: 14px; cursor: pointer; accent-color: var(--color-accent); flex-shrink: 0; margin: 0; }
+.adv-name { font-size: 11px; font-weight: 700 !important; font-family: -apple-system, system-ui, sans-serif; color: #444; cursor: help; position: relative; white-space: nowrap; }
+.adv-tooltip { position: absolute; bottom: calc(100% + 6px); left: 0; background: #333; color: #fff; padding: 4px 8px; border-radius: 4px; font-size: 10px; white-space: nowrap; z-index: 100; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+.adv-tooltip::after { content: ""; position: absolute; top: 100%; left: 10px; border: 4px solid transparent; border-top-color: #333; }
+.adv-name:hover .adv-tooltip { opacity: 1; }
+.adv-inputs { display: flex; gap: 4px; align-items: center; flex-shrink: 0; }
+.inp-num { width: 42px !important; min-width: 42px !important; max-width: 42px !important; padding: 3px 2px !important; border: 1px solid #ccc; border-radius: 4px; font-family: -apple-system, system-ui, sans-serif !important; font-size: 11px !important; font-weight: 700 !important; text-align: center; height: 22px; background: white; flex-shrink: 0; }
+.inp-num:disabled { background: #f0f0f0; color: #bbb; cursor: not-allowed; border-color: #e0e0e0; }
+.inp-num:enabled { border-color: #bbb; }
+.inp-num:enabled:focus { border-color: var(--color-primary); outline: none; }
+.txt-rule { width: 48px !important; min-width: 48px !important; max-width: 48px !important; padding: 3px 2px !important; border: 1px solid #ccc; border-radius: 4px; font-family: -apple-system, system-ui, sans-serif !important; font-size: 11px !important; font-weight: 700 !important; text-align: center; height: 22px; background: white; flex-shrink: 0; }
+.txt-rule:disabled { background: #f0f0f0; color: #bbb; cursor: not-allowed; border-color: #e0e0e0; }
+.txt-rule:enabled { border-color: #bbb; }
+.txt-rule:enabled:focus { border-color: var(--color-primary); outline: none; }
+.txt-rule.wide { width: 120px !important; min-width: 120px !important; max-width: 120px !important; text-align: left; padding-left: 6px; }
+.sep { color: #999; font-size: 10px; font-weight: 700; margin: 0 2px; }
+.full-width { grid-column: 1 / -1; width: fit-content; }
+@media (max-width: 600px) { .adv-grid { grid-template-columns: 1fr; } .full-width { grid-column: 1 / -1; } }
+/* --- РЕЖИМЫ ГЕНЕРАЦИИ --- */
+.gen-modes-container {
+background: white; border: 1px solid var(--color-border); border-radius: 8px; padding: 12px; margin-bottom: 15px;
+border-left: 3px solid #e91e63;
+}
+.gen-modes-header {
+font-size: 12px; font-weight: 700; color: #e91e63; text-transform: uppercase; margin-bottom: 10px;
+display: flex; align-items: center; gap: 8px;
+}
+.gen-modes-header .toggle-icon { color: #e91e63; font-size: 16px; cursor: pointer; }
+.gen-modes-header:hover .toggle-icon { color: #c2185b; }
+.gen-modes-row { display: flex; gap: 12px; flex-wrap: wrap; }
+.mode-card {
+flex: 1; min-width: 200px; background: #f8f9fa; border: 2px solid #e0e0e0; border-radius: 8px;
+padding: 12px; cursor: pointer; transition: all 0.2s; user-select: none;
+}
+.mode-card:hover { border-color: #e91e63; background: #fff5f8; }
+.mode-card.active { border-color: #e91e63; background: #fce4ec; box-shadow: 0 2px 8px rgba(233,30,99,0.15); }
+.mode-card-top { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.mode-toggle { width: 36px; height: 20px; border-radius: 10px; background: #ccc; position: relative; transition: 0.3s; flex-shrink: 0; }
+.mode-toggle::after { content: ''; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: white; transition: 0.3s; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+.mode-card.active .mode-toggle { background: #e91e63; }
+.mode-card.active .mode-toggle::after { left: 18px; }
+.mode-name { font-size: 13px; font-weight: 700; color: #333; }
+.mode-desc { font-size: 11px; color: #777; line-height: 1.3; }
+.mode-card.active .mode-name { color: #c2185b; }
+.mode-badge { display: none; font-size: 10px; font-weight: 700; color: white; background: #e91e63; padding: 2px 8px; border-radius: 10px; margin-left: auto; }
+.mode-card.active .mode-badge { display: inline-block; }
+.anti-keep-row {
+margin-top: 12px; padding: 10px 14px; background: #fff3e0; border: 1px dashed #e91e63;
+border-radius: 8px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+}
+.anti-keep-label { font-size: 13px; font-weight: 700; color: #c2185b; white-space: nowrap; }
+.anti-keep-controls { display: flex; align-items: center; gap: 8px; }
+.anti-keep-input {
+width: 60px; padding: 6px 8px; border: 2px solid #e91e63; border-radius: 6px;
+font-size: 16px; font-weight: 700; text-align: center; color: #c2185b; background: white;
+}
+.anti-keep-input:focus { outline: none; border-color: #ad1457; box-shadow: 0 0 0 3px rgba(233,30,99,0.15); }
+.anti-keep-hint { font-size: 11px; color: #888; }
+.mode-indicator-bar { display: none; margin-top: 8px; padding: 4px 12px; border-radius: 6px; background: rgba(233,30,99,0.15); color: #e91e63; font-size: 11px; font-weight: 600; text-align: center; }
+.mode-indicator-bar.visible { display: block; }
+
+#row-prevdraw { display: none; }
+#row-prevdraw.active { display: flex; }
+
+/* --- КНОПКИ --- */
+.buttons-row { display: flex; gap: 10px; }
+.btn-main { flex: 3; padding: 15px; background: var(--color-primary); color: white; border: none; border-radius: 8px; font-size: 18px; font-weight: 600; cursor: pointer; transition: 0.2s; }
+.btn-main:hover { opacity: 0.9; }
+.btn-clear { flex: 1; padding: 15px; background: white; color: #d93025; border: 2px solid #d93025; border-radius: 8px; font-size: 18px; font-weight: 600; cursor: pointer; transition: 0.2s; }
+.btn-clear:hover { background: #fff5f5; }
+.btn-export { width: 100%; margin-top: 10px; padding: 12px; background: white; color: var(--color-text); border: 2px solid var(--color-border); border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; display: none; justify-content: center; align-items: center; gap: 10px; }
+.btn-export:hover { background: #f9fafb; }
+/* --- ПАНЕЛЬ ПРОВЕРКИ --- */
+.check-panel { padding: 25px; background: #fff; border-bottom: 1px solid #eee; }
+.check-title { font-size: 16px; font-weight: 700; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.stats-box { background: #f0f2f5; border-radius: 12px; padding: 20px; margin-top: 20px; border: 1px solid var(--color-border); }
+.stats-title { font-size: 14px; font-weight: 700; color: #555; margin-bottom: 15px; text-transform: uppercase; }
+.discount-box { background: white; padding: 12px; border-radius: 8px; border: 1px dashed var(--color-accent); margin-bottom: 15px; display: flex; align-items: center; gap: 10px; }
+.discount-label { font-size: 13px; font-weight: 600; color: var(--color-text); }
+.discount-input { width: 70px; padding: 6px 10px; border: 2px solid var(--color-border); border-radius: 6px; font-size: 15px; font-weight: 700; text-align: center; }
+.discount-input:focus { border-color: var(--color-accent); outline: none; }
+.stat-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 15px; }
+.stat-label { color: #666; }
+.stat-val { font-weight: 700; color: var(--color-text); }
+.win-table { width: 100%; border-collapse: collapse; margin-top: 10px; background: white; border-radius: 8px; overflow: hidden; }
+.win-table th { background: #e0e0e0; padding: 8px; font-size: 12px; text-align: left; color: #555; }
+.win-table td { padding: 8px; font-size: 14px; border-bottom: 1px solid #eee; }
+.win-table tr:last-child td { border-bottom: none; }
+.win-table .num-col { text-align: center; }
+.win-table .sum-col { text-align: right; font-weight: 700; color: var(--color-win); }
+.summary-box { background: #1a1a1a; color: white; padding: 20px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; margin-top: 15px; }
+.summary-item { text-align: left; flex: 1; min-width: 120px; }
+.summary-label { font-size: 12px; color: #aaa; text-transform: uppercase; }
+.summary-val { font-size: 20px; font-weight: 700; }
+.profit-positive { color: #4caf50; }
+.profit-negative { color: var(--color-loss); }
+.results-area { padding: 20px; min-height: 200px; display: flex; flex-direction: column; gap: 15px; }
+.res-item { background: var(--color-surface); border-radius: 12px; padding: 15px; border: 1px solid var(--color-border); transition: 0.3s; }
+.res-item.winner { border-color: var(--color-win); background: #f0fff4; box-shadow: 0 0 10px rgba(42, 127, 98, 0.1); }
+.res-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; color: #666; font-size: 13px; font-weight: 600; }
+.res-sum-badge { display: inline-block; background: #eee; color: #333; padding: 2px 8px; border-radius: 10px; font-size: 12px; font-weight: 700; margin-left: 10px; }
+.balls-container { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.ball { width: 32px; height: 32px; border-radius: 50%; display: flex; justify-content: center; align-items: center; color: white; font-weight: 800; font-size: 14px; box-shadow: 0 2px 0 rgba(0,0,0,0.2); transition: 0.2s ease-in-out; }
+.ball.matched { transform: scale(1.15); box-shadow: 0 0 0 3px #fff, 0 0 0 5px var(--color-win), 0 4px 0 rgba(0,0,0,0.2); z-index: 1; }
+.ball-dice { border-radius: 6px !important; border: 1px solid rgba(0,0,0,0.1); }
+.ball-blue { background: var(--color-primary); }
+.ball-green { background: var(--color-secondary); }
+.ball-orange { background: var(--color-accent); }
+.ball-purple { background: var(--color-mag8); }
+.ball-red { background: #d32f2f; }
+.separator { font-size: 20px; color: #ccc; margin: 0 5px; }
+.win-badge { background: var(--color-win); color: white; padding: 3px 8px; border-radius: 4px; font-size: 12px; font-weight: 700; }
+.empty-state { text-align: center; color: #999; padding: 40px 0; width: 100%; }
+</style>
+</head>
+<body>
+<div id="prizeSidebar">
+<div class="sidebar-header">
+<span>🏆 Таблица выигрышей</span>
+<div class="sidebar-actions">
+<button id="btnEditPrizes" class="btn-sidebar" onclick="toggleEditMode()">✏️ Редактировать</button>
+<button id="btnSavePrizes" class="btn-sidebar active" onclick="savePrizes()" style="display:none;">✅ Готово</button>
+</div>
+</div>
+<div id="prizeSidebarContent"></div>
+</div>
+<div id="leftSidebar">
+<div class="sidebar-header">⚙️ Настройки генерации</div>
+<div class="left-sidebar-section">
+<!-- БЛОК РЕЖИМОВ ГЕНЕРАЦИИ -->
+<div class="gen-modes-container">
+<div class="gen-modes-header" onclick="toggleGenModes()">
+<span>🔄 Режим генерации</span>
+<span class="toggle-icon" id="gen-toggle-icon">+</span>
+</div>
+<div class="gen-modes-body" id="gen-modes-body">
+<div class="gen-modes-row">
+<div class="mode-card" id="modeReverse" onclick="toggleMode('reverse')">
+<div class="mode-card-top">
+<div class="mode-toggle"></div>
+<span class="mode-name">С конца диапазона</span>
+<span class="mode-badge">ВКЛ</span>
+</div>
+<div class="mode-desc">Приоритет старшим числам — генератор предпочитает числа из верхней части диапазона (взвешенный рандом)</div>
+</div>
+<div class="mode-card" id="modeAnti" onclick="toggleMode('anti')">
+<div class="mode-card-top">
+<div class="mode-toggle"></div>
+<span class="mode-name">Антикомбинации</span>
+<span class="mode-badge">ВКЛ</span>
+</div>
+<div class="mode-desc">Перегенерирует билеты, исключая числа из обычной генерации. Сначала сгенерируйте в обычном режиме, затем включите антирежим и нажмите «Сгенерировать» снова</div>
+</div>
+</div>
+<div class="anti-keep-row" id="antiKeepRow" style="display:none;">
+<div class="anti-keep-label">🎯 Оставить из комбинации:</div>
+<div class="anti-keep-controls">
+<input type="number" id="antiKeepCount" class="anti-keep-input" value="0" min="0" max="20" placeholder="0">
+<span class="anti-keep-hint">чисел (рандомно). 0 = исключить все</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="left-sidebar-section">
+<!-- БЛОК ГСЧ -->
+<div class="advanced-rng-container">
+<div class="adv-header" onclick="toggleAdvRng()">
+    <span>⚙️ Расширенный ГСЧ</span>
+    <span class="toggle-icon" id="adv-toggle-icon">+</span>
+</div>
+<div class="adv-grid" id="adv-grid-content">
+
+<!-- СТРОКА 1 -->
+<!-- Столбец 1: Сумма -->
+<div class="adv-row">
+<div class="adv-left">
+<input type="checkbox" id="advSumRange" class="adv-check" onchange="toggleAdv('sum')">
+<label class="adv-name" for="advSumRange">Сумма<span class="adv-tooltip">Сумма всех чисел билета</span></label>
+</div>
+<div class="adv-inputs">
+<input type="number" id="sumMin" class="inp-num" placeholder="Мин" disabled>
+<span class="sep">—</span>
+<input type="number" id="sumMax" class="inp-num" placeholder="Мкс" disabled>
+</div>
+</div>
+<!-- Столбец 2: Чет/Нечет -->
+<div class="adv-row">
+<div class="adv-left">
+<input type="checkbox" id="advEvenOdd" class="adv-check" onchange="toggleAdv('evenodd')">
+<label class="adv-name" for="advEvenOdd">Чет / Нечет<span class="adv-tooltip">Количество четных и нечетных</span></label>
+</div>
+<div class="adv-inputs">
+<input type="number" id="evenCount" class="inp-num" placeholder="Чт" disabled>
+<span class="sep">/</span>
+<input type="number" id="oddCount" class="inp-num" placeholder="Нч" disabled>
+</div>
+</div>
+<!-- Столбец 3: Тест 1 -->
+<div class="adv-row">
+<div class="adv-left">
+<input type="checkbox" id="advTest1" class="adv-check" onchange="toggleAdv('test1')">
+<label class="adv-name" for="advTest1">Тест 1<span class="adv-tooltip">Для доработки</span></label>
+</div>
+<div class="adv-inputs">
+<input type="number" id="testInput1" class="inp-num" placeholder="T1" disabled>
+</div>
+</div>
+
+<!-- СТРОКА 2 -->
+<!-- Столбец 1: Хвосты -->
+<div class="adv-row">
+<div class="adv-left">
+<input type="checkbox" id="advTails" class="adv-check" onchange="toggleAdv('tails')">
+<label class="adv-name" for="advTails">Хвосты<span class="adv-tooltip">Минимум уникальных последних цифр</span></label>
+</div>
+<div class="adv-inputs">
+<input type="number" id="minTails" class="inp-num" placeholder="Мн" disabled>
+</div>
+</div>
+<!-- Столбец 2: Десятки -->
+<div class="adv-row">
+<div class="adv-left">
+<input type="checkbox" id="advTens" class="adv-check" onchange="toggleAdv('tens')">
+<label class="adv-name" for="advTens">Десятки<span class="adv-tooltip">Лимит чисел в одной десятке</span></label>
+</div>
+<div class="adv-inputs">
+<input type="number" id="maxInTen" class="inp-num" placeholder="Лм" disabled>
+</div>
+</div>
+<!-- Столбец 3: Тест 2 -->
+<div class="adv-row">
+<div class="adv-left">
+<input type="checkbox" id="advTest2" class="adv-check" onchange="toggleAdv('test2')">
+<label class="adv-name" for="advTest2">Тест 2<span class="adv-tooltip">Для доработки</span></label>
+</div>
+<div class="adv-inputs">
+<input type="number" id="testInput2" class="inp-num" placeholder="T2" disabled>
+</div>
+</div>
+
+<!-- СТРОКА 3 -->
+<!-- Столбец 1: Пары -->
+<div class="adv-row">
+<div class="adv-left">
+<input type="checkbox" id="advPairs" class="adv-check" onchange="toggleAdv('pairs')">
+<label class="adv-name" for="advPairs">Пары<span class="adv-tooltip">Последовательности (Длина-Кол-во)</span></label>
+</div>
+<div class="adv-inputs">
+<input type="text" id="pairRule1" class="txt-rule" placeholder="3-2" disabled>
+<input type="text" id="pairRule2" class="txt-rule" placeholder="2-1" disabled>
+</div>
+</div>
+<!-- Столбец 2: Повторы -->
+<div class="adv-row">
+<div class="adv-left">
+<input type="checkbox" id="advRepeats" class="adv-check" onchange="toggleAdv('repeats')">
+<label class="adv-name" for="advRepeats">Повторы<span class="adv-tooltip">Совпадения с предыдущим тиражом</span></label>
+</div>
+<div class="adv-inputs">
+<input type="number" id="repeatMin" class="inp-num" placeholder="Мн" disabled>
+<span class="sep">—</span>
+<input type="number" id="repeatMax" class="inp-num" placeholder="Мкс" disabled>
+</div>
+</div>
+<!-- Столбец 3: Тест 3 -->
+<div class="adv-row">
+<div class="adv-left">
+<input type="checkbox" id="advTest3" class="adv-check" onchange="toggleAdv('test3')">
+<label class="adv-name" for="advTest3">Тест 3<span class="adv-tooltip">Для доработки</span></label>
+</div>
+<div class="adv-inputs">
+<input type="number" id="testInput3" class="inp-num" placeholder="T3" disabled>
+</div>
+</div>
+
+<!-- НИЖНИЕ БЛОКИ (Полная ширина) -->
+<div class="adv-row full-width">
+<div class="adv-left">
+<input type="checkbox" id="advRanges" class="adv-check" onchange="toggleAdv('ranges')">
+<label class="adv-name" for="advRanges">Диапазоны<span class="adv-tooltip">-1: искл., 0: случайно, N: ровно N</span></label>
+</div>
+<div class="adv-inputs">
+<input type="number" id="rangeLow" class="inp-num" placeholder="1-9" disabled title="1-9">
+<input type="number" id="rangeMid" class="inp-num" placeholder="10-20" disabled title="10-20">
+<input type="number" id="rangeHigh" class="inp-num" placeholder="21-30" disabled title="21-30">
+<input type="number" id="rangeLast" class="inp-num" placeholder="31-36" disabled title="31-36">
+</div>
+</div>
+<div class="adv-row full-width" id="row-prevdraw" style="display: none;">
+<div class="adv-left">
+<label class="adv-name" style="margin-left: 22px; cursor: default;">Пред. тираж<span class="adv-tooltip">Числа прошлого тиража</span></label>
+</div>
+<div class="adv-inputs" style="flex-grow: 1;">
+<input type="text" id="prevDrawNums" class="txt-rule wide" placeholder="Числа через пробел" disabled>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div id="authOverlay" class="auth-overlay">
+<div class="auth-box">
+<h2 style="margin-bottom:10px;">🔐 Введите пароль</h2>
+<p style="color:#666; font-size:14px;">Доступ к генератору ограничен</p>
+<input type="password" id="passInput" class="auth-input" placeholder="Пароль..." autofocus>
+<button class="auth-btn" onclick="checkPass()">Войти</button>
+<div id="errorMsg" class="error-msg">Неверный пароль!</div>
+</div>
+</div>
+<div class="container">
+<div class="header">
+<h1>🎰 Комбогенератор + Калькулятор</h1>
+<p>Генерация, экспорт и детальная статистика</p>
+<div class="mode-indicator-bar" id="modeIndicator"></div>
+</div>
+<div class="settings-panel">
+<div class="settings-row">
+<div class="input-group" style="flex: 2;">
+<label>Лотерея</label>
+<select id="lotterySelect" onchange="onLotteryChange()">
+<option value="5x36">5 из 36 (цена 100₽)</option>
+<option value="sumFortune">Сумма Фортуны (цена 250₽)</option>
+<option value="mag8">Великолепная 8 (цена 10₽)</option>
+<option value="big8">Большая 8 (цена 250₽)</option>
+<option value="super8">Супер 8 (цена 100₽)</option>
+<option value="top12">Топ-12 (цена 150₽)</option>
+<option value="dd12">12 Добрых Дел (цена 200₽)</option>
+<option value="premier">Премьер (цена 80₽)</option>
+<option value="trilogy">Трилогия (цена 50₽)</option>
+</select>
+</div>
+<div class="input-group" style="flex: 1;">
+<label>Цена билета (₽)</label>
+<input type="number" id="ticketPrice" value="100" min="1" oninput="updateDynamicData()">
+</div>
+<div class="input-group" style="flex: 1;">
+<label>Кол-во билетов</label>
+<input type="number" id="ticketCount" value="3" min="1" max="20">
+</div>
+</div>
+<div class="field-inputs-container" id="fieldInputsContainer"></div>
+<div class="cost-info" id="costInfo">Базовая ставка</div>
+
+
+
+<div class="buttons-row">
+<button class="btn-main" onclick="generateAll()">🎲 Сгенерировать</button>
+<button class="btn-clear" onclick="clearAll()" title="Очистить всё">🗑️</button>
+</div>
+<button class="btn-export" onclick="exportCSV()" id="exportBtn">📁 Выгрузить в CSV (Excel)</button>
+</div>
+<div class="check-panel" id="checkPanel" style="display:none;">
+<div class="check-title">🎯 Введите выпавшую комбинацию:</div>
+<div class="field-inputs-container" style="border-color: var(--color-primary);" id="checkInputsContainer"></div>
+<button class="btn-main" style="background: var(--color-secondary); margin-top:10px;" onclick="calculateWinnings()">💰 Посчитать выигрыш</button>
+<div class="stats-box" id="statsBox" style="display:none;">
+<div class="stats-title">📊 Статистика</div>
+<div class="discount-box">
+<span class="discount-label">Скидка (%):</span>
+<input type="number" id="discountInput" class="discount-input" placeholder="0" min="0" max="100" oninput="calculateWinnings()">
+</div>
+<div class="stat-row"><span class="stat-label">Купленных билетов:</span><span class="stat-val" id="statTotal">0</span></div>
+<div class="stat-row"><span class="stat-label">Выигрышных билетов:</span><span class="stat-val" id="statWinTickets">0</span></div>
+<div id="winDetailsContainer" style="margin-top: 15px;"></div>
+</div>
+<div class="summary-box" id="summaryBox" style="display:none;">
+<div class="summary-item"><div class="summary-label">Затраты</div><div class="summary-val" id="sumCost">0 ₽</div></div>
+<div class="summary-item"><div class="summary-label">Выигрыш</div><div class="summary-val" id="sumWin">0 ₽</div></div>
+<div class="summary-item"><div class="summary-label">Процент</div><div class="summary-val" id="sumPercent">0%</div></div>
+<div class="summary-item"><div class="summary-label">Итог</div><div class="summary-val" id="sumProfit">0 ₽</div></div>
+</div>
+</div>
+<div class="results-area" id="resultsArea">
+<div class="empty-state">Нажмите "Сгенерировать", чтобы создать билеты</div>
+</div>
+</div>
+<script>
+/* --- ПАРОЛЬ --- */
+const VALID_PASS_HASH = '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918';
+async function checkPass() {
+    const inputVal = document.getElementById('passInput').value;
+    const buffer = new TextEncoder().encode(inputVal);
+    try {
+        const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        const inputHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        if (inputHash === VALID_PASS_HASH) document.getElementById('authOverlay').style.display = 'none';
+        else document.getElementById('errorMsg').style.display = 'block';
+    } catch (e) {
+        if (inputVal === 'admin') document.getElementById('authOverlay').style.display = 'none';
+        else document.getElementById('errorMsg').style.display = 'block';
+    }
+}
+document.getElementById('passInput').addEventListener("keyup", e => { if (e.key === "Enter") checkPass(); });
+
+function toggleGenModes() {
+    const body = document.getElementById('gen-modes-body');
+    const icon = document.getElementById('gen-toggle-icon');
+    if (body.classList.contains('active')) { body.classList.remove('active'); icon.textContent = '+'; }
+    else { body.classList.add('active'); icon.textContent = '−'; }
+}
+
+function toggleAdvRng() {
+    const content = document.getElementById('adv-grid-content');
+    const icon = document.getElementById('adv-toggle-icon');
+    if (content.style.display === 'grid') { content.style.display = 'none'; icon.textContent = '+'; } 
+    else { content.style.display = 'grid'; icon.textContent = '−'; }
+}
+
+const LOTTERIES = {
+'5x36': { name: "5 из 36", price: 100, fields: [{ standard: 5, max: 12, total: 36, label: "Поле 1" }], basePrizes: { 5: 2000000, 4: 20000, 3: 1000, 2: 200 }, priceTiers: { 500: { 5: 10000000, 4: 50000, 3: 5000, 2: 2000 } }, prizes: {} },
+'sumFortune': { 
+    name: "Сумма Фортуны", price: 250, 
+    fields: [
+        { standard: 1, max: 6, total: 6, label: "Кубик 1" }, { standard: 1, max: 6, total: 6, label: "Кубик 2" }, { standard: 1, max: 6, total: 6, label: "Кубик 3" },
+        { standard: 1, max: 6, total: 6, label: "Кубик 4" }, { standard: 1, max: 6, total: 6, label: "Кубик 5" }, { standard: 1, max: 6, total: 6, label: "Кубик 6" }
+    ],
+    rules: {
+        sum: { 6:9000000, 7:8500000, 8:8000000, 9:130000, 10:60000, 11:30000, 12:15000, 13:10000, 14:6000, 15:4500, 16:3000, 17:2500, 18:2250, 19:2000, 20:1750, 21:1750, 22:1750, 23:2000, 24:2250, 25:2500, 26:3000, 27:4500, 28:6000, 29:10000, 30:15000, 31:30000, 32:60000, 33:130000, 34:8000000, 35:8500000, 36:9000000 },
+        combination: [
+            { name: "Все единицы", check: (arr) => arr.every(n => n === 1), prize: 7000000 }, { name: "Все двойки", check: (arr) => arr.every(n => n === 2), prize: 7000000 }, { name: "Все тройки", check: (arr) => arr.every(n => n === 3), prize: 7000000 },
+            { name: "Все четверки", check: (arr) => arr.every(n => n === 4), prize: 7000000 }, { name: "Все пятерки", check: (arr) => arr.every(n => n === 5), prize: 7000000 }, { name: "Все шестерки", check: (arr) => arr.every(n => n === 6), prize: 7000000 },
+            { name: "Шесть одинаковых", check: (arr) => arr.every(n => n === arr[0]), prize: 1175000 },
+            { name: "Пять одинаковых", check: (arr) => { const u = [...new Set(arr)]; return u.length === 2 && (arr.filter(n=>n===u[0]).length === 5 || arr.filter(n=>n===u[0]).length === 1); }, prize: 40000 },
+            { name: "3 числа х 2", check: (arr) => { const c = {}; arr.forEach(n => c[n] = (c[n]||0)+1); return Object.values(c).filter(v => v === 2).length === 3; }, prize: 15000 },
+            { name: "Все шесть чисел", check: (arr) => arr.sort((a,b)=>a-b).join('') === '123456', prize: 10000 },
+            { name: "Только четные", check: (arr) => arr.every(n => n % 2 === 0), prize: 10000 }, { name: "Только нечетные", check: (arr) => arr.every(n => n % 2 !== 0), prize: 10000 },
+            { name: "Числа 1, 2, 3", check: (arr) => [1,2,3].every(n => arr.includes(n)), prize: 10000 }, { name: "Числа 4, 5, 6", check: (arr) => [4,5,6].every(n => arr.includes(n)), prize: 10000 },
+            { name: "Четыре одинаковых", check: (arr) => { const c = {}; arr.forEach(n => c[n] = (c[n]||0)+1); return Object.values(c).includes(4); }, prize: 3500 },
+            { name: "2 числа х 3", check: (arr) => { const c = {}; arr.forEach(n => c[n] = (c[n]||0)+1); return Object.values(c).filter(v => v === 3).length === 2; }, prize: 3000 }
+        ],
+        position: { 6: 2893950, 5: 25000, 4: 3000, 3: 800, 2: 300 }
+    },
+    basePrizes: {}, prizes: {}
+},
+'mag8': { name: "Великолепная 8", price: 10, fields: [ { standard: 8, max: 12, total: 20, label: "Поле 1" }, { standard: 1, max: 4, total: 4, label: "Поле 2" } ], basePrizes: [[8,1,531835],[8,0,12500],[7,1,500],[7,0,400],[6,1,125],[6,0,60],[5,1,30],[5,0,15],[4,1,10]], priceTiers: { 120: [[8,1,3000000],[8,0,150000],[7,1,6000],[7,0,4800],[6,1,1500],[6,0,900],[5,1,360],[5,0,180],[4,1,240]] }, prizes: [] },
+'big8': { name: "Большая 8", price: 250, fields: [{ standard: 8, max: 12, total: 20, label: "Поле 1" }, { standard: 1, max: 4, total: 4, label: "Поле 2" }], basePrizes: [[8,1,5000000],[8,0,500000],[7,1,25000],[7,0,5000],[6,1,2000],[6,0,1250],[5,1,800],[5,0,750],[4,1,750]], priceTiers: { 300: [[8,1,5000000],[8,0,500000],[7,1,30000],[7,0,5000],[6,1,2000],[6,0,1500],[5,1,1000],[5,0,900],[4,1,900]] }, prizes: [] },
+'super8': { name: "Супер 8", price: 100, fields: [{ standard: 8, max: 12, total: 20, label: "Поле 1" }, { standard: 1, max: 4, total: 4, label: "Поле 2" }], basePrizes: [[8,1,10000000],[8,0,1000000],[7,1,50000],[7,0,15000],[6,1,6000],[6,0,3000],[5,1,1500],[5,0,1000],[4,1,1000]], priceTiers: { 700: [[8,1,15000000],[8,0,1400000],[7,1,70000],[7,0,21000],[6,1,8400],[6,0,4200],[5,1,2100],[5,0,1400],[4,1,1400]] }, prizes: [] },
+'top12': { name: "Топ-12", price: 150, fields: [{ standard: 12, max: 15, total: 24, label: "Числа" }], prizes: { 12: 15170362, 0: 15170362, 11: 75000, 1: 75000, 10: 3750, 2: 3750, 9: 750, 3: 750, 8: 150, 4: 150 } },
+'dd12': { name: "12 Добрых Дел", price: 200, fields: [{ standard: 12, max: 15, total: 24, label: "Числа" }], prizes: { 12: 10000000, 0: 10000000, 11: 50000, 1: 50000, 10: 5000, 2: 5000, 9: 1000, 3: 1000, 8: 200, 4: 200 } },
+'premier': { name: "Премьер", price: 80, fields: [ { standard: 4, max: 12, total: 20, label: "Поле 1" }, { standard: 4, max: 12, total: 20, label: "Поле 2" } ], prizes: [[4,4,120825228],[4,3,80000],[3,4,80000],[4,2,15000],[2,4,15000],[4,1,6000],[1,4,6000],[4,0,6000],[0,4,6000],[3,3,3000],[3,2,600],[2,3,600],[3,1,200],[1,3,200],[3,0,250],[0,3,250],[2,2,150],[2,1,120],[1,2,120],[2,0,100],[0,2,100]] },
+'trilogy': { name: "Трилогия", price: 50, fields: [ { standard: 4, max: 15, total: 24, label: "Поле 1" }, { standard: 2, max: 8, total: 8, label: "Поле 2" }, { standard: 1, max: 3, total: 3, label: "Поле 3" } ], basePrizes: [ [4,2,1, 1500000], [4,2,0, 150000], [4,1,1, 25000], [4,0,1, 15000], [4,1,0, 10000], [4,0,0, 5000], [3,2,1, 2500], [3,2,0, 1250], [3,1,1, 875], [3,0,1, 625], [2,2,1, 750], [3,1,0, 500], [2,2,0, 450], [3,0,0, 400], [2,1,1, 300], [2,0,1, 250], [2,1,0, 150], [2,0,0, 150] ], priceTiers: { 100: [ [4,2,1, 3000000], [4,2,0, 500000], [4,1,1, 50000], [4,0,1, 30000], [4,1,0, 20000], [4,0,0, 10000], [3,2,1, 5000], [3,2,0, 2500], [3,1,1, 1750], [2,2,1, 1500], [3,0,1, 1250], [3,1,0, 1000], [2,2,0, 900], [3,0,0, 900], [2,1,1, 800], [2,0,1, 800], [2,1,0, 750] ] }, prizes: [] }
+};
+const COLORS = ['ball-blue', 'ball-green', 'ball-orange', 'ball-purple', 'ball-red'];
+let ticketsData = [];
+let lastDrawnNumbers = [];
+let isEditingPrizes = false;
+
+function factorial(n) { return n ? n * factorial(n - 1) : 1; }
+function combinations(n, k) { if(k>n) return 0; return factorial(n) / (factorial(k) * factorial(n - k)); }
+function formatMoney(n) { return n.toLocaleString('ru') + ' ₽'; }
+
+function onLotteryChange() {
+const type = document.getElementById('lotterySelect').value;
+const config = LOTTERIES[type];
+document.getElementById('ticketPrice').value = config.price;
+const genContainer = document.getElementById('fieldInputsContainer');
+let fieldsHtml = '';
+
+if (type === 'sumFortune') {
+    fieldsHtml += '<div class="fields-config-block">';
+    config.fields.forEach((field, index) => {
+        fieldsHtml += `<div class="field-block"><span class="field-label">${field.label}</span><input type="number" class="field-input-small" id="gen-field-${index}" value="${field.standard}" min="1" max="${field.max}" onchange="updateDynamicData()" oninput="updateDynamicData()"><span class="field-range">из ${field.total}</span></div>`;
+    });
+    fieldsHtml += '</div>';
+    fieldsHtml += `
+    <div class="collapsible-container">
+        <div class="collapsible-header" onclick="toggleCollapsible(this)">
+            <span>⚙️ Настройки фильтрации</span>
+            <div>
+                <button class="btn-sidebar" style="font-size:10px; padding: 2px 8px; margin-right: 10px;" onclick="event.stopPropagation(); clearAllFilters()">🗑️ Очистить</button>
+                <span class="arrow-icon">▼</span>
+            </div>
+        </div>
+        <div class="collapsible-content" style="display: none;">
+            <table class="filter-table">
+                <thead><tr><th></th><th>Включить</th><th></th><th>Исключить</th></tr></thead>
+                <tbody>
+                    ${config.fields.map((field, index) => `
+                    <tr>
+                        <td class="filter-label-cell">Поз. ${index + 1}</td>
+                        <td class="filter-val-cell"><textarea class="filter-val-input filter-inc" id="include-field-${index}" placeholder="" rows="1" oninput="autoResize(this)"></textarea></td>
+                        <td class="filter-act-cell"><button class="btn-reverse" onclick="swapFields(${index})" title="Поменять местами">⇄</button></td>
+                        <td class="filter-val-cell"><textarea class="filter-val-input filter-exc" id="exclude-field-${index}" placeholder="" rows="1" oninput="autoResize(this)"></textarea></td>
+                    </tr>`).join('')}
+                </tbody>
+            </table>
+            <div class="fixed-numbers-block">
+                <div class="fixed-row">
+                    <div class="fixed-item"><div class="fixed-numbers-header">Свои числа</div><textarea class="fixed-numbers-textarea" id="fixed-numbers-input" placeholder="1 2 3" rows="1" oninput="autoResize(this)"></textarea></div>
+                    <div class="fixed-item"><div class="fixed-numbers-header">Пары (группы)</div><textarea class="fixed-numbers-textarea" id="pairs-input" placeholder="3-1 2-1" rows="1" oninput="autoResize(this)"></textarea></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="collapsible-container" style="margin-top: 15px;">
+        <div class="collapsible-header" onclick="toggleCollapsible(this)"><span>🎯 Выбор ставок</span> <span class="arrow-icon">▼</span></div>
+        <div class="collapsible-content">
+            <div class="bet-selector-wrapper">
+                <div class="bet-selector-title">Нажмите, чтобы выбрать</div>
+                <div class="bet-section-title">Игра «Сумма»</div><div class="bet-grid" id="sumBetsGrid"></div>
+                <div class="games-row-container">
+                    <div class="position-col"><div class="bet-section-title">Игра «Позиция»</div><div class="position-grid" id="positionBetsGrid"></div></div>
+                    <div class="combo-col"><div class="bet-section-title">Игра «Комбинация»</div><div class="bet-grid side-grid" id="comboBetsGrid"></div></div>
+                </div>
+                <div class="bet-summary"><span>Выбрано ставок: <strong id="totalBetsCount">0</strong></span><span>Стоимость: <strong id="totalBetsCost">0 ₽</strong></span></div>
+            </div>
+        </div>
+    </div>`;
+} else {
+    fieldsHtml += '<div class="fields-config-block">';
+    config.fields.forEach((field, index) => {
+        fieldsHtml += `
+        <div class="field-block">
+            <span class="field-label">${field.label}</span>
+            <input type="number" class="field-input-small" id="gen-field-${index}" 
+                   value="${field.standard}" min="${field.standard}" max="${field.max}" 
+                   onchange="updateDynamicData()" oninput="updateDynamicData()">
+            <span class="field-range">из ${field.total}</span>
+        </div>`;
+    });
+    fieldsHtml += '</div>';
+    fieldsHtml += '<div class="inclusion-block"><div class="inclusion-header">Включить</div>';
+    config.fields.forEach((field, index) => {
+        fieldsHtml += `
+        <div class="inclusion-row">
+            <label>Поле ${index + 1}</label>
+            <textarea class="inclusion-textarea" id="include-field-${index}" 
+                      placeholder="Числа через пробел" rows="1" 
+                      oninput="autoResize(this)"></textarea>
+        </div>`;
+    });
+    fieldsHtml += '</div>';
+    fieldsHtml += '<div class="exclusion-block"><div class="exclusion-header">Исключения</div>';
+    config.fields.forEach((field, index) => {
+        fieldsHtml += `
+        <div class="exclusion-row">
+            <label>Поле ${index + 1}</label>
+            <textarea class="exclusion-textarea" id="exclude-field-${index}" 
+                      placeholder="Числа через пробел" rows="1" 
+                      oninput="autoResize(this)"></textarea>
+        </div>`;
+    });
+    fieldsHtml += '</div>';
+}
+genContainer.innerHTML = fieldsHtml;
+if (type === 'sumFortune') { initBetSelector(); }
+const checkContainer = document.getElementById('checkInputsContainer');
+let checkHtml = '';
+if (type === 'sumFortune') { checkHtml += `<div class="field-row"><span class="field-label">Кубики (6 чисел)</span><input type="text" class="field-input-small" id="check-field-0" placeholder="6 чисел через пробел" style="width: 250px;" onchange="calculateWinnings()"><span class="field-range">Введите через пробел</span></div>`; }
+else { config.fields.forEach((field, index) => { checkHtml += `<div class="field-row"><span class="field-label">${field.label}</span><input type="text" class="field-input-small" id="check-field-${index}" placeholder="${field.standard} чисел" style="width: 200px;" onchange="calculateWinnings()"><span class="field-range">Введите через пробел</span></div>`; }); }
+checkContainer.innerHTML = checkHtml;
+updateDynamicData(); clearAll();
+}
+
+function toggleCollapsible(header) { const content = header.nextElementSibling; const icon = header.querySelector('.arrow-icon'); if (content.style.display === 'block') { content.style.display = 'none'; icon.textContent = '▼'; } else { content.style.display = 'block'; icon.textContent = '▲'; } }
+function swapFields(index) { const inc = document.getElementById(`include-field-${index}`); const exc = document.getElementById(`exclude-field-${index}`); if(inc && exc) { const temp = inc.value; inc.value = exc.value; exc.value = temp; autoResize(inc); autoResize(exc); } }
+function clearAll() {
+    ticketsData = [];
+    lastDrawnNumbers = [];
+    const output = document.getElementById('resultsArea');
+    output.innerHTML = '<div class="empty-state">Нажмите "Сгенерировать", чтобы создать билеты</div>';
+    document.getElementById('checkPanel').style.display = 'none';
+    document.getElementById('exportBtn').style.display = 'none';
+    document.getElementById('statsBox').style.display = 'none';
+    document.getElementById('summaryBox').style.display = 'none';
+}
+
+function clearAllFilters() { const type = document.getElementById('lotterySelect').value; if(type !== 'sumFortune') return; const config = LOTTERIES[type]; config.fields.forEach((f, i) => { const inc = document.getElementById(`include-field-${i}`); const exc = document.getElementById(`exclude-field-${i}`); if(inc) inc.value = ''; if(exc) exc.value = ''; }); const fixed = document.getElementById('fixed-numbers-input'); const pairs = document.getElementById('pairs-input'); if(fixed) fixed.value = ''; if(pairs) pairs.value = ''; }
+
+function initBetSelector() {
+    const ticketPrice = 250;
+    const sumContainer = document.getElementById('sumBetsGrid');
+    const sumData = { 6:"36к", 7:"34к", 8:"32к", 9:"520", 10:"240", 11:"120", 12:"60", 13:"40", 14:"24", 15:"18", 16:"12", 17:"10", 18:"9", 19:"8", 20:"7", 21:"7", 22:"7", 23:"8", 24:"9", 25:"10", 26:"12", 27:"18", 28:"24", 29:"40", 30:"60", 31:"120", 32:"240", 33:"520", 34:"32к", 35:"34к", 36:"36к" };
+    sumContainer.innerHTML = '';
+    for (let i = 6; i <= 36; i++) { sumContainer.innerHTML += `<div class="bet-btn" data-type="sum" onclick="toggleBetBtn(this)"><span class="val">${i}</span><span class="mult">× ${sumData[i]}</span></div>`; }
+    const comboContainer = document.getElementById('comboBetsGrid');
+    const comboData = [
+        { name: "Все 1", mult: "28к" }, { name: "Все 2", mult: "28к" }, { name: "Все 3", mult: "28к" }, { name: "Все 4", mult: "28к" }, { name: "Все 5", mult: "28к" }, { name: "Все 6", mult: "28к" },
+        { name: "Шесть одинак.", mult: "4.7к" }, { name: "Пять одинак.", mult: "160" }, { name: "3 числа × 2", mult: "60" }, { name: "Все шесть чисел", mult: "40" }, { name: "Только четные", mult: "40" }, { name: "Только нечетные", mult: "40" },
+        { name: "Числа 1,2,3", mult: "40" }, { name: "Числа 4,5,6", mult: "40" }, { name: "Четыре одинак.", mult: "14" }, { name: "2 числа × 3", mult: "12" }
+    ];
+    comboContainer.innerHTML = '';
+    comboData.forEach(item => { comboContainer.innerHTML += `<div class="bet-btn combo-btn" data-type="combo" onclick="toggleBetBtn(this)"><span class="val">${item.name}</span><span class="mult">× ${item.mult}</span></div>`; });
+    const posContainer = document.getElementById('positionBetsGrid');
+    let posHtml = '<div class="pos-header"></div>'; for(let i=1; i<=6; i++) posHtml += `<div class="pos-header">${i}</div>`;
+    for(let r=1; r<=6; r++) {
+        posHtml += `<div class="pos-row-label">Ход ${r}</div>`;
+        for(let c=1; c<=6; c++) { posHtml += `<div class="pos-num" data-row="${r}" onclick="togglePosBtn(this)">${c}</div>`; }
+    }
+    posContainer.innerHTML = posHtml;
+    updateBetSummary();
+}
+function toggleBetBtn(el) { el.classList.toggle('active'); updateBetSummary(); }
+function togglePosBtn(el) { el.classList.toggle('active'); updateBetSummary(); }
+function updateBetSummary() {
+    let simpleBets = document.querySelectorAll('#sumBetsGrid .bet-btn.active, #comboBetsGrid .bet-btn.active').length;
+    let posBetCount = 0; let validPosBet = true; let combos = 1;
+    for(let r=1; r<=6; r++) { const selectedInRow = document.querySelectorAll(`.pos-num.active[data-row="${r}"]`).length; if(selectedInRow === 0) { validPosBet = false; break; } combos *= selectedInRow; }
+    if(validPosBet) posBetCount = combos;
+    const totalCost = (simpleBets * 250) + (posBetCount * 250);
+    document.getElementById('totalBetsCount').innerText = simpleBets + (validPosBet ? 1 : 0);
+    document.getElementById('totalBetsCost').innerText = totalCost.toLocaleString('ru') + ' ₽';
+}
+
+function toggleAdv(cardType) {
+let checkbox, inputs, prevDrawRow;
+if (cardType === 'sum') { checkbox = document.getElementById('advSumRange'); inputs = [document.getElementById('sumMin'), document.getElementById('sumMax')]; }
+else if (cardType === 'evenodd') { checkbox = document.getElementById('advEvenOdd'); inputs = [document.getElementById('evenCount'), document.getElementById('oddCount')]; }
+else if (cardType === 'tails') { checkbox = document.getElementById('advTails'); inputs = [document.getElementById('minTails')]; }
+else if (cardType === 'pairs') { checkbox = document.getElementById('advPairs'); inputs = [document.getElementById('pairRule1'), document.getElementById('pairRule2')]; }
+else if (cardType === 'repeats') { checkbox = document.getElementById('advRepeats'); inputs = [document.getElementById('prevDrawNums'), document.getElementById('repeatMin'), document.getElementById('repeatMax')]; prevDrawRow = document.getElementById('row-prevdraw'); }
+else if (cardType === 'tens') { checkbox = document.getElementById('advTens'); inputs = [document.getElementById('maxInTen')]; }
+else if (cardType === 'ranges') { checkbox = document.getElementById('advRanges'); inputs = [document.getElementById('rangeLow'), document.getElementById('rangeMid'), document.getElementById('rangeHigh'), document.getElementById('rangeLast')]; }
+else if (cardType === 'test1') { checkbox = document.getElementById('advTest1'); inputs = [document.getElementById('testInput1')]; }
+else if (cardType === 'test2') { checkbox = document.getElementById('advTest2'); inputs = [document.getElementById('testInput2')]; }
+else if (cardType === 'test3') { checkbox = document.getElementById('advTest3'); inputs = [document.getElementById('testInput3')]; }
+
+if (checkbox && inputs) { inputs.forEach(input => input.disabled = !checkbox.checked); if(cardType === 'repeats' && prevDrawRow) { prevDrawRow.style.display = checkbox.checked ? 'flex' : 'none'; } }
+}
+function autoResize(textarea) { textarea.style.height = 'auto'; textarea.style.height = textarea.scrollHeight + 'px'; }
+function updateDynamicData() { updatePrizesBasedOnPrice(); updateCostInfo(); }
+function updatePrizesBasedOnPrice() { const type = document.getElementById('lotterySelect').value; const config = LOTTERIES[type]; const price = parseInt(document.getElementById('ticketPrice').value) || 0; if (isEditingPrizes) return; if (config.priceTiers && config.priceTiers[price]) { config.prizes = config.priceTiers[price]; } else if (config.basePrizes) { config.prizes = config.basePrizes; } updatePrizeSidebar(); }
+function updatePrizeSidebar() { const type = document.getElementById('lotterySelect').value; const config = LOTTERIES[type]; const container = document.getElementById('prizeSidebarContent'); document.getElementById('btnEditPrizes').style.display = 'block'; document.getElementById('btnSavePrizes').style.display = 'none'; isEditingPrizes = false; let tableHtml = '';
+if (type === 'sumFortune') {
+    tableHtml += `<div class="sidebar-category-header">Игра «Сумма»</div>`; tableHtml += '<table class="sidebar-table"><thead><tr><th>Сумма</th><th>Приз</th></tr></thead><tbody>'; Object.keys(config.rules.sum).sort((a,b) => a-b).forEach(key => { tableHtml += `<tr><td>${key}</td><td class="sum-col">${formatMoney(config.rules.sum[key])}</td></tr>`; }); tableHtml += '</tbody></table>';
+    tableHtml += `<div class="sidebar-category-header">Игра «Комбинация»</div>`; tableHtml += '<table class="sidebar-table"><thead><tr><th>Комбинация</th><th>Приз</th></tr></thead><tbody>'; config.rules.combination.forEach(rule => { tableHtml += `<tr><td>${rule.name}</td><td class="sum-col">${formatMoney(rule.prize)}</td></tr>`; }); tableHtml += '</tbody></table>';
+    tableHtml += `<div class="sidebar-category-header">Игра «Позиция»</div>`; tableHtml += '<table class="sidebar-table"><thead><tr><th>Совпадений</th><th>Приз</th></tr></thead><tbody>'; Object.keys(config.rules.position).sort((a,b) => b-a).forEach(key => { tableHtml += `<tr><td>${key} из 6</td><td class="sum-col">${formatMoney(config.rules.position[key])}</td></tr>`; }); tableHtml += '</tbody></table>';
+} else {
+    tableHtml = '<table class="sidebar-table"><thead><tr><th>Категория</th><th>Приз</th></tr></thead><tbody>';
+    if (Array.isArray(config.prizes)) { config.prizes.forEach((rule, index) => { const cash = rule[rule.length - 1]; const reqs = rule.slice(0, -1); const catName = reqs.join('+'); tableHtml += `<tr><td>${catName}</td><td class="sum-col" data-prize-index="${index}">${formatMoney(cash)}</td></tr>`; });
+    } else { const keys = Object.keys(config.prizes).sort((a, b) => parseInt(b) - parseInt(a)); keys.forEach(key => { let catName = ""; if(type === 'top12' || type === 'dd12') { if(key == 0) catName = "0 угадано"; else catName = key + " угадано"; } else { catName = key; } tableHtml += `<tr><td>${catName}</td><td class="sum-col" data-prize-key="${key}">${formatMoney(config.prizes[key])}</td></tr>`; }); }
+    tableHtml += '</tbody></table>';
+} container.innerHTML = tableHtml; }
+function toggleEditMode() { isEditingPrizes = true; document.getElementById('btnEditPrizes').style.display = 'none'; document.getElementById('btnSavePrizes').style.display = 'block'; document.querySelectorAll('#prizeSidebarContent .sum-col').forEach(cell => { const currentVal = parseInt(cell.innerText.replace(/\D/g, '')); cell.innerHTML = `<input type="number" class="edit-input" value="${currentVal}">`; }); }
+function savePrizes() { const type = document.getElementById('lotterySelect').value; const config = LOTTERIES[type]; document.querySelectorAll('#prizeSidebarContent .sum-col').forEach(cell => { const input = cell.querySelector('input'); const newVal = parseInt(input.value); if (cell.dataset.prizeIndex !== undefined) { const idx = parseInt(cell.dataset.prizeIndex); config.prizes[idx][config.prizes[idx].length - 1] = newVal; } else if (cell.dataset.prizeKey !== undefined) { config.prizes[cell.dataset.prizeKey] = newVal; } }); updatePrizeSidebar(); if (lastDrawnNumbers.length > 0) calculateWinnings(); }
+
+function updateCostInfo() { 
+    const type = document.getElementById('lotterySelect').value; 
+    const config = LOTTERIES[type]; 
+    let totalMult = 1; 
+    
+    if (type === 'sumFortune') {
+        config.fields.forEach((field, index) => {
+            const val = parseInt(document.getElementById(`gen-field-${index}`).value) || field.standard;
+            totalMult *= val;
+        });
+    } else {
+        config.fields.forEach((field, index) => {
+            const val = parseInt(document.getElementById(`gen-field-${index}`).value) || field.standard;
+            totalMult *= combinations(val, field.standard);
+        });
+    }
+    const price = parseInt(document.getElementById('ticketPrice').value) || 0; 
+    const totalCost = totalMult * price; 
+    const infoEl = document.getElementById('costInfo'); 
+    if (totalMult === 1) { infoEl.innerText = `Стоимость билета: ${price} ₽`; infoEl.classList.remove("warning"); } 
+    else { infoEl.innerText = `Развернутая ставка: ${totalMult.toLocaleString('ru')} комб. = ${totalCost.toLocaleString('ru')} ₽`; infoEl.classList.add("warning"); } 
+    return { mult: totalMult, cost: totalCost }; 
+}
+
+function getRandInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+function parseNumbers(str) { if(!str) return []; return str.trim().split(/\s+/).map(Number).filter(n => !isNaN(n)); }
+function generateSet(count, total, excluded, included) { const arr = [...included]; let attempts = 0; const maxAttempts = 1000; if (included.length > count) return null; if (new Set(included).size !== included.length) return null; for(let n of included) { if (n < 1 || n > total) return null; if (excluded && excluded.includes(n)) return null; } while (arr.length < count) { if (attempts++ > maxAttempts) return null; const r = getRandInt(1, total); if (arr.indexOf(r) !== -1) continue; if (excluded && excluded.includes(r)) continue; arr.push(r); } return arr.sort((a, b) => a - b); }
+function shuffleArray(array) { for (let i = array.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [array[i], array[j]] = [array[j], array[i]]; } return array; }
+
+function generateAll() {
+const type = document.getElementById('lotterySelect').value; const config = LOTTERIES[type]; const count = parseInt(document.getElementById('ticketCount').value) || 1;
+const output = document.getElementById('resultsArea'); output.innerHTML = ''; document.getElementById('exportBtn').style.display = 'none';
+
+/* --- АНТИРЕЖИМ: исключаем числа предыдущих билетов, оставляя N рандомных --- */
+if (activeMode === 'anti') {
+    if (previousNormalTickets.length === 0) {
+        alert('Сначала сгенерируйте билеты в обычном режиме!\nПотом включите антирежим и нажмите «Сгенерировать» снова.');
+        return;
+    }
+    ticketsData = [];
+    const priceInfo = updateCostInfo();
+    let errorsShown = 0;
+    const antiCount = previousNormalTickets.length;
+    const keepN = parseInt(document.getElementById('antiKeepCount').value) || 0;
+
+    if (type === 'sumFortune') {
+        for (let i = 0; i < antiCount; i++) {
+            const prevTicket = previousNormalTickets[i];
+            let finalTicketNumbers = [];
+            let ticketValid = false;
+            let attempts = 0;
+
+            while (!ticketValid && attempts < 500) {
+                attempts++;
+                let currentTicketArrays = [];
+                let genSuccess = true;
+
+                for (let pos = 0; pos < 6; pos++) {
+                    const countEl = document.getElementById(`gen-field-${pos}`);
+                    let neededCount = parseInt(countEl.value) || 1;
+                    if (neededCount < 1) neededCount = 1;
+                    if (neededCount > 6) neededCount = 6;
+
+                    const prevNums = prevTicket.fields[pos] ? [...prevTicket.fields[pos].nums] : [];
+
+                    /* Определяем сколько оставить на этой позиции (пропорционально, мин 0, макс = prevNums.length) */
+                    let keepForPos = Math.min(keepN, prevNums.length, neededCount);
+
+                    /* Рандомно выбираем keepForPos чисел из prevNums чтобы оставить */
+                    const shuffledPrev = shuffleArray([...prevNums]);
+                    const keptNums = shuffledPrev.slice(0, keepForPos);
+                    const excludedNums = prevNums.filter(n => !keptNums.includes(n));
+
+                    let posNums = [...keptNums];
+                    let safetyCounter = 0;
+                    while (posNums.length < neededCount && safetyCounter < 100) {
+                        safetyCounter++;
+                        let rand = getRandInt(1, 6);
+                        if (!posNums.includes(rand) && !excludedNums.includes(rand)) {
+                            posNums.push(rand);
+                        }
+                    }
+                    if (posNums.length !== neededCount) { genSuccess = false; break; }
+                    currentTicketArrays.push(posNums);
+                }
+                if (!genSuccess) continue;
+                finalTicketNumbers = currentTicketArrays;
+                ticketValid = true;
+            }
+            if (!ticketValid) { if (errorsShown < 1) alert('Не удалось подобрать антикомбинацию для Суммы Фортуны. Попробуйте уменьшить количество чисел на кубик.'); errorsShown++; continue; }
+            const fieldsData = finalTicketNumbers.map((numsArr, idx) => { return { nums: numsArr, total: 6, required: 1, color: COLORS[idx % COLORS.length] }; });
+            ticketsData.push({ id: i + 1, type: type, fields: fieldsData, cost: priceInfo.cost, win: 0, checked: false });
+        }
+    } else {
+        for (let i = 0; i < antiCount; i++) {
+            const prevTicket = previousNormalTickets[i];
+            let ticketValid = false;
+            let attempts = 0;
+            let fieldsData = null;
+
+            while (!ticketValid && attempts < 500) {
+                attempts++;
+                fieldsData = config.fields.map((field, index) => {
+                    const val = parseInt(document.getElementById(`gen-field-${index}`).value) || field.standard;
+                    const prevNums = prevTicket.fields[index] ? [...prevTicket.fields[index].nums] : [];
+
+                    /* Сколько оставить: не больше чем есть в предыдущем и не больше чем нужно */
+                    let keepForField = Math.min(keepN, prevNums.length, val);
+
+                    /* Рандомно выбираем keepForField чисел из prevNums для сохранения */
+                    const shuffledPrev = shuffleArray([...prevNums]);
+                    const keptNums = shuffledPrev.slice(0, keepForField);
+                    const excludedNums = prevNums.filter(n => !keptNums.includes(n));
+
+                    /* Плюс пользовательские исключения */
+                    const userExc = (function() { const ta = document.getElementById(`exclude-field-${index}`); return ta ? parseNumbers(ta.value) : []; })();
+                    const allExcluded = [...new Set([...excludedNums, ...userExc])];
+
+                    /* Оставленные числа = включения (плюс пользовательские) */
+                    const userInc = (function() { const ta = document.getElementById(`include-field-${index}`); return ta ? parseNumbers(ta.value) : []; })();
+                    const allIncluded = [...new Set([...keptNums, ...userInc.filter(n => !allExcluded.includes(n))])];
+
+                    let nums = generateSet(val, field.total, allExcluded, allIncluded);
+                    if (!nums) return null;
+                    return { nums: nums, total: field.total, required: field.standard, color: COLORS[index % COLORS.length] };
+                });
+                if (fieldsData.includes(null)) continue;
+                ticketValid = true;
+            }
+            if (!ticketValid) { if (errorsShown < 1) alert(`Не удалось подобрать антикомбинацию для билета ${i+1}. Мало оставшихся чисел в диапазоне.`); errorsShown++; continue; }
+            ticketsData.push({ id: i + 1, type: type, fields: fieldsData, cost: priceInfo.cost, win: 0, checked: false });
+        }
+    }
+
+    if (ticketsData.length > 0) { renderTickets(); document.getElementById('checkPanel').style.display = 'block'; document.getElementById('exportBtn').style.display = 'flex'; document.getElementById('summaryBox').style.display = 'none'; document.getElementById('statsBox').style.display = 'none'; }
+    else { output.innerHTML = '<div class="empty-state">Не удалось сгенерировать антибилеты. Проверьте настройки.</div>'; }
+    return;
+}
+
+/* === ОБЫЧНАЯ ГЕНЕРАЦИЯ (normal + reverse) === */
+ticketsData = [];
+const exclusions = config.fields.map((field, index) => { const textarea = document.getElementById(`exclude-field-${index}`); return textarea ? parseNumbers(textarea.value) : []; });
+const inclusions = config.fields.map((field, index) => { const textarea = document.getElementById(`include-field-${index}`); return textarea ? parseNumbers(textarea.value) : []; });
+const useSumRange = document.getElementById('advSumRange').checked; let sumMin = 0, sumMax = Infinity; if (useSumRange) { sumMin = parseInt(document.getElementById('sumMin').value) || 0; sumMax = parseInt(document.getElementById('sumMax').value) || Infinity; }
+const useEvenOdd = document.getElementById('advEvenOdd').checked; let targetEven = -1, targetOdd = -1; if (useEvenOdd) { targetEven = parseInt(document.getElementById('evenCount').value); targetOdd = parseInt(document.getElementById('oddCount').value); if(isNaN(targetEven)) targetEven = -1; if(isNaN(targetOdd)) targetOdd = -1; }
+const useTails = document.getElementById('advTails').checked; let minTails = -1; if (useTails) { minTails = parseInt(document.getElementById('minTails').value); if(isNaN(minTails)) minTails = -1; }
+const usePairs = document.getElementById('advPairs').checked; let pairRules = []; if (usePairs) { const inputs = [document.getElementById('pairRule1'), document.getElementById('pairRule2')]; inputs.forEach(inp => { const val = inp.value.trim(); if(val) { const parts = val.split('-'); if(parts.length === 2) { const len = parseInt(parts[0]); const cnt = parseInt(parts[1]); if(!isNaN(len) && !isNaN(cnt) && len > 0 && cnt > 0) { pairRules.push({ length: len, count: cnt }); } } } }); }
+const useRepeats = document.getElementById('advRepeats').checked; let prevDrawNums = []; let repeatMinLimit = -1, repeatMaxLimit = -1; if (useRepeats) { prevDrawNums = parseNumbers(document.getElementById('prevDrawNums').value); repeatMinLimit = parseInt(document.getElementById('repeatMin').value); repeatMaxLimit = parseInt(document.getElementById('repeatMax').value); if(isNaN(repeatMinLimit)) repeatMinLimit = -1; if(isNaN(repeatMaxLimit)) repeatMaxLimit = -1; }
+const useTens = document.getElementById('advTens').checked; let maxInTenLimit = -1; if (useTens) { maxInTenLimit = parseInt(document.getElementById('maxInTen').value); if(isNaN(maxInTenLimit)) maxInTenLimit = -1; }
+const priceInfo = updateCostInfo(); let errorsShown = 0;
+
+if (type === 'sumFortune') {
+    const pairsInputEl = document.getElementById('pairs-input'); 
+    if (pairsInputEl) { 
+        const rawStr = pairsInputEl.value.trim();
+        if(rawStr) { 
+            const parts = rawStr.split(/\s+/); 
+            parts.forEach(p => { 
+                const nums = p.split('-'); 
+                if(nums.length === 2) { 
+                    const size = parseInt(nums[0]); 
+                    const qty = parseInt(nums[1]); 
+                    if(!isNaN(size) && !isNaN(qty) && size > 0 && qty > 0) { 
+                        if(!usePairs) pairRules.push({size: size, qty: qty});
+                    } 
+                } 
+            }); 
+        } 
+    }
+    for (let i = 0; i < count; i++) {
+        let ticketValid = false; let attempts = 0; let finalTicketNumbers = []; 
+        let currentTicketArrays = [];
+        while (!ticketValid && attempts < 500) {
+            attempts++;
+            currentTicketArrays = [];
+            let genSuccess = true;
+            for(let pos=0; pos<6; pos++) {
+                const countEl = document.getElementById(`gen-field-${pos}`);
+                let neededCount = parseInt(countEl.value) || 1;
+                if(neededCount < 1) neededCount = 1;
+                if(neededCount > 6) neededCount = 6;
+                let posNums = [];
+                let inc = inclusions[pos] || [];
+                let exc = exclusions[pos] || [];
+                inc.forEach(n => {
+                    if(posNums.length < neededCount && !posNums.includes(n) && !exc.includes(n) && n >= 1 && n <= 6) {
+                        posNums.push(n);
+                    }
+                });
+                let safetyCounter = 0;
+                while(posNums.length < neededCount && safetyCounter < 100) {
+                    safetyCounter++;
+                    let rand = (activeMode === 'reverse') ? getRandIntReverse(1, 6) : getRandInt(1, 6);
+                    if(!posNums.includes(rand) && !exc.includes(rand)) {
+                        posNums.push(rand);
+                    }
+                }
+                if(posNums.length !== neededCount) {
+                    genSuccess = false;
+                    break;
+                }
+                currentTicketArrays.push(posNums);
+            }
+            if(!genSuccess) continue;
+            let flatTicket = currentTicketArrays.flat();
+            let pass = true;
+            if (pass && useSumRange) { let s = flatTicket.reduce((a, b) => a + b, 0); if (s < sumMin || s > sumMax) pass = false; }
+            if (pass && useEvenOdd) { const evenCount = flatTicket.filter(n => n % 2 === 0).length; const oddCount = flatTicket.length - evenCount; if (targetEven !== -1 && evenCount !== targetEven) pass = false; if (targetOdd !== -1 && oddCount !== targetOdd) pass = false; }
+            if (pass && useTails && minTails !== -1) { const tails = new Set(flatTicket.map(n => n % 10)); if (tails.size < minTails) pass = false; }
+            if (pass) { finalTicketNumbers = currentTicketArrays; ticketValid = true; }
+        }
+        if (!ticketValid) { if(errorsShown < 1) alert(`Не удалось подобрать комбинацию (попыток: 500). Ослабьте условия фильтров или измените количество чисел.`); errorsShown++; return; }
+        const fieldsData = finalTicketNumbers.map((numsArr, idx) => { return { nums: numsArr, total: 6, required: 1, color: COLORS[idx % COLORS.length] }; });
+        ticketsData.push({ id: i + 1, type: type, fields: fieldsData, cost: priceInfo.cost, win: 0, checked: false });
+    }
+} else {
+    for (let i = 0; i < count; i++) {
+    let ticketValid = false; let attempts = 0; let fieldsData = null;
+    while (!ticketValid && attempts < 500) {
+    attempts++;
+    fieldsData = config.fields.map((field, index) => { const val = parseInt(document.getElementById(`gen-field-${index}`).value) || field.standard; let nums; if (activeMode === "reverse") nums = generateSetReverse(val, field.total, exclusions[index], inclusions[index]); else nums = generateSet(val, field.total, exclusions[index], inclusions[index]); if (!nums) return null; return { nums: nums, total: field.total, required: field.standard, color: COLORS[index % COLORS.length] }; });
+    if (fieldsData.includes(null)) { if(errorsShown < 1) alert("Ошибка генерации! Проверьте настройки."); errorsShown++; return; }
+    const mainNums = fieldsData[0].nums; let pass = true;
+    if (pass && useSumRange) { const currentSum = mainNums.reduce((a, b) => a + b, 0); if (currentSum < sumMin || currentSum > sumMax) pass = false; }
+    if (pass && useEvenOdd) { const evenCount = mainNums.filter(n => n % 2 === 0).length; const oddCount = mainNums.length - evenCount; if (targetEven !== -1 && evenCount !== targetEven) pass = false; if (targetOdd !== -1 && oddCount !== targetOdd) pass = false; }
+    if (pass && useTails && minTails !== -1) { const tails = new Set(mainNums.map(n => n % 10)); if (tails.size < minTails) pass = false; }
+    if (pass && usePairs && pairRules.length > 0) { for(let rule of pairRules) { const actualCount = countSequences(mainNums, rule.length); if (actualCount !== rule.count) { pass = false; break; } } }
+    if (pass && useRepeats && prevDrawNums.length > 0) { const matchCount = mainNums.filter(n => prevDrawNums.includes(n)).length; if (repeatMinLimit !== -1 && matchCount < repeatMinLimit) pass = false; if (pass && repeatMaxLimit !== -1 && matchCount > repeatMaxLimit) pass = false; }
+    if (pass && useTens && maxInTenLimit !== -1) { const tens = {}; mainNums.forEach(n => { const decade = Math.floor((n - 1) / 10); if (!tens[decade]) tens[decade] = 0; tens[decade]++; }); for (let dec in tens) { if (tens[dec] > maxInTenLimit) { pass = false; break; } } }
+    if (pass) ticketValid = true;
+    }
+    if (!ticketValid) { if(errorsShown < 1) alert(`Не удалось подобрать комбинацию (попыток: 500). Ослабьте условия.`); errorsShown++; return; }
+    ticketsData.push({ id: i + 1, type: type, fields: fieldsData, cost: priceInfo.cost, win: 0, checked: false });
+    }
+}
+
+/* Сохраняем билеты для антирежима */
+previousNormalTickets = JSON.parse(JSON.stringify(ticketsData));
+
+/* Обновляем индикатор антирежима */
+const indicator = document.getElementById('modeIndicator');
+if (activeMode === 'normal' || activeMode === 'reverse') {
+    indicator.textContent = '✅ Сгенерировано ' + ticketsData.length + ' билетов. Можно включить Антирежим и перегенерировать.';
+    indicator.classList.add('visible');
+}
+
+if (ticketsData.length > 0) { renderTickets(); document.getElementById('checkPanel').style.display = 'block'; document.getElementById('exportBtn').style.display = 'flex'; document.getElementById('summaryBox').style.display = 'none'; document.getElementById('statsBox').style.display = 'none'; }
+else { output.innerHTML = '<div class="empty-state">Не удалось сгенерировать билеты.</div>'; }
+}
+
+function exportCSV() { if(ticketsData.length === 0) return; const type = document.getElementById('lotterySelect').value; const config = LOTTERIES[type]; let csvContent = "\ufeff"; let headers = ["Название Лотереи"]; config.fields.forEach((f, i) => headers.push(`Поле ${i+1}`)); headers.push("Выигрыш"); csvContent += headers.join(";") + "\r\n"; ticketsData.forEach(ticket => { let row = []; row.push(config.name); ticket.fields.forEach(f => { row.push(f.nums.join(' ')); }); row.push(ticket.win || 0); csvContent += row.join(";") + "\r\n"; }); var blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' }); var link = document.createElement("a"); var url = URL.createObjectURL(blob); link.setAttribute("href", url); link.setAttribute("download", "lottery_export.csv"); link.style.visibility = 'hidden'; document.body.appendChild(link); link.click(); document.body.removeChild(link); }
+
+function renderTickets() { 
+    const output = document.getElementById('resultsArea'); 
+    output.innerHTML = ''; 
+    const type = document.getElementById('lotterySelect').value; 
+    ticketsData.forEach(ticket => { 
+        const ticketDiv = document.createElement('div'); 
+        ticketDiv.className = 'res-item'; 
+        if(ticket.win > 0) ticketDiv.classList.add('winner'); 
+        let sumDisplay = ''; 
+        let sum = 0; 
+        ticket.fields.forEach(f => { f.nums.forEach(n => sum += n); });
+        sumDisplay = `<span class="res-sum-badge">Сумма чисел: ${sum}</span>`; 
+        let ballsHtml = ticket.fields.map((f, fIdx) => { 
+            return f.nums.map(n => { 
+                let isMatch = false; 
+                if (ticket.checked && lastDrawnNumbers[fIdx]) { if (lastDrawnNumbers[fIdx].includes(n)) isMatch = true; } 
+                let classes = `ball ${f.color}`; if(isMatch) classes += " matched"; if (type === 'sumFortune') classes += " ball-dice"; return `<div class="${classes}">${n}</div>`; 
+            }).join(''); 
+        }).join('<span class="separator">|</span>'); 
+        let winDisplay = ''; 
+        if(ticket.checked) { if(ticket.win > 0) winDisplay = `<span class="win-badge">+ ${ticket.win.toLocaleString('ru')} ₽</span>`; else winDisplay = `<span style="color:#999; font-size:12px;">нет выигрыша</span>`; } 
+        ticketDiv.innerHTML = `<div class="res-header"><span>Билет #${ticket.id}</span><span style="font-size:12px; color:#888;">Стоимость: ${ticket.cost.toLocaleString('ru')} ₽</span>${winDisplay}</div><div class="balls-container">${ballsHtml} ${sumDisplay}</div>`; 
+        output.appendChild(ticketDiv); 
+    }); 
+}
+
+function parseInput(str) { if(!str) return []; return str.trim().split(/\s+/).map(Number).filter(n => !isNaN(n)); }
+
+function calculateWinnings() {
+const type = document.getElementById('lotterySelect').value; const config = LOTTERIES[type];
+let totalWin = 0, totalCost = 0, winningTicketsCount = 0; let categoryStats = {};
+if (type === 'sumFortune') {
+    const rawInput = parseInput(document.getElementById(`check-field-0`).value); const price = parseInt(document.getElementById('ticketPrice').value) || 250; const isValidDraw = rawInput.length === 6;
+    if (isValidDraw) { lastDrawnNumbers = rawInput.map(n => [n]); } else { lastDrawnNumbers = []; }
+    const drawnSum = isValidDraw ? rawInput.reduce((a, b) => a + b, 0) : -1; const activeSumBtns = document.querySelectorAll('#sumBetsGrid .bet-btn.active');
+    activeSumBtns.forEach(btn => { const val = parseInt(btn.querySelector('.val').innerText); totalCost += price; if (isValidDraw && val === drawnSum) { const prize = config.rules.sum[drawnSum]; if (prize) { totalWin += prize; let catName = `Сумма: ${drawnSum}`; if(!categoryStats[catName]) categoryStats[catName] = {count: 0, unitPrize: prize, total: 0}; categoryStats[catName].count++; categoryStats[catName].total += prize; } } });
+    const drawnArr = rawInput; const activeComboBtns = document.querySelectorAll('#comboBetsGrid .bet-btn.active');
+    activeComboBtns.forEach(btn => { const name = btn.querySelector('.val').innerText; totalCost += price; if (isValidDraw) { const rule = config.rules.combination.find(r => r.name === name); if (rule && rule.check(drawnArr)) { totalWin += rule.prize; let catName = `Комбинация: ${rule.name}`; if(!categoryStats[catName]) categoryStats[catName] = {count: 0, unitPrize: rule.prize, total: 0}; categoryStats[catName].count++; categoryStats[catName].total += rule.prize; } } });
+    ticketsData.forEach(ticket => { 
+        totalCost += ticket.cost; 
+        if (isValidDraw) { 
+            const cartesian = (arr) => arr.reduce((a, b) => a.flatMap(x => b.map(y => [...x, y])), [[]]);
+            const positions = ticket.fields.map(f => f.nums); const allCombinations = cartesian(positions);
+            let ticketTotalWin = 0;
+            allCombinations.forEach(combo => {
+                let posMatches = 0; combo.forEach((num, idx) => { if(num === rawInput[idx]) posMatches++; });
+                if (config.rules.position[posMatches]) { const prize = config.rules.position[posMatches]; ticketTotalWin += prize; let catName = `Позиция: ${posMatches} из 6`; if(!categoryStats[catName]) categoryStats[catName] = {count: 0, unitPrize: prize, total: 0}; categoryStats[catName].count++; categoryStats[catName].total += prize; }
+            });
+            ticket.win = ticketTotalWin; totalWin += ticketTotalWin; ticket.checked = true; if(ticketTotalWin > 0) winningTicketsCount++;
+        } 
+    });
+    renderTickets();
+} else {
+    lastDrawnNumbers = config.fields.map((field, index) => parseInput(document.getElementById(`check-field-${index}`).value));
+    ticketsData.forEach(ticket => {
+    let ticketWin = 0; totalCost += ticket.cost;
+    const matches = ticket.fields.map((f, i) => f.nums.filter(n => lastDrawnNumbers[i].includes(n)).length);
+    if (type === '5x36' || type === 'top12' || type === 'dd12') {
+    const k = matches[0]; const n = ticket.fields[0].nums.length; const req = ticket.fields[0].required;
+    const prizeKeys = Object.keys(config.prizes);
+    prizeKeys.forEach(key => {
+    let catName = ""; let count = 0; let prizeVal = config.prizes[key];
+    if(type === 'top12' || type === 'dd12') { if(key == 0) { if(k === 0) { catName = "0 угадано"; count = 1; } } else { const m = parseInt(key); if (k >= m) { count = combinations(k, m) * combinations(n - k, req - m); catName = m + " угадано"; } } }
+    else { const m = parseInt(key); if (k >= m) { count = combinations(k, m) * combinations(n - k, req - m); catName = m + " угадано"; } }
+    if(count > 0) { const winSum = count * prizeVal; ticketWin += winSum; if(!categoryStats[catName]) categoryStats[catName] = {count: 0, unitPrize: prizeVal, total: 0}; categoryStats[catName].count += count; categoryStats[catName].total += winSum; }
+    });
+    } else {
+    config.prizes.forEach(rule => {
+    const cash = rule[rule.length - 1]; const reqs = rule.slice(0, -1); let isValid = true; let combos = 1;
+    ticket.fields.forEach((f, idx) => { const matchCount = matches[idx]; const reqMatch = reqs[idx]; if (matchCount >= reqMatch) combos *= combinations(matchCount, reqMatch) * combinations(f.nums.length - matchCount, f.required - reqMatch); else isValid = false; });
+    if(isValid && combos > 0) { const winSum = combos * cash; ticketWin += winSum; let catName = reqs.join('+'); if(!categoryStats[catName]) categoryStats[catName] = {count: 0, unitPrize: cash, total: 0}; categoryStats[catName].count += combos; categoryStats[catName].total += winSum; }
+    });
+    }
+    ticket.win = ticketWin; ticket.checked = true; totalWin += ticketWin; if(ticketWin > 0) winningTicketsCount++;
+    });
+    renderTickets();
+}
+updateStatsUI(totalCost, totalWin, winningTicketsCount, categoryStats);
+}
+
+function updateStatsUI(cost, win, winTickets, stats) {
+const totalTickets = ticketsData.length; let totalBetsCount = 0; for(let key in stats) { totalBetsCount += stats[key].count; }
+if(document.getElementById('lotterySelect').value === 'sumFortune') { let uiBets = document.querySelectorAll('#sumBetsGrid .bet-btn.active, #comboBetsGrid .bet-btn.active').length; document.getElementById('statTotal').innerText = totalTickets + uiBets; document.getElementById('statWinTickets').innerText = totalBetsCount; } else { document.getElementById('statTotal').innerText = totalTickets; document.getElementById('statWinTickets').innerText = winTickets; }
+const detailsContainer = document.getElementById('winDetailsContainer'); let tableHtml = '';
+let sortedKeys = Object.keys(stats).sort((a, b) => { if(a.includes('+')) return 1; return parseInt(b) - parseInt(a); });
+if(sortedKeys.length > 0) { tableHtml = '<table class="win-table"><thead><tr><th>Категория</th><th>Сумма</th><th>Кол-во</th><th>Итого</th></tr></thead><tbody>'; sortedKeys.forEach(key => { tableHtml += `<tr><td>${key}</td><td class="sum-col">${formatMoney(stats[key].unitPrize)}</td><td class="num-col">${stats[key].count} шт.</td><td class="sum-col">${formatMoney(stats[key].total)}</td></tr>`; }); tableHtml += '</tbody></table>'; }
+else { tableHtml = '<div style="text-align:center; color:#999; padding:10px;">Выигрышных комбинаций нет</div>'; }
+detailsContainer.innerHTML = tableHtml;
+const discountInput = document.getElementById('discountInput'); const discountVal = parseFloat(discountInput.value) || 0;
+let finalCost = cost; if (discountVal > 0) finalCost = cost * (1 - discountVal / 100);
+const profit = win - finalCost;
+document.getElementById('sumCost').innerText = formatMoney(finalCost); document.getElementById('sumWin').innerText = formatMoney(win);
+let percentText = "0%"; if(finalCost > 0) percentText = Math.round((win / finalCost) * 100) + "%"; document.getElementById('sumPercent').innerText = percentText;
+const profitEl = document.getElementById('sumProfit'); profitEl.innerText = (profit >= 0 ? '+' : '') + profit.toLocaleString('ru') + ' ₽'; profitEl.className = 'summary-val ' + (profit >= 0 ? 'profit-positive' : 'profit-negative');
+document.getElementById('statsBox').style.display = 'block'; document.getElementById('summaryBox').style.display = 'flex';
+}
+
+
+/* === РЕЖИМЫ ГЕНЕРАЦИИ === */
+let activeMode = 'normal'; // 'normal', 'reverse', 'anti'
+
+function toggleMode(mode) {
+    if (activeMode === mode) { activeMode = 'normal'; }
+    else { activeMode = mode; }
+    document.getElementById('modeReverse').classList.toggle('active', activeMode === 'reverse');
+    document.getElementById('modeAnti').classList.toggle('active', activeMode === 'anti');
+    /* Показать/скрыть поле 'Оставить N чисел' */
+    document.getElementById('antiKeepRow').style.display = (activeMode === 'anti') ? 'flex' : 'none';
+    const indicator = document.getElementById('modeIndicator');
+    if (activeMode === 'reverse') { indicator.textContent = '⚡ Режим: С КОНЦА ДИАПАЗОНА — приоритет старшим числам'; indicator.classList.add('visible'); }
+    else if (activeMode === 'anti') {
+        const keepN = parseInt(document.getElementById('antiKeepCount').value) || 0;
+        const keepText = keepN > 0 ? `, оставляя ${keepN} чисел` : '';
+        indicator.textContent = previousNormalTickets.length > 0
+            ? `🛡️ АНТИРЕЖИМ ВКЛ — исключаются числа из ${previousNormalTickets.length} билетов${keepText}. Нажмите «Сгенерировать»!`
+            : '🛡️ АНТИРЕЖИМ ВКЛ — сначала сгенерируйте билеты в обычном режиме';
+        indicator.classList.add('visible');
+    }
+    else { indicator.textContent = ''; indicator.classList.remove('visible'); }
+}
+
+/* Взвешенный рандом с приоритетом старшим числам */
+function getRandIntReverse(min, max) {
+    // Квадратичный вес: чем больше число, тем выше вероятность
+    const range = max - min + 1;
+    const weights = [];
+    let totalWeight = 0;
+    for (let i = 0; i < range; i++) {
+        const w = (i + 1) * (i + 1); // квадратичный рост веса
+        weights.push(w);
+        totalWeight += w;
+    }
+    let r = Math.random() * totalWeight;
+    for (let i = 0; i < range; i++) {
+        r -= weights[i];
+        if (r <= 0) return min + i;
+    }
+    return max;
+}
+
+/* Генерация набора чисел с приоритетом старшим */
+function generateSetReverse(count, total, excluded, included) {
+    const arr = [...included];
+    let attempts = 0;
+    const maxAttempts = 1000;
+    if (included.length > count) return null;
+    if (new Set(included).size !== included.length) return null;
+    for (let n of included) { if (n < 1 || n > total) return null; if (excluded && excluded.includes(n)) return null; }
+    while (arr.length < count) {
+        if (attempts++ > maxAttempts) return null;
+        const r = getRandIntReverse(1, total);
+        if (arr.indexOf(r) !== -1) continue;
+        if (excluded && excluded.includes(r)) continue;
+        arr.push(r);
+    }
+    return arr.sort((a, b) => a - b);
+}
+
+/* === АНТИРЕЖИМ: хранение предыдущих билетов для исключения === */
+let previousNormalTickets = []; // сохраняем билеты обычной генерации
+
+function countSequences(sorted, seqLen) {
+    if (!sorted || sorted.length < seqLen) return 0;
+    let count = 0;
+    for (let i = 0; i <= sorted.length - seqLen; i++) {
+        let isSeq = true;
+        for (let j = 1; j < seqLen; j++) {
+            if (sorted[i + j] !== sorted[i] + j) { isSeq = false; break; }
+        }
+        if (isSeq) count++;
+    }
+    return count;
+}
+
+
+window.onload = () => { onLotteryChange(); };
+</script>
+</body>
+</html>
