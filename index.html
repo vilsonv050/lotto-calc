@@ -1,1 +1,104 @@
 
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NLOTO System</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap');
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { height: 100vh; font-family: 'Inter', 'Segoe UI', system-ui, sans-serif; background: #050508; color: #fff; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+        .bg-blobs { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; overflow: hidden; pointer-events: none; }
+        .blob { position: absolute; width: 500px; height: 500px; border-radius: 50%; filter: blur(80px); opacity: 0.4; animation: float 10s infinite alternate ease-in-out; }
+        .blob-1 { background: #FF9800; top: -100px; left: -100px; }
+        .blob-2 { background: #4CAF50; bottom: -100px; right: -100px; animation-delay: -3s; }
+        .blob-3 { background: #2196F3; top: 50%; left: 50%; transform: translate(-50%, -50%); animation-delay: -6s; }
+        @keyframes float { 0% { transform: translate(0, 0) scale(1); } 33% { transform: translate(50px, -50px) scale(1.1); } 66% { transform: translate(-30px, 30px) scale(0.9); } 100% { transform: translate(20px, -20px) scale(1.05); } }
+        .screen { position: absolute; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; flex-direction: column; z-index: 10; opacity: 0; transform: scale(0.95) translateY(20px); transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1); pointer-events: none; }
+        .screen.active { opacity: 1; transform: scale(1) translateY(0); pointer-events: all; }
+        .glass { background: rgba(20, 20, 35, 0.65); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); border-radius: 24px; padding: 48px; text-align: center; max-width: 420px; width: 90%; }
+        .lock-icon { width: 64px; height: 64px; background: linear-gradient(135deg, #f44336, #c62828); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px auto; box-shadow: 0 0 30px rgba(244, 67, 54, 0.4); font-size: 28px; }
+        .lock-title { font-size: 24px; font-weight: 800; margin-bottom: 8px; color: #fff; }
+        .lock-sub { font-size: 14px; color: #666; margin-bottom: 32px; line-height: 1.5; }
+        .input-group { position: relative; margin-bottom: 24px; }
+        .pwd-input { width: 100%; background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 16px 20px; color: #fff; font-size: 16px; font-family: inherit; outline: none; transition: all 0.3s ease; }
+        .pwd-input:focus { border-color: rgba(244, 67, 54, 0.5); box-shadow: 0 0 0 4px rgba(244, 67, 54, 0.1); }
+        .pwd-input::placeholder { color: #444; }
+        .btn-unlock { width: 100%; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.1); color: #fff; padding: 14px; border-radius: 12px; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; font-family: inherit; }
+        .btn-unlock:hover { background: rgba(255, 255, 255, 0.15); transform: translateY(-1px); }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); } 20%, 40%, 60%, 80% { transform: translateX(5px); } }
+        .shake { animation: shake 0.5s ease-in-out; }
+        .error-text { color: #ff5252; font-size: 12px; margin-top: -16px; margin-bottom: 16px; opacity: 0; transition: opacity 0.2s; }
+        .error-text.show { opacity: 1; }
+        .logo-text { font-size: 48px; font-weight: 900; letter-spacing: -2px; background: linear-gradient(135deg, #FF9800 0%, #FF5722 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 8px; text-shadow: 0 0 40px rgba(255, 152, 0, 0.3); }
+        .ver-badge { display: inline-block; background: rgba(255, 152, 0, 0.15); color: #FF9800; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; margin-bottom: 32px; border: 1px solid rgba(255, 152, 0, 0.2); }
+        .install-desc { color: #888; font-size: 14px; line-height: 1.6; margin-bottom: 40px; }
+        .install-btn-wrap { display: inline-block; position: relative; margin-bottom: 32px; cursor: grab; }
+        .install-btn-wrap::before { content: ''; position: absolute; inset: -4px; border-radius: 20px; background: linear-gradient(135deg, #4CAF50, #00E676, #4CAF50); z-index: -1; filter: blur(12px); opacity: 0.6; transition: opacity 0.3s; }
+        .install-btn-wrap:hover::before { opacity: 1; }
+        .install-btn { display: block; background: linear-gradient(135deg, #4CAF50 0%, #43a047 100%); color: white; text-decoration: none; padding: 20px 48px; border-radius: 16px; font-size: 18px; font-weight: 800; letter-spacing: 0.5px; box-shadow: 0 10px 30px -5px rgba(76, 175, 80, 0.5); transition: all 0.3s ease; position: relative; overflow: hidden; }
+        .install-btn:active { cursor: grabbing; transform: scale(0.97); }
+        .install-btn span { position: relative; z-index: 2; }
+        .install-btn::after { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: linear-gradient(45deg, transparent 40%, rgba(255,255,255,0.3) 50%, transparent 60%); animation: btn-shine 3s infinite; }
+        @keyframes btn-shine { 0% { transform: translateX(-100%) rotate(45deg); } 20% { transform: translateX(100%) rotate(45deg); } 100% { transform: translateX(100%) rotate(45deg); } }
+        .install-hint { display: flex; align-items: center; justify-content: center; gap: 8px; color: #555; font-size: 13px; }
+        .features { display: flex; gap: 24px; margin-top: 40px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 32px; }
+        .feature { flex: 1; }
+        .feature-icon { font-size: 20px; margin-bottom: 8px; display: block; }
+        .feature-text { font-size: 12px; color: #666; line-height: 1.4; }
+    </style>
+</head>
+<body>
+    <div class="bg-blobs"><div class="blob blob-1"></div><div class="blob blob-2"></div><div class="blob blob-3"></div></div>
+    <div id="lock-screen" class="screen active">
+        <div class="glass" id="lock-card">
+            <div class="lock-icon">🔒</div>
+            <div class="lock-title">Доступ ограничен</div>
+            <div class="lock-sub">Система не является публичным ресурсом.<br>Введите ключ для продолжения.</div>
+            <div class="input-group"><input type="password" id="pwd-input" class="pwd-input" placeholder="Authorization Key..." autofocus autocomplete="off"></div>
+            <div id="error-text" class="error-text">Неверный ключ доступа</div>
+            <button class="btn-unlock" onclick="checkPassword()">Разблокировать</button>
+        </div>
+    </div>
+    <div id="main-content" class="screen">
+        <div class="glass">
+            <div class="logo-text">NLOTO</div>
+            <div class="ver-badge">VERSION 2.5.1</div>
+            <p class="install-desc">Персональная среда для выполнения,<br>хранения и синхронизации скриптов.</p>
+            <div class="install-btn-wrap">
+                <a class="install-btn" href="javascript:(function(){if(window._NLOTO){alert('NLOTO уже загружен!');return}var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/gh/vilsonv050/lotto-calc@main/loader.js';document.head.appendChild(s)})()"><span>⚡ УСТАНОВИТЬ NLOTO</span></a>
+            </div>
+            <div class="install-hint">
+                <svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M7 11l5-5m0 0l5 5m-5-5v12" /></svg>
+                Перетащите кнопку выше на панель закладок
+            </div>
+            <div class="features">
+                <div class="feature"><span class="feature-icon">☁️</span><div class="feature-text">Мгновенная синхронизация скриптов через GitHub</div></div>
+                <div class="feature"><span class="feature-icon">🛡️</span><div class="feature-text">Безопасное локальное выполнение в изоляции</div></div>
+                <div class="feature"><span class="feature-icon">⚡</span><div class="feature-text">Встроенная консоль и отладка на лету</div></div>
+            </div>
+        </div>
+    </div>
+    <script>
+        const secretHash = "MTIzNDU="; 
+        function checkPassword() {
+            const input = document.getElementById('pwd-input').value;
+            const errorText = document.getElementById('error-text');
+            const lockCard = document.getElementById('lock-card');
+            if (btoa(input) === secretHash) {
+                errorText.classList.remove('show');
+                document.getElementById('lock-screen').classList.remove('active');
+                setTimeout(() => { document.getElementById('main-content').classList.add('active'); }, 300);
+            } else {
+                errorText.classList.add('show');
+                lockCard.classList.add('shake');
+                document.getElementById('pwd-input').value = '';
+                setTimeout(() => lockCard.classList.remove('shake'), 500);
+            }
+        }
+        document.getElementById("pwd-input").addEventListener("keypress", function(event) { if (event.key === "Enter") { event.preventDefault(); checkPassword(); } });
+        document.getElementById("pwd-input").addEventListener("input", function() { document.getElementById('error-text').classList.remove('show'); });
+    </script>
+</body>
+</html>
