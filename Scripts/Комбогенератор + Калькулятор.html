@@ -21,6 +21,7 @@ body {
 font-family: -apple-system, system-ui, sans-serif;
 background: #f0f2f5; margin: 0; padding: 20px; color: var(--color-text);
 display: flex; justify-content: center; min-height: 100vh;
+zoom: 0.9;
 }
 
 /* --- ПАНЕЛЬ СПРАВА --- */
@@ -75,13 +76,14 @@ font-size: 14px; display: flex; flex-direction: column;
 /* --- ОКНО ПАРОЛЯ --- */
 .auth-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #f0f2f5; z-index: 9999; display: flex; justify-content: center; align-items: center; flex-direction: column; }
 .auth-box { background: white; padding: 40px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center; max-width: 400px; width: 90%; }
-.auth-input { padding: 15px; border: 2px solid var(--color-border); border-radius: 8px; font-size: 18px; width: 100%; margin: 20px 0; text-align: center; letter-spacing: 2px; }
+.auth-input { padding: 15px; border: 2px solid var(--color-border); border-radius: 8px; font-size: 12px; width: 100%; margin: 20px 0; text-align: center; letter-spacing: 2px; }
 .auth-btn { background: var(--color-primary); color: white; border: none; padding: 12px 40px; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; }
 .error-msg { color: var(--color-loss); margin-top: 15px; font-weight: 600; display: none; }
 
 /* --- ОСНОВНОЙ ИНТЕРФЕЙС --- */
 .container { max-width: 900px; width: 100%; background: white; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); overflow: hidden; }
-.header { background: #1a1a1a; color: white; padding: 30px; text-align: center; }
+.header { background: #1a1a1a; color: white; padding: 30px; text-align: center; position: relative; }
+.build-stamp { position: absolute; top: 12px; right: 16px; background: rgba(255,255,255,0.08); color: #e8edf5; border: 1px solid rgba(255,255,255,0.14); border-radius: 999px; padding: 6px 10px; font-size: 11px; font-weight: 700; letter-spacing: 0.3px; }
 .header h1 { margin: 0 0 10px 0; font-size: 24px; }
 .header p { margin: 0; color: #aaa; font-size: 14px; }
 .settings-panel { padding: 25px; border-bottom: 1px solid #eee; background: #fafafa; }
@@ -178,7 +180,7 @@ border-left: 3px solid var(--color-loss);
 .bet-btn { background: #f8f9fa; border: 2px solid #e0e0e0; border-radius: 8px; padding: 10px 5px; cursor: pointer; display: flex; flex-direction: column; align-items: center; transition: all 0.2s; text-align: center; min-height: 60px; }
 .bet-btn:hover { border-color: var(--color-primary); background: #f0f4ff; }
 .bet-btn.active { background: var(--color-primary); border-color: var(--color-primary); color: white; }
-.bet-btn .val { font-size: 18px; font-weight: 800; line-height: 1.2; }
+.bet-btn .val { font-size: 12px; font-weight: 800; line-height: 1.2; }
 .bet-btn .mult { font-size: 11px; font-weight: 600; opacity: 0.7; margin-top: 2px; }
 .bet-btn.active .mult { opacity: 1; color: #fff; }
 
@@ -237,6 +239,26 @@ border-left: 3px solid var(--color-loss);
 .txt-rule.wide { width: 120px !important; min-width: 120px !important; max-width: 120px !important; text-align: left; padding-left: 6px; }
 .sep { color: #999; font-size: 10px; font-weight: 700; margin: 0 2px; }
 .full-width { grid-column: 1 / -1; width: fit-content; }
+/* ===== ГИБРИД-ГЕНЕРАТОР ===== */
+.left-sidebar-section .hybrid-container { margin-bottom: 0; border: none; border-radius: 0; border-left: 3px solid #2196F3; padding: 10px 12px; }
+.hybrid-header { font-size: 12px; font-weight: 700; color: #2196F3; text-transform: uppercase; cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none; transition: color 0.2s; }
+.hybrid-header:hover { color: #1565C0; }
+.hybrid-body { display: none; margin-top: 10px; }
+.hybrid-body.active { display: block; }
+.hybrid-row { margin-bottom: 8px; }
+.hybrid-label { font-size: 11px; font-weight: 700; color: #444; display: block; margin-bottom: 4px; }
+.hybrid-input-text { width: 100%; padding: 5px 8px; font-size: 12px; border: 1px solid #ddd; border-radius: 4px; font-family: inherit; box-sizing: border-box; }
+.hybrid-input-text:focus { border-color: #2196F3; outline: none; }
+.hybrid-k-row { display: flex; align-items: center; gap: 8px; }
+.hybrid-k-input { width: 60px; padding: 5px 8px; font-size: 12px; border: 1px solid #ddd; border-radius: 4px; font-family: inherit; text-align: center; }
+.hybrid-k-input:focus { border-color: #2196F3; outline: none; }
+.hybrid-count-badge { background: #E3F2FD; color: #1565C0; border: 1px solid #90CAF9; border-radius: 4px; padding: 3px 8px; font-size: 11px; font-weight: 700; white-space: nowrap; flex-shrink: 0; }
+.hybrid-count-badge.warn { background: #FFF3E0; color: #E65100; border-color: #FFCC80; }
+.hybrid-hint { font-size: 10px; color: #888; margin-bottom: 6px; min-height: 14px; line-height: 1.3; }
+.hybrid-activate-row { display: flex; align-items: center; }
+.hybrid-toggle-label { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; color: #444; cursor: pointer; }
+.hybrid-toggle-label input[type="checkbox"] { accent-color: #2196F3; width: 14px; height: 14px; cursor: pointer; margin: 0; }
+
 @media (max-width: 600px) { .adv-grid { grid-template-columns: 1fr; } .full-width { grid-column: 1 / -1; } }
 /* --- РЕЖИМЫ ГЕНЕРАЦИИ --- */
 .gen-modes-container {
@@ -285,11 +307,13 @@ font-size: 16px; font-weight: 700; text-align: center; color: #c2185b; backgroun
 #row-prevdraw.active { display: flex; }
 
 /* --- КНОПКИ --- */
-.buttons-row { display: flex; gap: 10px; }
-.btn-main { flex: 3; padding: 15px; background: var(--color-primary); color: white; border: none; border-radius: 8px; font-size: 18px; font-weight: 600; cursor: pointer; transition: 0.2s; }
+.buttons-row { display: flex; gap: 10px; align-items: stretch; flex-wrap: wrap; }
+.btn-main { flex: 1 1 260px; padding: 8.4px 18.9px; background: var(--color-primary); color: white; border: none; border-radius: 8px; font-size: 15.75px; line-height: 1.1; font-weight: 600; cursor: pointer; transition: 0.2s; }
 .btn-main:hover { opacity: 0.9; }
-.btn-clear { flex: 1; padding: 15px; background: white; color: #d93025; border: 2px solid #d93025; border-radius: 8px; font-size: 18px; font-weight: 600; cursor: pointer; transition: 0.2s; }
+.btn-calc { background: var(--color-secondary); }
+.btn-clear { flex: 0 0 140px; padding: 8.4px 18.9px; background: white; color: #d93025; border: 2px solid #d93025; border-radius: 8px; font-size: 15.75px; line-height: 1.1; font-weight: 600; cursor: pointer; transition: 0.2s; }
 .btn-clear:hover { background: #fff5f5; }
+@media (max-width: 700px) { .buttons-row { flex-direction: column; } .btn-main, .btn-clear { flex: 1 1 auto; width: 100%; } }
 .btn-export { width: 100%; margin-top: 10px; padding: 12px; background: white; color: var(--color-text); border: 2px solid var(--color-border); border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; display: none; justify-content: center; align-items: center; gap: 10px; }
 .btn-export:hover { background: #f9fafb; }
 /* --- ПАНЕЛЬ ПРОВЕРКИ --- */
@@ -333,6 +357,27 @@ font-size: 16px; font-weight: 700; text-align: center; color: #c2185b; backgroun
 .separator { font-size: 20px; color: #ccc; margin: 0 5px; }
 .win-badge { background: var(--color-win); color: white; padding: 3px 8px; border-radius: 4px; font-size: 12px; font-weight: 700; }
 .empty-state { text-align: center; color: #999; padding: 40px 0; width: 100%; }
+.package-mode-row { margin-top: 10px; padding: 10px 12px; border: 1px solid var(--color-border); border-radius: 10px; background: #fafafa; display: flex; align-items: center; gap: 10px; }
+.package-mode-row input { width: 18px; height: 18px; }
+.package-mode-hint { font-size: 12px; color: #777; }
+.package-group { background: #fff; border: 1px solid var(--color-border); border-radius: 12px; overflow: hidden; margin-bottom: 14px; }
+.package-header { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 14px 16px; background: #f7f9fc; cursor: pointer; border-bottom: 1px solid var(--color-border); }
+.package-header-left { display: flex; flex-direction: column; gap: 5px; }
+.package-title { font-weight: 800; color: #1f2c3d; }
+.package-subtitle { font-size: 12px; color: #667; }
+.package-header-right { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+.package-pill { background: #e9eef8; color: #29415f; border-radius: 999px; padding: 4px 8px; font-size: 12px; font-weight: 700; }
+.package-body { padding: 12px; display: none; }
+.package-body.active { display: block; }
+        .package-inline-stats { padding: 0 12px 12px; }
+        .package-inline-stats .package-stat-card { margin-top: 12px; }
+.package-stats-list { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; }
+.package-stat-card { border: 1px solid var(--color-border); border-radius: 12px; padding: 12px 14px; background: #fff; }
+.package-stat-title { font-weight: 800; color: #1f2c3d; margin-bottom: 8px; }
+.package-stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; }
+.package-stat-item { background: #f8fafc; border-radius: 10px; padding: 10px; }
+.package-stat-label { font-size: 11px; color: #7b8794; text-transform: uppercase; margin-bottom: 4px; }
+.package-stat-value { font-size: 16px; font-weight: 800; color: #1f2c3d; }
 </style>
 </head>
 <body>
@@ -520,18 +565,39 @@ font-size: 16px; font-weight: 700; text-align: center; color: #c2185b; backgroun
 </div>
 </div>
 </div>
+<div class="left-sidebar-section">
+<!-- БЛОК ГИБРИД-ГЕНЕРАТОРА -->
+<div class="hybrid-container">
+<div class="hybrid-header" onclick="toggleHybrid()">
+<span>🧬 Генератор Гибрид</span>
+<span class="toggle-icon" id="hybrid-toggle-icon">+</span>
 </div>
-<div id="authOverlay" class="auth-overlay">
-<div class="auth-box">
-<h2 style="margin-bottom:10px;">🔐 Введите пароль</h2>
-<p style="color:#666; font-size:14px;">Доступ к генератору ограничен</p>
-<input type="password" id="passInput" class="auth-input" placeholder="Пароль..." autofocus>
-<button class="auth-btn" onclick="checkPass()">Войти</button>
-<div id="errorMsg" class="error-msg">Неверный пароль!</div>
+<div class="hybrid-body" id="hybrid-body">
+<div class="hybrid-row">
+<label class="hybrid-label">Поле 1 — фиксированные числа:</label>
+<input type="text" id="hybridNumbers" class="hybrid-input-text" placeholder="Например: 1 2 3 4 5 6" oninput="updateHybridCount()">
+</div>
+<div class="hybrid-row">
+<label class="hybrid-label">Поле 2 — фиксировать K чисел:</label>
+<div class="hybrid-k-row">
+<input type="number" id="hybridK" class="hybrid-k-input" placeholder="K" min="1" oninput="updateHybridCount()">
+<span class="hybrid-count-badge" id="hybridCountBadge">— билетов</span>
+</div>
+</div>
+<div class="hybrid-hint" id="hybridHint"></div>
+<div class="hybrid-activate-row">
+<label class="hybrid-toggle-label">
+<input type="checkbox" id="hybridActive" onchange="updateHybridCount()">
+<span>Активировать Гибрид-режим</span>
+</label>
+</div>
+</div>
+</div>
 </div>
 </div>
 <div class="container">
 <div class="header">
+<div class="build-stamp" id="buildStamp">Доработка v23 • 17.04.2026</div>
 <h1>🎰 Комбогенератор + Калькулятор</h1>
 <p>Генерация, экспорт и детальная статистика</p>
 <div class="mode-indicator-bar" id="modeIndicator"></div>
@@ -563,19 +629,20 @@ font-size: 16px; font-weight: 700; text-align: center; color: #c2185b; backgroun
 </div>
 <div class="field-inputs-container" id="fieldInputsContainer"></div>
 <div class="cost-info" id="costInfo">Базовая ставка</div>
+<div class="package-mode-row"><input type="checkbox" id="packageMode"><label for="packageMode"><strong>Покупка пакетами</strong></label><span class="package-mode-hint">Каждое нажатие «Сгенерировать» добавляет новый пакет на один тираж</span></div>
 
 
 
 <div class="buttons-row">
 <button class="btn-main" onclick="generateAll()">🎲 Сгенерировать</button>
-<button class="btn-clear" onclick="clearAll()" title="Очистить всё">🗑️</button>
+<button class="btn-main btn-calc" onclick="calculateWinnings()">💰 Посчитать выигрыш</button>
+<button class="btn-clear" onclick="clearAll()" title="Очистить всё">🗑️ Очистить</button>
 </div>
 <button class="btn-export" onclick="exportCSV()" id="exportBtn">📁 Выгрузить в CSV (Excel)</button>
 </div>
 <div class="check-panel" id="checkPanel" style="display:none;">
 <div class="check-title">🎯 Введите выпавшую комбинацию:</div>
 <div class="field-inputs-container" style="border-color: var(--color-primary);" id="checkInputsContainer"></div>
-<button class="btn-main" style="background: var(--color-secondary); margin-top:10px;" onclick="calculateWinnings()">💰 Посчитать выигрыш</button>
 <div class="stats-box" id="statsBox" style="display:none;">
 <div class="stats-title">📊 Статистика</div>
 <div class="discount-box">
@@ -598,23 +665,196 @@ font-size: 16px; font-weight: 700; text-align: center; color: #c2185b; backgroun
 </div>
 </div>
 <script>
-/* --- ПАРОЛЬ --- */
-const VALID_PASS_HASH = '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918';
-async function checkPass() {
-    const inputVal = document.getElementById('passInput').value;
-    const buffer = new TextEncoder().encode(inputVal);
-    try {
-        const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
-        const hashArray = Array.from(new Uint8Array(hashBuffer));
-        const inputHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-        if (inputHash === VALID_PASS_HASH) document.getElementById('authOverlay').style.display = 'none';
-        else document.getElementById('errorMsg').style.display = 'block';
-    } catch (e) {
-        if (inputVal === 'admin') document.getElementById('authOverlay').style.display = 'none';
-        else document.getElementById('errorMsg').style.display = 'block';
-    }
+
+/* ========== ГИБРИД-ГЕНЕРАТОР ========== */
+function toggleHybrid() {
+    var body = document.getElementById('hybrid-body');
+    var icon = document.getElementById('hybrid-toggle-icon');
+    body.classList.toggle('active');
+    icon.textContent = body.classList.contains('active') ? '\u2212' : '+';
 }
-document.getElementById('passInput').addEventListener("keyup", e => { if (e.key === "Enter") checkPass(); });
+
+function parseHybridNumbers() {
+    var val = document.getElementById('hybridNumbers').value;
+    if (!val.trim()) return [];
+    var seen = {};
+    return val.trim().split(/[\s,;]+/).map(Number).filter(function(n) {
+        if (isNaN(n) || n <= 0) return false;
+        if (seen[n]) return false;
+        seen[n] = true; return true;
+    });
+}
+
+function getCombinations(arr, k) {
+    if (k <= 0 || k > arr.length) return [];
+    if (k === arr.length) return [arr.slice()];
+    if (k === 1) return arr.map(function(n) { return [n]; });
+    var result = [];
+    for (var i = 0; i <= arr.length - k; i++) {
+        var rest = getCombinations(arr.slice(i + 1), k - 1);
+        rest.forEach(function(combo) { result.push([arr[i]].concat(combo)); });
+    }
+    return result;
+}
+
+function updateHybridCount() {
+    var nums = parseHybridNumbers();
+    var k = parseInt(document.getElementById('hybridK').value);
+    var badge = document.getElementById('hybridCountBadge');
+    var hint = document.getElementById('hybridHint');
+    if (!nums.length || isNaN(k) || k < 1) {
+        badge.textContent = '— билетов';
+        badge.className = 'hybrid-count-badge';
+        hint.textContent = nums.length ? 'Введите K в Поле 2' : 'Введите числа в Поле 1';
+        return;
+    }
+    var type = document.getElementById('lotterySelect').value;
+    if (!ensurePackageModeLottery(type)) return false;
+    var config = LOTTERIES[type];
+    var fieldTotal = config.fields[0].total;
+    var fieldCountEl = document.getElementById('gen-field-0');
+    var totalNeeded = fieldCountEl ? (parseInt(fieldCountEl.value) || config.fields[0].standard) : config.fields[0].standard;
+    var ticketsWanted = parseInt(document.getElementById('ticketCount').value) || 1;
+    if (k > totalNeeded) {
+        badge.textContent = 'K слишком большое!';
+        badge.className = 'hybrid-count-badge warn';
+        hint.textContent = 'Для ' + config.name + ' нужно K ≤ ' + totalNeeded;
+        return;
+    }
+    if (k > nums.length) {
+        badge.textContent = 'K > чисел';
+        badge.className = 'hybrid-count-badge warn';
+        hint.textContent = 'K=' + k + ', но в Поле 1 только ' + nums.length + ' чисел';
+        return;
+    }
+    var badNums = nums.filter(function(n) { return n < 1 || n > fieldTotal; });
+    if (badNums.length) {
+        badge.textContent = 'Число вне диапазона!';
+        badge.className = 'hybrid-count-badge warn';
+        hint.textContent = 'Числа ' + badNums.join(', ') + ' вне диапазона 1–' + fieldTotal;
+        return;
+    }
+    var count = getCombinations(nums, k).length;
+    var totalTickets = count * ticketsWanted;
+    var isWarn = totalTickets > 3000;
+    badge.textContent = totalTickets.toLocaleString('ru') + ' билетов';
+    badge.className = 'hybrid-count-badge' + (isWarn ? ' warn' : '');
+    hint.textContent = isWarn
+        ? '⚠️ Много билетов: C(' + nums.length + ',' + k + ') × ' + ticketsWanted + ' = ' + totalTickets.toLocaleString('ru')
+        : 'C(' + nums.length + ', ' + k + ') × ' + ticketsWanted + ' = ' + totalTickets.toLocaleString('ru') + ' билетов';
+}
+
+function generateHybrid() {
+    var hybridNums = parseHybridNumbers();
+    var k = parseInt(document.getElementById('hybridK').value);
+    var type = document.getElementById('lotterySelect').value;
+    var config = LOTTERIES[type];
+    if (type === 'sumFortune') {
+        alert('Гибрид не поддерживается для «Сумма Фортуны».');
+        return false;
+    }
+    var field0El = document.getElementById('gen-field-0');
+    var totalNeeded = field0El ? (parseInt(field0El.value) || config.fields[0].standard) : config.fields[0].standard;
+    var fieldTotal = config.fields[0].total;
+    var priceInfo = updateCostInfo();
+    var ticketsWanted = parseInt(document.getElementById('ticketCount').value) || 1;
+    var exclusions = config.fields.map(function(field, index) {
+        var textarea = document.getElementById('exclude-field-' + index);
+        return textarea ? parseNumbers(textarea.value) : [];
+    });
+    var inclusions = config.fields.map(function(field, index) {
+        var textarea = document.getElementById('include-field-' + index);
+        return textarea ? parseNumbers(textarea.value) : [];
+    });
+    if (!hybridNums.length || isNaN(k) || k < 1) {
+        alert('Гибрид: заполните Поле 1 и Поле 2 в настройках слева.');
+        return false;
+    }
+    if (k > totalNeeded) {
+        alert('Гибрид: K (' + k + ') не может превышать число чисел в поле 1 (' + totalNeeded + ').');
+        return false;
+    }
+    if (k > hybridNums.length) {
+        alert('Гибрид: K (' + k + ') не может превышать количество чисел в Поле 1 (' + hybridNums.length + ').');
+        return false;
+    }
+    var badNums = hybridNums.filter(function(n) { return n < 1 || n > fieldTotal; });
+    if (badNums.length) {
+        alert('Гибрид: числа ' + badNums.join(', ') + ' вне диапазона 1–' + fieldTotal + '.');
+        return false;
+    }
+    var fixedCombos = getCombinations(hybridNums, k);
+    var totalTicketsPlanned = fixedCombos.length * ticketsWanted;
+    if (totalTicketsPlanned > 3000) {
+        if (!confirm('Гибрид сгенерирует ' + totalTicketsPlanned.toLocaleString('ru') + ' билетов. Продолжить?')) return false;
+    }
+    var output = document.getElementById('resultsArea');
+    output.innerHTML = '';
+    ticketsData = []; lastDrawnNumbers = [];
+    var errorsShown = 0;
+    var baseInclude0 = (inclusions[0] || []).filter(function(n) { return hybridNums.indexOf(n) === -1; });
+    var baseExclude0 = exclusions[0] || [];
+    for (var i = 0; i < fixedCombos.length; i++) {
+        var fixedNums = fixedCombos[i];
+        var include0 = Array.from(new Set(baseInclude0.concat(fixedNums)));
+        var exclude0 = baseExclude0.filter(function(n) { return fixedNums.indexOf(n) === -1; });
+        if (include0.some(function(n) { return exclude0.indexOf(n) !== -1; })) {
+            if (errorsShown < 1) alert('Гибрид: числа поля 1 одновременно попали в «Включить» и «Исключить».');
+            errorsShown++;
+            continue;
+        }
+        for (var copy = 0; copy < ticketsWanted; copy++) {
+            if (config.fields.length === 1) {
+                var tnums = null; var attempts = 0;
+                while (!tnums && attempts < 1000) { attempts++; tnums = generateSet(totalNeeded, fieldTotal, exclude0, include0); }
+                if (!tnums) { if (errorsShown < 1) alert('Гибрид: не удалось добрать числа с учетом фильтров «Включить/Исключить».'); errorsShown++; continue; }
+                ticketsData.push({ id: ticketsData.length + 1, type: type,
+                    fields: [{ nums: tnums, total: fieldTotal, required: config.fields[0].standard, color: COLORS[0] }],
+                    cost: priceInfo.cost, win: 0, checked: false });
+            } else {
+                var fieldsData = config.fields.map(function(field, idx) {
+                    var genEl = document.getElementById('gen-field-' + idx);
+                    var val = genEl ? (parseInt(genEl.value) || field.standard) : field.standard;
+                    var inc = inclusions[idx] || [];
+                    var exc = exclusions[idx] || [];
+                    if (idx === 0) {
+                        inc = include0;
+                        exc = exclude0;
+                    }
+                    if (inc.some(function(n) { return exc.indexOf(n) !== -1; })) return null;
+                    var t = null; var a = 0;
+                    while (!t && a < 1000) { a++; t = generateSet(val, field.total, exc, inc); }
+                    if (!t) return null;
+                    return { nums: t, total: field.total, required: field.standard, color: COLORS[idx % COLORS.length] };
+                });
+                if (fieldsData.indexOf(null) !== -1) { if (errorsShown < 1) alert('Гибрид: ошибка генерации билета ' + (i + 1) + ' с учетом фильтров.'); errorsShown++; continue; }
+                ticketsData.push({ id: ticketsData.length + 1, type: type, fields: fieldsData, cost: priceInfo.cost, win: 0, checked: false });
+            }
+        }
+    }
+    if (ticketsData.length === 0) {
+        output.innerHTML = '<div class="empty-state">Гибрид: не удалось сгенерировать билеты.</div>';
+        return true;
+    }
+    var hybridDedupeInfo = dedupeTicketsData();
+    previousNormalTickets = JSON.parse(JSON.stringify(ticketsData));
+    if (isPackageMode()) { var hybridPkg = createPackageFromCurrentTickets(type, config, priceInfo.cost, 'гибрид'); packagesData.push(hybridPkg); flattenPackagesToTickets(); }
+    renderTickets();
+    document.getElementById('checkPanel').style.display = 'block';
+    document.getElementById('exportBtn').style.display = 'flex';
+    document.getElementById('summaryBox').style.display = 'none';
+    document.getElementById('statsBox').style.display = 'none';
+    hasCalculatedStats = false;
+    var indicator = document.getElementById('modeIndicator');
+    indicator.textContent = isPackageMode() ? ('📦 Добавлен ' + packagesData[packagesData.length - 1].name + ' • пакетов: ' + packagesData.length + ' • билетов: ' + ticketsData.length) : ('🧬 Гибрид: ' + ticketsData.length + ' билетов • C(' + hybridNums.length + ', ' + k + ') × ' + ticketsWanted + ' = ' + ticketsData.length + (hybridDedupeInfo.removed > 0 ? ' • удалено дублей: ' + hybridDedupeInfo.removed : ''));
+    indicator.classList.add('visible');
+    return true;
+}
+/* ===== КОНЕЦ ГИБРИД-ГЕНЕРАТОРА ===== */
+
+/* --- ПАРОЛЬ УДАЛЁН --- */
+function checkPass(){ return true; }
+
 
 function toggleGenModes() {
     const body = document.getElementById('gen-modes-body');
@@ -668,13 +908,159 @@ const COLORS = ['ball-blue', 'ball-green', 'ball-orange', 'ball-purple', 'ball-r
 let ticketsData = [];
 let lastDrawnNumbers = [];
 let isEditingPrizes = false;
+let packagesData = [];
+let packageSequence = 1;
+
+function isPackageMode() { const el = document.getElementById('packageMode'); return !!(el && el.checked); }
+function getTicketKey(ticket) { return (ticket.fields || []).map(f => ((f && Array.isArray(f.nums)) ? [...f.nums].sort((a,b)=>a-b) : []).join(',')).join('|'); }
+function getPackageSummaryText(type, config, count) {
+    const parts = [];
+    parts.push(config.name);
+    config.fields.forEach((field, index) => {
+        const incEl = document.getElementById('include-field-' + index);
+        const excEl = document.getElementById('exclude-field-' + index);
+        const genEl = document.getElementById('gen-field-' + index);
+        const val = genEl ? (parseInt(genEl.value) || field.standard) : field.standard;
+        const inc = incEl && incEl.value.trim() ? ('вкл ' + (index+1) + ': ' + incEl.value.trim()) : '';
+        const exc = excEl && excEl.value.trim() ? ('искл ' + (index+1) + ': ' + excEl.value.trim()) : '';
+        parts.push('поле ' + (index+1) + ': ' + val);
+        if (inc) parts.push(inc);
+        if (exc) parts.push(exc);
+    });
+    if (document.getElementById('hybridActive') && document.getElementById('hybridActive').checked) {
+        const hn = document.getElementById('hybridNumbers');
+        const hk = document.getElementById('hybridK');
+        parts.push('гибрид: ' + (hn ? hn.value.trim() : '') + ' / K=' + (hk ? hk.value.trim() : ''));
+    }
+    if (typeof activeMode !== 'undefined' && activeMode === 'anti') parts.push('анти');
+    if (typeof activeMode !== 'undefined' && activeMode === 'reverse') parts.push('с конца диапазона');
+    return parts.filter(Boolean).join(' | ');
+}
+function ensurePackageModeLottery(type) {
+    if (!isPackageMode()) return true;
+    if (!packagesData.length) return true;
+    const prevType = packagesData[0].type;
+    if (prevType !== type) { alert('В пакетном режиме все пакеты должны быть одной лотереи. Очистите текущую покупку или завершите тираж.'); return false; }
+    return true;
+}
+function createPackageFromCurrentTickets(type, config, priceCost, sourceLabel) {
+    const packageTickets = JSON.parse(JSON.stringify(ticketsData));
+    const actualCount = packageTickets.length || 0;
+    const pkg = {
+        id: packageSequence++,
+        type: type,
+        name: 'Пакет ' + packageSequence,
+        source: sourceLabel || 'обычный',
+        summary: getPackageSummaryText(type, config, actualCount),
+        tickets: packageTickets,
+        checked: false
+    };
+    pkg.name = 'Пакет ' + pkg.id;
+    pkg.tickets.forEach((ticket, idx) => {
+        ticket.id = idx + 1;
+        ticket.packageId = pkg.id;
+        ticket.packageName = pkg.name;
+    });
+    pkg.cost = pkg.tickets.reduce((sum, t) => sum + (t.cost || priceCost || 0), 0);
+    pkg.count = pkg.tickets.length;
+    return pkg;
+}
+function flattenPackagesToTickets() {
+    const flat = [];
+    packagesData.forEach(pkg => {
+        (pkg.tickets || []).forEach(ticket => {
+            flat.push(ticket);
+        });
+    });
+    ticketsData = flat;
+}
+function getCategorySortMeta(name) {
+    const posMatch = name.match(/^Позиция:\s*(\d+)\s*из\s*\d+/);
+    if (posMatch) return { group: 1, nums: [-parseInt(posMatch[1], 10)] };
+
+    const guessedMatch = name.match(/^(\d+)\s+угадано$/);
+    if (guessedMatch) return { group: 2, nums: [-parseInt(guessedMatch[1], 10)] };
+
+    if (/^\d+(?:\+\d+)+$/.test(name)) {
+        return { group: 3, nums: name.split('+').map(n => -parseInt(n, 10)) };
+    }
+
+    const sumMatch = name.match(/^Сумма:\s*(\d+)/);
+    if (sumMatch) return { group: 4, nums: [-parseInt(sumMatch[1], 10)] };
+
+    if (name.startsWith('Комбинация:')) return { group: 5, nums: [], text: name.replace(/^Комбинация:\s*/, '') };
+
+    return { group: 6, nums: [], text: name };
+}
+
+function compareWinCategory(a, b) {
+    const aa = getCategorySortMeta(a);
+    const bb = getCategorySortMeta(b);
+    if (aa.group !== bb.group) return aa.group - bb.group;
+
+    const maxLen = Math.max((aa.nums || []).length, (bb.nums || []).length);
+    for (let i = 0; i < maxLen; i++) {
+        const av = aa.nums[i] ?? 0;
+        const bv = bb.nums[i] ?? 0;
+        if (av !== bv) return av - bv;
+    }
+
+    return (aa.text || a).localeCompare(bb.text || b, 'ru');
+}
+
+function addPackageCategoryStat(statsMap, packageId, catName, unitPrize, count, total) {
+    if (!packageId || !statsMap[packageId] || !catName || count <= 0) return;
+    if (!statsMap[packageId].details) statsMap[packageId].details = {};
+    if (!statsMap[packageId].details[catName]) statsMap[packageId].details[catName] = { count: 0, unitPrize: unitPrize, total: 0 };
+    statsMap[packageId].details[catName].count += count;
+    statsMap[packageId].details[catName].total += total;
+}
+function buildPackageDetailsTable(details) {
+    const keys = Object.keys(details || {});
+    if (!keys.length) return '<div style="text-align:center; color:#999; padding:10px;">Выигрышных комбинаций нет</div>';
+    const sortedKeys = keys.slice().sort(compareWinCategory);
+    let html = '<table class="win-table"><thead><tr><th>Категория</th><th>Сумма</th><th>Кол-во</th><th>Итого</th></tr></thead><tbody>';
+    sortedKeys.forEach(key => {
+        html += `<tr><td>${key}</td><td class="sum-col">${formatMoney(details[key].unitPrize)}</td><td class="num-col">${details[key].count} шт.</td><td class="sum-col">${formatMoney(details[key].total)}</td></tr>`;
+    });
+    html += '</tbody></table>';
+    return html;
+}
+function renderPackageStats(statsMap, totalStats) {
+    if (!isPackageMode() || !packagesData.length) return;
+
+    packagesData.forEach(pkg => {
+        const stat = statsMap[pkg.id] || { count: pkg.count || 0, cost: pkg.cost || 0, winners: 0, win: 0, details: {} };
+        const profit = stat.win - stat.cost;
+        const roi = stat.cost > 0 ? ((stat.win / stat.cost) * 100).toFixed(1) : '0.0';
+        const pkgBox = document.getElementById('package-stats-' + pkg.id);
+        if (!pkgBox) return;
+
+        pkgBox.style.display = 'block';
+        pkgBox.innerHTML = `<div class="package-stat-card"><div class="package-stat-title">${pkg.name}</div><div class="package-subtitle">${pkg.summary}</div><div class="package-stat-grid"><div class="package-stat-item"><div class="package-stat-label">Билетов</div><div class="package-stat-value">${stat.count}</div></div><div class="package-stat-item"><div class="package-stat-label">Затраты</div><div class="package-stat-value">${formatMoney(stat.cost)}</div></div><div class="package-stat-item"><div class="package-stat-label">Выигрышных</div><div class="package-stat-value">${stat.winners}</div></div><div class="package-stat-item"><div class="package-stat-label">Выигрыш</div><div class="package-stat-value">${formatMoney(stat.win)}</div></div><div class="package-stat-item"><div class="package-stat-label">Итог</div><div class="package-stat-value">${formatMoney(profit)}</div></div><div class="package-stat-item"><div class="package-stat-label">ROI</div><div class="package-stat-value">${roi}%</div></div></div><div style="margin-top:12px; font-size:12px; font-weight:700; color:#555; text-transform:uppercase;">Комбинации пакета</div>${buildPackageDetailsTable(stat.details || {})}</div>`;
+    });
+}
+function togglePackageBody(id) { const body = document.getElementById('package-body-' + id); if (!body) return; body.classList.toggle('active'); }
+
+const BUILD_INFO = {
+    version: 'v24-v8',
+    date: '17.04.2026'
+};
+
+function applyBuildStamp() {
+    const stamp = document.getElementById('buildStamp');
+    if (!stamp) return;
+    stamp.textContent = 'Доработка ' + BUILD_INFO.version + ' • ' + BUILD_INFO.date;
+}
 
 function factorial(n) { return n ? n * factorial(n - 1) : 1; }
 function combinations(n, k) { if(k>n) return 0; return factorial(n) / (factorial(k) * factorial(n - k)); }
 function formatMoney(n) { return n.toLocaleString('ru') + ' ₽'; }
+applyBuildStamp();
 
 function onLotteryChange() {
 const type = document.getElementById('lotterySelect').value;
+if (isPackageMode && isPackageMode() && packagesData.length && packagesData[0].type !== type) { alert('Сначала очистите текущую пакетную покупку для другого тиража.'); document.getElementById('lotterySelect').value = packagesData[0].type; return; }
 const config = LOTTERIES[type];
 document.getElementById('ticketPrice').value = config.price;
 const genContainer = document.getElementById('fieldInputsContainer');
@@ -770,8 +1156,8 @@ genContainer.innerHTML = fieldsHtml;
 if (type === 'sumFortune') { initBetSelector(); }
 const checkContainer = document.getElementById('checkInputsContainer');
 let checkHtml = '';
-if (type === 'sumFortune') { checkHtml += `<div class="field-row"><span class="field-label">Кубики (6 чисел)</span><input type="text" class="field-input-small" id="check-field-0" placeholder="6 чисел через пробел" style="width: 250px;" onchange="calculateWinnings()"><span class="field-range">Введите через пробел</span></div>`; }
-else { config.fields.forEach((field, index) => { checkHtml += `<div class="field-row"><span class="field-label">${field.label}</span><input type="text" class="field-input-small" id="check-field-${index}" placeholder="${field.standard} чисел" style="width: 200px;" onchange="calculateWinnings()"><span class="field-range">Введите через пробел</span></div>`; }); }
+if (type === 'sumFortune') { checkHtml += `<div class="field-row"><span class="field-label">Кубики (6 чисел)</span><input type="text" class="field-input-small" id="check-field-0" placeholder="6 чисел через пробел" style="width: 250px;"><span class="field-range">Введите через пробел</span></div>`; }
+else { config.fields.forEach((field, index) => { checkHtml += `<div class="field-row"><span class="field-label">${field.label}</span><input type="text" class="field-input-small" id="check-field-${index}" placeholder="${field.standard} чисел" style="width: 200px;"><span class="field-range">Введите через пробел</span></div>`; }); }
 checkContainer.innerHTML = checkHtml;
 updateDynamicData(); clearAll();
 }
@@ -780,6 +1166,9 @@ function toggleCollapsible(header) { const content = header.nextElementSibling; 
 function swapFields(index) { const inc = document.getElementById(`include-field-${index}`); const exc = document.getElementById(`exclude-field-${index}`); if(inc && exc) { const temp = inc.value; inc.value = exc.value; exc.value = temp; autoResize(inc); autoResize(exc); } }
 function clearAll() {
     ticketsData = [];
+    packagesData = [];
+    previousNormalTickets = [];
+    packageSequence = 1;
     lastDrawnNumbers = [];
     const output = document.getElementById('resultsArea');
     output.innerHTML = '<div class="empty-state">Нажмите "Сгенерировать", чтобы создать билеты</div>';
@@ -787,6 +1176,7 @@ function clearAll() {
     document.getElementById('exportBtn').style.display = 'none';
     document.getElementById('statsBox').style.display = 'none';
     document.getElementById('summaryBox').style.display = 'none';
+    hasCalculatedStats = false;
 }
 
 function clearAllFilters() { const type = document.getElementById('lotterySelect').value; if(type !== 'sumFortune') return; const config = LOTTERIES[type]; config.fields.forEach((f, i) => { const inc = document.getElementById(`include-field-${i}`); const exc = document.getElementById(`exclude-field-${i}`); if(inc) inc.value = ''; if(exc) exc.value = ''; }); const fixed = document.getElementById('fixed-numbers-input'); const pairs = document.getElementById('pairs-input'); if(fixed) fixed.value = ''; if(pairs) pairs.value = ''; }
@@ -856,7 +1246,7 @@ if (type === 'sumFortune') {
     tableHtml += '</tbody></table>';
 } container.innerHTML = tableHtml; }
 function toggleEditMode() { isEditingPrizes = true; document.getElementById('btnEditPrizes').style.display = 'none'; document.getElementById('btnSavePrizes').style.display = 'block'; document.querySelectorAll('#prizeSidebarContent .sum-col').forEach(cell => { const currentVal = parseInt(cell.innerText.replace(/\D/g, '')); cell.innerHTML = `<input type="number" class="edit-input" value="${currentVal}">`; }); }
-function savePrizes() { const type = document.getElementById('lotterySelect').value; const config = LOTTERIES[type]; document.querySelectorAll('#prizeSidebarContent .sum-col').forEach(cell => { const input = cell.querySelector('input'); const newVal = parseInt(input.value); if (cell.dataset.prizeIndex !== undefined) { const idx = parseInt(cell.dataset.prizeIndex); config.prizes[idx][config.prizes[idx].length - 1] = newVal; } else if (cell.dataset.prizeKey !== undefined) { config.prizes[cell.dataset.prizeKey] = newVal; } }); updatePrizeSidebar(); if (lastDrawnNumbers.length > 0) calculateWinnings(); }
+function savePrizes() { const type = document.getElementById('lotterySelect').value; const config = LOTTERIES[type]; document.querySelectorAll('#prizeSidebarContent .sum-col').forEach(cell => { const input = cell.querySelector('input'); const newVal = parseInt(input.value); if (cell.dataset.prizeIndex !== undefined) { const idx = parseInt(cell.dataset.prizeIndex); config.prizes[idx][config.prizes[idx].length - 1] = newVal; } else if (cell.dataset.prizeKey !== undefined) { config.prizes[cell.dataset.prizeKey] = newVal; } }); updatePrizeSidebar();  }
 
 function updateCostInfo() { 
     const type = document.getElementById('lotterySelect').value; 
@@ -887,12 +1277,36 @@ function parseNumbers(str) { if(!str) return []; return str.trim().split(/\s+/).
 function generateSet(count, total, excluded, included) { const arr = [...included]; let attempts = 0; const maxAttempts = 1000; if (included.length > count) return null; if (new Set(included).size !== included.length) return null; for(let n of included) { if (n < 1 || n > total) return null; if (excluded && excluded.includes(n)) return null; } while (arr.length < count) { if (attempts++ > maxAttempts) return null; const r = getRandInt(1, total); if (arr.indexOf(r) !== -1) continue; if (excluded && excluded.includes(r)) continue; arr.push(r); } return arr.sort((a, b) => a - b); }
 function shuffleArray(array) { for (let i = array.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [array[i], array[j]] = [array[j], array[i]]; } return array; }
 
+function getTicketFlatNumbers(fieldsData) {
+    return (fieldsData || []).flatMap(f => (f && Array.isArray(f.nums)) ? f.nums : []);
+}
+
+function getPrimaryFieldNumbers(fieldsData) {
+    return fieldsData && fieldsData[0] && Array.isArray(fieldsData[0].nums) ? fieldsData[0].nums : [];
+}
+
+function getAdvancedRngTargetNumbers(fieldsData, type) {
+    const primaryOnlyTypes = new Set(['mag8', 'big8', 'super8']);
+    return primaryOnlyTypes.has(type) ? getPrimaryFieldNumbers(fieldsData) : getTicketFlatNumbers(fieldsData);
+}
+
+function getAdvancedRngSumNumbers(fieldsData, type) {
+    if (type === 'sumFortune') return getTicketFlatNumbers(fieldsData);
+    return getPrimaryFieldNumbers(fieldsData);
+}
+
+
+
 function generateAll() {
-const type = document.getElementById('lotterySelect').value; const config = LOTTERIES[type]; const count = parseInt(document.getElementById('ticketCount').value) || 1;
-const output = document.getElementById('resultsArea'); output.innerHTML = ''; document.getElementById('exportBtn').style.display = 'none';
+const packageModeActive = isPackageMode();
+/* ГИБРИД-РЕЖИМ */
+if (document.getElementById('hybridActive') && document.getElementById('hybridActive').checked) { generateHybrid(); return; }
+const type = document.getElementById('lotterySelect').value; if (!ensurePackageModeLottery(type)) return; const config = LOTTERIES[type]; const count = parseInt(document.getElementById('ticketCount').value) || 1;
+const output = document.getElementById('resultsArea'); if (!packageModeActive) output.innerHTML = ''; document.getElementById('exportBtn').style.display = 'none';
 
 /* --- АНТИРЕЖИМ: исключаем числа предыдущих билетов, оставляя N рандомных --- */
 if (activeMode === 'anti') {
+    if (packageModeActive) { alert('Антирежим в пакетной покупке v1 не поддерживается.'); return; }
     if (previousNormalTickets.length === 0) {
         alert('Сначала сгенерируйте билеты в обычном режиме!\nПотом включите антирежим и нажмите «Сгенерировать» снова.');
         return;
@@ -992,7 +1406,7 @@ if (activeMode === 'anti') {
         }
     }
 
-    if (ticketsData.length > 0) { renderTickets(); document.getElementById('checkPanel').style.display = 'block'; document.getElementById('exportBtn').style.display = 'flex'; document.getElementById('summaryBox').style.display = 'none'; document.getElementById('statsBox').style.display = 'none'; }
+    if (ticketsData.length > 0) { const dedupeInfo = dedupeTicketsData(); renderTickets(); document.getElementById('checkPanel').style.display = 'block'; document.getElementById('exportBtn').style.display = 'flex'; document.getElementById('summaryBox').style.display = 'none'; document.getElementById('statsBox').style.display = 'none'; hasCalculatedStats = false; if (dedupeInfo.removed > 0) { const indicator = document.getElementById('modeIndicator'); indicator.textContent += ' | Удалено дублей: ' + dedupeInfo.removed; indicator.classList.add('visible'); } }
     else { output.innerHTML = '<div class="empty-state">Не удалось сгенерировать антибилеты. Проверьте настройки.</div>'; }
     return;
 }
@@ -1080,13 +1494,13 @@ if (type === 'sumFortune') {
     attempts++;
     fieldsData = config.fields.map((field, index) => { const val = parseInt(document.getElementById(`gen-field-${index}`).value) || field.standard; let nums; if (activeMode === "reverse") nums = generateSetReverse(val, field.total, exclusions[index], inclusions[index]); else nums = generateSet(val, field.total, exclusions[index], inclusions[index]); if (!nums) return null; return { nums: nums, total: field.total, required: field.standard, color: COLORS[index % COLORS.length] }; });
     if (fieldsData.includes(null)) { if(errorsShown < 1) alert("Ошибка генерации! Проверьте настройки."); errorsShown++; return; }
-    const mainNums = fieldsData[0].nums; let pass = true;
-    if (pass && useSumRange) { const currentSum = mainNums.reduce((a, b) => a + b, 0); if (currentSum < sumMin || currentSum > sumMax) pass = false; }
-    if (pass && useEvenOdd) { const evenCount = mainNums.filter(n => n % 2 === 0).length; const oddCount = mainNums.length - evenCount; if (targetEven !== -1 && evenCount !== targetEven) pass = false; if (targetOdd !== -1 && oddCount !== targetOdd) pass = false; }
-    if (pass && useTails && minTails !== -1) { const tails = new Set(mainNums.map(n => n % 10)); if (tails.size < minTails) pass = false; }
-    if (pass && usePairs && pairRules.length > 0) { for(let rule of pairRules) { const actualCount = countSequences(mainNums, rule.length); if (actualCount !== rule.count) { pass = false; break; } } }
-    if (pass && useRepeats && prevDrawNums.length > 0) { const matchCount = mainNums.filter(n => prevDrawNums.includes(n)).length; if (repeatMinLimit !== -1 && matchCount < repeatMinLimit) pass = false; if (pass && repeatMaxLimit !== -1 && matchCount > repeatMaxLimit) pass = false; }
-    if (pass && useTens && maxInTenLimit !== -1) { const tens = {}; mainNums.forEach(n => { const decade = Math.floor((n - 1) / 10); if (!tens[decade]) tens[decade] = 0; tens[decade]++; }); for (let dec in tens) { if (tens[dec] > maxInTenLimit) { pass = false; break; } } }
+    const advNums = getAdvancedRngTargetNumbers(fieldsData, type); let pass = true;
+    if (pass && useSumRange) { const sumNums = getAdvancedRngSumNumbers(fieldsData, type); const currentSum = sumNums.reduce((a, b) => a + b, 0); if (currentSum < sumMin || currentSum > sumMax) pass = false; }
+    if (pass && useEvenOdd) { const evenCount = advNums.filter(n => n % 2 === 0).length; const oddCount = advNums.length - evenCount; if (targetEven !== -1 && evenCount !== targetEven) pass = false; if (targetOdd !== -1 && oddCount !== targetOdd) pass = false; }
+    if (pass && useTails && minTails !== -1) { const tails = new Set(advNums.map(n => n % 10)); if (tails.size < minTails) pass = false; }
+    if (pass && usePairs && pairRules.length > 0) { for(let rule of pairRules) { const actualCount = countSequences(advNums, rule.length); if (actualCount !== rule.count) { pass = false; break; } } }
+    if (pass && useRepeats && prevDrawNums.length > 0) { const matchCount = advNums.filter(n => prevDrawNums.includes(n)).length; if (repeatMinLimit !== -1 && matchCount < repeatMinLimit) pass = false; if (pass && repeatMaxLimit !== -1 && matchCount > repeatMaxLimit) pass = false; }
+    if (pass && useTens && maxInTenLimit !== -1) { const tens = {}; advNums.forEach(n => { const decade = Math.floor((n - 1) / 10); if (!tens[decade]) tens[decade] = 0; tens[decade]++; }); for (let dec in tens) { if (tens[dec] > maxInTenLimit) { pass = false; break; } } }
     if (pass) ticketValid = true;
     }
     if (!ticketValid) { if(errorsShown < 1) alert(`Не удалось подобрать комбинацию (попыток: 500). Ослабьте условия.`); errorsShown++; return; }
@@ -1100,28 +1514,78 @@ previousNormalTickets = JSON.parse(JSON.stringify(ticketsData));
 /* Обновляем индикатор антирежима */
 const indicator = document.getElementById('modeIndicator');
 if (activeMode === 'normal' || activeMode === 'reverse') {
-    indicator.textContent = '✅ Сгенерировано ' + ticketsData.length + ' билетов. Можно включить Антирежим и перегенерировать.';
+    indicator.textContent = '🎲 Сгенерировано билетов: ' + ticketsData.length;
     indicator.classList.add('visible');
 }
 
-if (ticketsData.length > 0) { renderTickets(); document.getElementById('checkPanel').style.display = 'block'; document.getElementById('exportBtn').style.display = 'flex'; document.getElementById('summaryBox').style.display = 'none'; document.getElementById('statsBox').style.display = 'none'; }
+if (ticketsData.length > 0) { const dedupeInfo = dedupeTicketsData(); if (packageModeActive) { const pkg = createPackageFromCurrentTickets(type, config, priceInfo.cost, (document.getElementById('hybridActive') && document.getElementById('hybridActive').checked) ? 'гибрид' : (typeof activeMode !== 'undefined' ? activeMode : 'обычный')); packagesData.push(pkg); flattenPackagesToTickets(); } renderTickets(); document.getElementById('checkPanel').style.display = 'block'; document.getElementById('exportBtn').style.display = 'flex'; document.getElementById('summaryBox').style.display = 'none'; document.getElementById('statsBox').style.display = 'none'; hasCalculatedStats = false; const indicator = document.getElementById('modeIndicator'); if (packageModeActive) { indicator.textContent = '📦 Добавлен ' + packagesData[packagesData.length - 1].name + ' • пакетов: ' + packagesData.length + ' • билетов: ' + ticketsData.length; indicator.classList.add('visible'); } else if (dedupeInfo.removed > 0) { indicator.textContent += ' | Удалено дублей: ' + dedupeInfo.removed; indicator.classList.add('visible'); } }
 else { output.innerHTML = '<div class="empty-state">Не удалось сгенерировать билеты.</div>'; }
 }
 
 function exportCSV() { if(ticketsData.length === 0) return; const type = document.getElementById('lotterySelect').value; const config = LOTTERIES[type]; let csvContent = "\ufeff"; let headers = ["Название Лотереи"]; config.fields.forEach((f, i) => headers.push(`Поле ${i+1}`)); headers.push("Выигрыш"); csvContent += headers.join(";") + "\r\n"; ticketsData.forEach(ticket => { let row = []; row.push(config.name); ticket.fields.forEach(f => { row.push(f.nums.join(' ')); }); row.push(ticket.win || 0); csvContent += row.join(";") + "\r\n"; }); var blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' }); var link = document.createElement("a"); var url = URL.createObjectURL(blob); link.setAttribute("href", url); link.setAttribute("download", "lottery_export.csv"); link.style.visibility = 'hidden'; document.body.appendChild(link); link.click(); document.body.removeChild(link); }
 
+function dedupeTicketsData() {
+    if (!Array.isArray(ticketsData)) return { removed: 0, total: 0 };
+    const seen = new Set();
+    const unique = [];
+    let removed = 0;
+    ticketsData.forEach(ticket => {
+        const key = (ticket.fields || []).map(f => {
+            const nums = (f && Array.isArray(f.nums)) ? [...f.nums].sort((a, b) => a - b) : [];
+            return nums.join(',');
+        }).join('|');
+        if (seen.has(key)) { removed++; return; }
+        seen.add(key);
+        unique.push(ticket);
+    });
+    unique.forEach((ticket, idx) => { ticket.id = idx + 1; });
+    ticketsData = unique;
+    return { removed, total: unique.length };
+}
+
 function renderTickets() { 
     const output = document.getElementById('resultsArea'); 
     output.innerHTML = ''; 
     const type = document.getElementById('lotterySelect').value; 
+    if (isPackageMode() && packagesData.length) {
+        packagesData.forEach(pkg => {
+            const group = document.createElement('div');
+            group.className = 'package-group';
+            const checkedWin = (pkg.tickets || []).reduce((s, t) => s + (t.win || 0), 0);
+            group.innerHTML = `<div class="package-header" onclick="togglePackageBody(${pkg.id})"><div class="package-header-left"><div class="package-title">${pkg.name}</div><div class="package-subtitle">${pkg.summary}</div></div><div class="package-header-right"><span class="package-pill">${pkg.count} билетов</span><span class="package-pill">${formatMoney(pkg.cost || 0)}</span>${pkg.checked ? `<span class="package-pill">Выигрыш: ${formatMoney(checkedWin)}</span>` : `<span class="package-pill">Не проверен</span>`}</div></div><div class="package-body" id="package-body-${pkg.id}"></div><div class="package-inline-stats" id="package-stats-${pkg.id}" style="display:none;"></div>`;
+            output.appendChild(group);
+            const body = group.querySelector('.package-body');
+            (pkg.tickets || []).forEach(ticket => {
+                const ticketDiv = document.createElement('div');
+                ticketDiv.className = 'res-item'; 
+                if(ticket.win > 0) ticketDiv.classList.add('winner'); 
+                let sumDisplay = ''; 
+                const sumNums = getAdvancedRngSumNumbers(ticket.fields, type);
+                const sum = sumNums.reduce((acc, n) => acc + n, 0);
+                sumDisplay = `<span class="res-sum-badge">Сумма поля 1: ${sum}</span>`; 
+                let ballsHtml = ticket.fields.map((f, fIdx) => { 
+                    return f.nums.map(n => { 
+                        let isMatch = false; 
+                        if (ticket.checked && lastDrawnNumbers[fIdx]) { if (lastDrawnNumbers[fIdx].includes(n)) isMatch = true; } 
+                        let classes = `ball ${f.color}`; if(isMatch) classes += " matched"; if (type === 'sumFortune') classes += " ball-dice"; return `<div class="${classes}">${n}</div>`; 
+                    }).join(''); 
+                }).join('<span class="separator">|</span>'); 
+                let winDisplay = ''; 
+                if(ticket.checked) { if(ticket.win > 0) winDisplay = `<span class="win-badge">+ ${ticket.win.toLocaleString('ru')} ₽</span>`; else winDisplay = `<span style="color:#999; font-size:12px;">нет выигрыша</span>`; } 
+                ticketDiv.innerHTML = `<div class="res-header"><span>Билет #${ticket.id}</span><span style="font-size:12px; color:#888;">Стоимость: ${ticket.cost.toLocaleString('ru')} ₽</span>${winDisplay}</div><div class="balls-container">${ballsHtml} ${sumDisplay}</div>`; 
+                body.appendChild(ticketDiv);
+            });
+        });
+        return;
+    }
     ticketsData.forEach(ticket => { 
         const ticketDiv = document.createElement('div'); 
         ticketDiv.className = 'res-item'; 
         if(ticket.win > 0) ticketDiv.classList.add('winner'); 
         let sumDisplay = ''; 
-        let sum = 0; 
-        ticket.fields.forEach(f => { f.nums.forEach(n => sum += n); });
-        sumDisplay = `<span class="res-sum-badge">Сумма чисел: ${sum}</span>`; 
+        const sumNums = getAdvancedRngSumNumbers(ticket.fields, type);
+        const sum = sumNums.reduce((acc, n) => acc + n, 0);
+        sumDisplay = `<span class="res-sum-badge">Сумма поля 1: ${sum}</span>`; 
         let ballsHtml = ticket.fields.map((f, fIdx) => { 
             return f.nums.map(n => { 
                 let isMatch = false; 
@@ -1139,8 +1603,12 @@ function renderTickets() {
 function parseInput(str) { if(!str) return []; return str.trim().split(/\s+/).map(Number).filter(n => !isNaN(n)); }
 
 function calculateWinnings() {
+hasCalculatedStats = true;
 const type = document.getElementById('lotterySelect').value; const config = LOTTERIES[type];
 let totalWin = 0, totalCost = 0, winningTicketsCount = 0; let categoryStats = {};
+let packageStatsMap = {};
+let packageTotals = { count: 0, cost: 0, winners: 0, win: 0 };
+if (isPackageMode() && packagesData.length) { packagesData.forEach(pkg => { packageStatsMap[pkg.id] = { count: (pkg.tickets || []).length, cost: (pkg.cost || 0), winners: 0, win: 0, details: {} }; packageTotals.count += (pkg.tickets || []).length; packageTotals.cost += (pkg.cost || 0); }); }
 if (type === 'sumFortune') {
     const rawInput = parseInput(document.getElementById(`check-field-0`).value); const price = parseInt(document.getElementById('ticketPrice').value) || 250; const isValidDraw = rawInput.length === 6;
     if (isValidDraw) { lastDrawnNumbers = rawInput.map(n => [n]); } else { lastDrawnNumbers = []; }
@@ -1148,53 +1616,59 @@ if (type === 'sumFortune') {
     activeSumBtns.forEach(btn => { const val = parseInt(btn.querySelector('.val').innerText); totalCost += price; if (isValidDraw && val === drawnSum) { const prize = config.rules.sum[drawnSum]; if (prize) { totalWin += prize; let catName = `Сумма: ${drawnSum}`; if(!categoryStats[catName]) categoryStats[catName] = {count: 0, unitPrize: prize, total: 0}; categoryStats[catName].count++; categoryStats[catName].total += prize; } } });
     const drawnArr = rawInput; const activeComboBtns = document.querySelectorAll('#comboBetsGrid .bet-btn.active');
     activeComboBtns.forEach(btn => { const name = btn.querySelector('.val').innerText; totalCost += price; if (isValidDraw) { const rule = config.rules.combination.find(r => r.name === name); if (rule && rule.check(drawnArr)) { totalWin += rule.prize; let catName = `Комбинация: ${rule.name}`; if(!categoryStats[catName]) categoryStats[catName] = {count: 0, unitPrize: rule.prize, total: 0}; categoryStats[catName].count++; categoryStats[catName].total += rule.prize; } } });
-    ticketsData.forEach(ticket => { 
-        totalCost += ticket.cost; 
-        if (isValidDraw) { 
+    ticketsData.forEach(ticket => {
+        totalCost += ticket.cost;
+        if (isValidDraw) {
             const cartesian = (arr) => arr.reduce((a, b) => a.flatMap(x => b.map(y => [...x, y])), [[]]);
             const positions = ticket.fields.map(f => f.nums); const allCombinations = cartesian(positions);
             let ticketTotalWin = 0;
             allCombinations.forEach(combo => {
                 let posMatches = 0; combo.forEach((num, idx) => { if(num === rawInput[idx]) posMatches++; });
-                if (config.rules.position[posMatches]) { const prize = config.rules.position[posMatches]; ticketTotalWin += prize; let catName = `Позиция: ${posMatches} из 6`; if(!categoryStats[catName]) categoryStats[catName] = {count: 0, unitPrize: prize, total: 0}; categoryStats[catName].count++; categoryStats[catName].total += prize; }
+                if (config.rules.position[posMatches]) { const prize = config.rules.position[posMatches]; ticketTotalWin += prize; let catName = `Позиция: ${posMatches} из 6`; if(!categoryStats[catName]) categoryStats[catName] = {count: 0, unitPrize: prize, total: 0}; categoryStats[catName].count++; categoryStats[catName].total += prize; if (isPackageMode() && ticket.packageId && packageStatsMap[ticket.packageId]) addPackageCategoryStat(packageStatsMap, ticket.packageId, catName, prize, 1, prize); }
             });
-            ticket.win = ticketTotalWin; totalWin += ticketTotalWin; ticket.checked = true; if(ticketTotalWin > 0) winningTicketsCount++;
-        } 
+            ticket.win = ticketTotalWin; totalWin += ticketTotalWin; ticket.checked = true; if(ticketTotalWin > 0) winningTicketsCount++; if (isPackageMode() && ticket.packageId && packageStatsMap[ticket.packageId]) { packageStatsMap[ticket.packageId].win += ticketTotalWin; if (ticketTotalWin > 0) packageStatsMap[ticket.packageId].winners++; }
+        }
     });
+    if (isPackageMode() && packagesData.length) { packagesData.forEach(pkg => { pkg.checked = true; }); packageTotals.winners = Object.values(packageStatsMap).reduce((s, p) => s + p.winners, 0); packageTotals.win = Object.values(packageStatsMap).reduce((s, p) => s + p.win, 0); }
     renderTickets();
+    if (isPackageMode() && packagesData.length) { renderPackageStats(packageStatsMap, packageTotals); }
 } else {
     lastDrawnNumbers = config.fields.map((field, index) => parseInput(document.getElementById(`check-field-${index}`).value));
     ticketsData.forEach(ticket => {
-    let ticketWin = 0; totalCost += ticket.cost;
-    const matches = ticket.fields.map((f, i) => f.nums.filter(n => lastDrawnNumbers[i].includes(n)).length);
-    if (type === '5x36' || type === 'top12' || type === 'dd12') {
-    const k = matches[0]; const n = ticket.fields[0].nums.length; const req = ticket.fields[0].required;
-    const prizeKeys = Object.keys(config.prizes);
-    prizeKeys.forEach(key => {
-    let catName = ""; let count = 0; let prizeVal = config.prizes[key];
-    if(type === 'top12' || type === 'dd12') { if(key == 0) { if(k === 0) { catName = "0 угадано"; count = 1; } } else { const m = parseInt(key); if (k >= m) { count = combinations(k, m) * combinations(n - k, req - m); catName = m + " угадано"; } } }
-    else { const m = parseInt(key); if (k >= m) { count = combinations(k, m) * combinations(n - k, req - m); catName = m + " угадано"; } }
-    if(count > 0) { const winSum = count * prizeVal; ticketWin += winSum; if(!categoryStats[catName]) categoryStats[catName] = {count: 0, unitPrize: prizeVal, total: 0}; categoryStats[catName].count += count; categoryStats[catName].total += winSum; }
+        let ticketWin = 0; totalCost += ticket.cost;
+        const matches = ticket.fields.map((f, i) => f.nums.filter(n => lastDrawnNumbers[i].includes(n)).length);
+        if (type === '5x36' || type === 'top12' || type === 'dd12') {
+            const k = matches[0]; const n = ticket.fields[0].nums.length; const req = ticket.fields[0].required;
+            const prizeKeys = Object.keys(config.prizes);
+            prizeKeys.forEach(key => {
+                let catName = ""; let count = 0; let prizeVal = config.prizes[key];
+                if(type === 'top12' || type === 'dd12') { if(key == 0) { if(k === 0) { catName = "0 угадано"; count = 1; } } else { const m = parseInt(key); if (k >= m) { count = combinations(k, m) * combinations(n - k, req - m); catName = m + " угадано"; } } }
+                else { const m = parseInt(key); if (k >= m) { count = combinations(k, m) * combinations(n - k, req - m); catName = m + " угадано"; } }
+                if(count > 0) { const winSum = count * prizeVal; ticketWin += winSum; if(!categoryStats[catName]) categoryStats[catName] = {count: 0, unitPrize: prizeVal, total: 0}; categoryStats[catName].count += count; categoryStats[catName].total += winSum; if (isPackageMode() && ticket.packageId && packageStatsMap[ticket.packageId]) addPackageCategoryStat(packageStatsMap, ticket.packageId, catName, prizeVal, count, winSum); }
+            });
+        } else {
+            config.prizes.forEach(rule => {
+                const cash = rule[rule.length - 1]; const reqs = rule.slice(0, -1); let isValid = true; let combos = 1;
+                ticket.fields.forEach((f, idx) => { const matchCount = matches[idx]; const reqMatch = reqs[idx]; if (matchCount >= reqMatch) combos *= combinations(matchCount, reqMatch) * combinations(f.nums.length - matchCount, f.required - reqMatch); else isValid = false; });
+                if(isValid && combos > 0) { const winSum = combos * cash; ticketWin += winSum; let catName = reqs.join('+'); if(!categoryStats[catName]) categoryStats[catName] = {count: 0, unitPrize: cash, total: 0}; categoryStats[catName].count += combos; categoryStats[catName].total += winSum; if (isPackageMode() && ticket.packageId && packageStatsMap[ticket.packageId]) addPackageCategoryStat(packageStatsMap, ticket.packageId, catName, cash, combos, winSum); }
+            });
+        }
+        ticket.win = ticketWin; ticket.checked = true; totalWin += ticketWin; if(ticketWin > 0) winningTicketsCount++; if (isPackageMode() && ticket.packageId && packageStatsMap[ticket.packageId]) { packageStatsMap[ticket.packageId].win += ticketWin; if (ticketWin > 0) packageStatsMap[ticket.packageId].winners++; }
     });
-    } else {
-    config.prizes.forEach(rule => {
-    const cash = rule[rule.length - 1]; const reqs = rule.slice(0, -1); let isValid = true; let combos = 1;
-    ticket.fields.forEach((f, idx) => { const matchCount = matches[idx]; const reqMatch = reqs[idx]; if (matchCount >= reqMatch) combos *= combinations(matchCount, reqMatch) * combinations(f.nums.length - matchCount, f.required - reqMatch); else isValid = false; });
-    if(isValid && combos > 0) { const winSum = combos * cash; ticketWin += winSum; let catName = reqs.join('+'); if(!categoryStats[catName]) categoryStats[catName] = {count: 0, unitPrize: cash, total: 0}; categoryStats[catName].count += combos; categoryStats[catName].total += winSum; }
-    });
-    }
-    ticket.win = ticketWin; ticket.checked = true; totalWin += ticketWin; if(ticketWin > 0) winningTicketsCount++;
-    });
+    if (isPackageMode() && packagesData.length) { packagesData.forEach(pkg => { pkg.checked = true; }); packageTotals.winners = Object.values(packageStatsMap).reduce((s, p) => s + p.winners, 0); packageTotals.win = Object.values(packageStatsMap).reduce((s, p) => s + p.win, 0); }
     renderTickets();
+    if (isPackageMode() && packagesData.length) { renderPackageStats(packageStatsMap, packageTotals); }
 }
 updateStatsUI(totalCost, totalWin, winningTicketsCount, categoryStats);
 }
 
 function updateStatsUI(cost, win, winTickets, stats) {
-const totalTickets = ticketsData.length; let totalBetsCount = 0; for(let key in stats) { totalBetsCount += stats[key].count; }
-if(document.getElementById('lotterySelect').value === 'sumFortune') { let uiBets = document.querySelectorAll('#sumBetsGrid .bet-btn.active, #comboBetsGrid .bet-btn.active').length; document.getElementById('statTotal').innerText = totalTickets + uiBets; document.getElementById('statWinTickets').innerText = totalBetsCount; } else { document.getElementById('statTotal').innerText = totalTickets; document.getElementById('statWinTickets').innerText = winTickets; }
+
+const totalTickets = isPackageMode() && packagesData.length ? packagesData.reduce((sum, pkg) => sum + ((pkg.tickets || []).length), 0) : ticketsData.length;
+document.getElementById('statTotal').innerText = totalTickets;
+document.getElementById('statWinTickets').innerText = winTickets;
 const detailsContainer = document.getElementById('winDetailsContainer'); let tableHtml = '';
-let sortedKeys = Object.keys(stats).sort((a, b) => { if(a.includes('+')) return 1; return parseInt(b) - parseInt(a); });
+let sortedKeys = Object.keys(stats).sort(compareWinCategory);
 if(sortedKeys.length > 0) { tableHtml = '<table class="win-table"><thead><tr><th>Категория</th><th>Сумма</th><th>Кол-во</th><th>Итого</th></tr></thead><tbody>'; sortedKeys.forEach(key => { tableHtml += `<tr><td>${key}</td><td class="sum-col">${formatMoney(stats[key].unitPrize)}</td><td class="num-col">${stats[key].count} шт.</td><td class="sum-col">${formatMoney(stats[key].total)}</td></tr>`; }); tableHtml += '</tbody></table>'; }
 else { tableHtml = '<div style="text-align:center; color:#999; padding:10px;">Выигрышных комбинаций нет</div>'; }
 detailsContainer.innerHTML = tableHtml;
@@ -1204,12 +1678,13 @@ const profit = win - finalCost;
 document.getElementById('sumCost').innerText = formatMoney(finalCost); document.getElementById('sumWin').innerText = formatMoney(win);
 let percentText = "0%"; if(finalCost > 0) percentText = Math.round((win / finalCost) * 100) + "%"; document.getElementById('sumPercent').innerText = percentText;
 const profitEl = document.getElementById('sumProfit'); profitEl.innerText = (profit >= 0 ? '+' : '') + profit.toLocaleString('ru') + ' ₽'; profitEl.className = 'summary-val ' + (profit >= 0 ? 'profit-positive' : 'profit-negative');
-document.getElementById('statsBox').style.display = 'block'; document.getElementById('summaryBox').style.display = 'flex';
+document.getElementById('statsBox').style.display = hasCalculatedStats ? 'block' : 'none'; document.getElementById('summaryBox').style.display = hasCalculatedStats ? 'flex' : 'none';
 }
 
 
 /* === РЕЖИМЫ ГЕНЕРАЦИИ === */
 let activeMode = 'normal'; // 'normal', 'reverse', 'anti'
+let hasCalculatedStats = false;
 
 function toggleMode(mode) {
     if (activeMode === mode) { activeMode = 'normal'; }
@@ -1274,13 +1749,15 @@ let previousNormalTickets = []; // сохраняем билеты обычно�
 function countSequences(sorted, seqLen) {
     if (!sorted || sorted.length < seqLen) return 0;
     let count = 0;
-    for (let i = 0; i <= sorted.length - seqLen; i++) {
-        let isSeq = true;
-        for (let j = 1; j < seqLen; j++) {
-            if (sorted[i + j] !== sorted[i] + j) { isSeq = false; break; }
+    let chainLen = 1;
+    for (let i = 1; i < sorted.length; i++) {
+        if (sorted[i] === sorted[i - 1] + 1) chainLen++;
+        else {
+            if (chainLen === seqLen) count++;
+            chainLen = 1;
         }
-        if (isSeq) count++;
     }
+    if (chainLen === seqLen) count++;
     return count;
 }
 
