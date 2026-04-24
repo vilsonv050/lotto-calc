@@ -1,0 +1,452 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Генератор</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: Arial, sans-serif; background: #f0f2f5; overflow: hidden; }
+        
+        #widget {
+            position: fixed;
+            width: auto; min-width: 380px; max-width: 95vw;
+            background: #ffffff;
+            border: 1px solid #ccc;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+            border-radius: 8px;
+            z-index: 99999;
+            display: inline-flex;
+            flex-direction: column;
+            height: auto; 
+            overflow: hidden; 
+        }
+        
+        #header {
+            background: #2c3e50; color: white; padding: 10px 15px; font-size: 14px; font-weight: bold;
+            cursor: move; display: flex; justify-content: space-between; align-items: center;
+            user-select: none; border-radius: 8px 8px 0 0; white-space: nowrap;
+        }
+        .header-btns { display: flex; gap: 8px; }
+        #helpBtn, #closeBtn {
+            color: white; border: none; border-radius: 50%; width: 24px; height: 24px; font-size: 14px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; font-weight: bold;
+        }
+        #helpBtn { background: #3498db; } #helpBtn:hover { background: #2980b9; }
+        #closeBtn { background: #e74c3c; } #closeBtn:hover { background: #c0392b; }
+        
+        #body {
+            padding: 12px 15px 15px 15px;
+            display: flex; flex-direction: column; gap: 10px;
+            overflow: hidden; 
+        }
+
+        #lotterySelect {
+            width: 100%; padding: 8px; border: 2px solid #3498db; border-radius: 6px;
+            font-size: 14px; font-weight: bold; color: #2c3e50; background: #ebf5fb; outline: none; cursor: pointer;
+        }
+
+        .modal-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); z-index: 100000; justify-content: center; align-items: center;
+        }
+        .modal-box {
+            background: white; padding: 20px; border-radius: 8px; width: 90%; max-width: 420px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2); position: relative;
+        }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; font-size: 16px; font-weight: bold; color: #2c3e50;}
+        .modal-close { background: none; border: none; font-size: 20px; color: #7f8c8d; cursor: pointer; }
+        .modal-close:hover { color: #e74c3c; }
+        .modal-text { font-size: 13px; color: #333; line-height: 1.6; }
+        .modal-text b { color: #2c3e50; display: block; margin-top: 8px; }
+        .modal-text b:first-child { margin-top: 0; }
+
+        .top-settings {
+            background: #ecf0f1; padding: 10px; border-radius: 6px;
+            display: flex; flex-direction: column; gap: 8px;
+        }
+        .top-row { display: flex; gap: 8px; align-items: flex-end; }
+        .top-group { display: flex; flex-direction: column; gap: 3px; flex: 1; min-width: 0; }
+        .top-group label { font-size: 11px; color: #555; font-weight: bold; }
+        
+        input[type="number"], input[type="text"] {
+            padding: 5px 8px; border: 1px solid #bdc3c7; border-radius: 4px; font-size: 12px; width: 100%; 
+        }
+        input[type="number"] { font-weight: bold; font-size: 14px; }
+        
+        #btnGenerate { 
+            background: #27ae60; color: white; border: none; border-radius: 4px; 
+            padding: 8px; font-size: 13px; font-weight: bold; cursor: pointer; width: 100%; height: 34px; 
+        }
+        #btnGenerate:hover { background: #2ecc71; }
+
+        .rules-section { display: flex; flex-direction: column; gap: 8px; }
+        .rule-row { 
+            border: 1px solid #dcdcdc; border-radius: 6px; padding: 8px; 
+            background: #fff; display: flex; flex-direction: column; gap: 5px;
+        }
+        .rule-top { display: flex; gap: 6px; align-items: center; }
+        .rule-input { flex: 1; min-width: 0; }
+        .rule-status { font-size: 11px; color: #7f8c8d; white-space: nowrap; overflow: hidden; }
+        
+        button { cursor: pointer; border: none; border-radius: 4px; font-weight: bold; flex-shrink: 0; }
+        .btn-add { background: #34495e; color: white; width: 30px; height: 30px; font-size: 16px; display: flex; align-items: center; justify-content: center; }
+        .btn-del { background: #e0e0e0; color: #c0392b; width: 30px; height: 30px; font-size: 16px; display: flex; align-items: center; justify-content: center; }
+        .btn-count { background: #3498db; color: white; height: 30px; padding: 0 8px; font-size: 11px; white-space: nowrap; }
+
+        #globalStatus { font-size: 11px; color: #2980b9; text-align: center; line-height: 1.4; white-space: pre-line; }
+        
+        #field2Block { display: flex; gap: 8px; align-items: flex-end; }
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+<div id="widget">
+    <div id="header">
+        <span>Генератор Мульти-наборов</span>
+        <div class="header-btns">
+            <button id="helpBtn" title="Справка">?</button>
+            <button id="closeBtn" title="Закрыть">✕</button>
+        </div>
+    </div>
+    <div id="body">
+        
+        <select id="lotterySelect">
+            <option value="vosmerki">Восьмерки (8 из 20, 2 поля)</option>
+            <option value="top12">ТОП-12 (12 из 24, 1 поле)</option>
+        </select>
+
+        <div class="top-settings">
+            <div class="top-row">
+                <div class="top-group">
+                    <label>Поле 1 (чисел):</label>
+                    <input type="number" id="inputN1" value="8" min="2" max="20">
+                </div>
+                <div id="field2Block">
+                    <div class="top-group">
+                        <label>Поле 2 (чисел):</label>
+                        <input type="number" id="inputN2" value="1" min="1" max="10">
+                    </div>
+                </div>
+                <div class="top-group">
+                    <label>Кол-во билетов:</label>
+                    <input type="number" id="inputAmount" value="15" min="1">
+                </div>
+            </div>
+            
+            <!-- ИСКЛЮЧЕНИЯ -->
+            <div class="top-row">
+                <div class="top-group">
+                    <label>Исключения Поле 1:</label>
+                    <input type="text" id="excN1" placeholder="Напр: 5, 12, 18">
+                </div>
+                <div id="exc2Block" class="top-group">
+                    <label>Исключения Поле 2:</label>
+                    <input type="text" id="excN2" placeholder="Напр: 2">
+                </div>
+            </div>
+
+            <!-- ВКЛЮЧЕНИЯ -->
+            <div class="top-row">
+                <div class="top-group">
+                    <label style="color: #d35400;">Включения Поле 1:</label>
+                    <input type="text" id="incN1" placeholder="Обязательно: 3, 10" style="border-color: #e67e22;">
+                </div>
+                <div id="inc2Block" class="top-group">
+                    <label style="color: #d35400;">Включения Поле 2:</label>
+                    <input type="text" id="incN2" placeholder="Обязательно: 4" style="border-color: #e67e22;">
+                </div>
+            </div>
+
+            <button id="btnGenerate">Сформировать и скачать CSV</button>
+        </div>
+
+        <div id="rulesContainer" class="rules-section"></div>
+        <div id="globalStatus"></div>
+    </div>
+</div>
+
+<div id="helpModal" class="modal-overlay">
+    <div class="modal-box">
+        <div class="modal-header">Справка <button class="modal-close" id="closeHelp">✕</button></div>
+        <div class="modal-text">
+            <b>1. Выбор лотереи</b>
+            Меняет лимиты и скрывает Поле 2, если оно не нужно.
+            <b>2. Исключения</b>
+            Цифры, которые 100% НЕ будут в билете.
+            <b>3. Включения</b>
+            Цифры, которые 100% БУДУТ в билете. Остальные места заполнятся по правилам разниц и рандомом.
+            <b>4. Формат разниц</b>
+            "разница-количество" (напр. 1-3).
+            <b>5. Мульти-наборы</b>
+            "+" добавляет независимые наборы правил.
+            <b>6. Выгрузка</b>
+            Билеты честно делятся поровну между наборами и скачаются одним CSV файлом.
+        </div>
+    </div>
+</div>
+
+<script>
+    const configs = {
+        vosmerki: { maxNum: 20, defN1: 8, hasField2: true },
+        top12: { maxNum: 24, defN1: 12, hasField2: false }
+    };
+    let currentConfig = configs.vosmerki;
+
+    const lotterySelect = document.getElementById('lotterySelect');
+    lotterySelect.addEventListener('change', (e) => {
+        currentConfig = configs[e.target.value];
+        document.getElementById('inputN1').value = currentConfig.defN1;
+        document.getElementById('inputN1').max = currentConfig.maxNum;
+        
+        if(currentConfig.hasField2) {
+            document.getElementById('field2Block').classList.remove('hidden');
+            document.getElementById('exc2Block').classList.remove('hidden');
+            document.getElementById('inc2Block').classList.remove('hidden');
+        } else {
+            document.getElementById('field2Block').classList.add('hidden');
+            document.getElementById('exc2Block').classList.add('hidden');
+            document.getElementById('inc2Block').classList.add('hidden');
+        }
+
+        document.getElementById('excN1').placeholder = `Напр: 5, 12, ${currentConfig.maxNum - 2}`;
+        document.getElementById('incN1').placeholder = `Обязательно: 3, 10`;
+        
+        ruleSetsData = {};
+        document.querySelectorAll('.rule-status').forEach(el => el.innerText = "Ожидание ввода...");
+        document.getElementById('globalStatus').innerText = "";
+    });
+
+    const helpModal = document.getElementById('helpModal');
+    document.getElementById('helpBtn').addEventListener('click', () => helpModal.style.display = 'flex');
+    document.getElementById('closeHelp').addEventListener('click', () => helpModal.style.display = 'none');
+    helpModal.addEventListener('click', (e) => { if (e.target === helpModal) helpModal.style.display = 'none'; });
+
+    window.addEventListener('load', () => {
+        const widget = document.getElementById('widget');
+        setTimeout(() => {
+            widget.style.left = (window.innerWidth / 2 - widget.offsetWidth / 2) + 'px';
+            widget.style.top = (window.innerHeight / 2 - widget.offsetHeight / 2) + 'px';
+        }, 50);
+        addRuleRow();
+    });
+
+    const widget = document.getElementById('widget');
+    const header = document.getElementById('header');
+    let isDragging = false, startX, startY, initialX, initialY;
+    header.addEventListener('mousedown', (e) => { 
+        if (e.target.id !== 'closeBtn' && e.target.id !== 'helpBtn') { 
+            isDragging = true; startX = e.clientX; startY = e.clientY; initialX = widget.offsetLeft; initialY = widget.offsetTop; 
+        }
+    });
+    document.addEventListener('mousemove', (e) => { 
+        if (!isDragging) return; 
+        widget.style.left = (initialX + e.clientX - startX) + 'px'; 
+        widget.style.top = (initialY + e.clientY - startY) + 'px'; 
+    });
+    document.addEventListener('mouseup', () => isDragging = false);
+    document.getElementById('closeBtn').addEventListener('click', () => widget.style.display = 'none');
+
+    let ruleSetsData = {};
+    let ruleIdCounter = 0;
+
+    // Универсальная функция парсинга (подходит и для исключений, и для включений)
+    function parseNumList(str) {
+        if (!str.trim()) return [];
+        return str.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n));
+    }
+
+    function addRuleRow() {
+        ruleIdCounter++;
+        let currentId = ruleIdCounter;
+        ruleSetsData[currentId] = []; 
+        let rowDiv = document.createElement('div');
+        rowDiv.className = 'rule-row';
+        rowDiv.id = `rule-${currentId}`;
+        rowDiv.innerHTML = `
+            <div class="rule-top">
+                <input type="text" class="rule-input" placeholder="Разницы: 1-3, 5-1" value="">
+                <button class="btn-count" onclick="countRule(${currentId})">Посчитать</button>
+                <button class="btn-add" onclick="addRuleRow()" title="Добавить">+</button>
+                <button class="btn-del" onclick="removeRuleRow(${currentId})" title="Удалить">x</button>
+            </div>
+            <div class="rule-status" id="status-${currentId}">Ожидание ввода...</div>
+        `;
+        document.getElementById('rulesContainer').appendChild(rowDiv);
+    }
+
+    function removeRuleRow(id) {
+        if (Object.keys(ruleSetsData).length <= 1) { alert("Нельзя удалить единственный набор!"); return; }
+        delete ruleSetsData[id];
+        document.getElementById(`rule-${id}`).remove();
+    }
+
+    function parseReqs(str, totalGaps) {
+        let reqs = {};
+        if (!str.trim()) return reqs;
+        let parts = str.split(',');
+        for (let p of parts) {
+            p = p.trim(); if (!p) continue;
+            let splitted = p.split('-');
+            if (splitted.length !== 2) throw "Формат: 'раз-кол' (напр. 1-3)";
+            let diff = parseInt(splitted[0]), count = parseInt(splitted[1]);
+            if (diff < 1) throw "Разница >= 1"; if (count < 0) throw "Кол-во >= 0";
+            reqs[diff] = count;
+        }
+        if (Object.values(reqs).reduce((a,b) => a+b, 0) > totalGaps) throw `Сумма разниц > ${totalGaps}!`;
+        return reqs;
+    }
+
+    function getGapSeqs(remLen, remReqs, restrDiff, curSum) {
+        if (remLen === 0) return Object.values(remReqs).every(v => v === 0) ? [{ gaps: [], sum: curSum }] : [];
+        let res = [], maxGap = (currentConfig.maxNum - 1) - curSum - (remLen - 1);
+        if (maxGap < 1) return res;
+        let totalReqLeft = Object.values(remReqs).reduce((a,b) => a+b, 0);
+        for (let diff in remReqs) {
+            diff = parseInt(diff);
+            if (remReqs[diff] > 0 && diff <= maxGap && (remLen - 1) >= (totalReqLeft - 1)) {
+                let newReqs = {...remReqs}; newReqs[diff]--;
+                for (let seq of getGapSeqs(remLen - 1, newReqs, restrDiff, curSum + diff)) res.push({ gaps: [diff, ...seq.gaps], sum: seq.sum });
+            }
+        }
+        for (let v = 1; v <= maxGap; v++) {
+            if (restrDiff.includes(v)) continue;
+            if ((remLen - 1) >= totalReqLeft) for (let seq of getGapSeqs(remLen - 1, remReqs, restrDiff, curSum + v)) res.push({ gaps: [v, ...seq.gaps], sum: seq.sum });
+        }
+        return res;
+    }
+
+    function countRule(id) {
+        let statusEl = document.getElementById(`status-${id}`);
+        let inputEl = document.getElementById(`rule-${id}`).querySelector('.rule-input');
+        try {
+            let N1 = parseInt(document.getElementById('inputN1').value);
+            if (isNaN(N1) || N1 < 2 || N1 > currentConfig.maxNum) throw `Поле 1: от 2 до ${currentConfig.maxNum}`;
+            
+            // Проверка на дурака для включений (нельзя включить больше чисел, чем влезет в билет)
+            let inclusionsF1 = parseNumList(document.getElementById('incN1').value);
+            if (inclusionsF1.length > N1) throw `Включений (${inclusionsF1.length}) больше, чем чисел в билете (${N1})!`;
+
+            let totalGaps = N1 - 1;
+            let reqs = parseReqs(inputEl.value, totalGaps);
+            let restrDiff = Object.keys(reqs).map(Number);
+            let exclusionsF1 = parseNumList(document.getElementById('excN1').value);
+            
+            let sequences = getGapSeqs(totalGaps, reqs, restrDiff, 0);
+            let uniqueCombos = new Set();
+            
+            for (let seq of sequences) {
+                let maxStart = currentConfig.maxNum - seq.sum;
+                for (let start = 1; start <= maxStart; start++) {
+                    if (exclusionsF1.includes(start)) continue; 
+                    let combo = [start];
+                    let isValid = true;
+                    for (let g of seq.gaps) {
+                        let nextNum = combo[combo.length - 1] + g;
+                        if (exclusionsF1.includes(nextNum)) { isValid = false; break; }
+                        combo.push(nextNum);
+                    }
+                    
+                    // ПРОВЕРКА НА ВКЛЮЧЕНИЯ: если есть включения, проверяем все ли они есть в комбинации
+                    if (isValid && inclusionsF1.length > 0) {
+                        if (!inclusionsF1.every(incNum => combo.includes(incNum))) {
+                            isValid = false;
+                        }
+                    }
+                    
+                    if (isValid) uniqueCombos.add(combo.join(','));
+                }
+            }
+            
+            ruleSetsData[id] = Array.from(uniqueCombos).map(c => c.split(',').map(Number));
+            statusEl.innerText = `✅ Найдено: ${ruleSetsData[id].length} комбинаций`;
+            statusEl.style.color = "#27ae60";
+        } catch (e) {
+            ruleSetsData[id] = [];
+            statusEl.innerText = "❌ " + e;
+            statusEl.style.color = "#e74c3c";
+        }
+    }
+
+    document.getElementById('btnGenerate').addEventListener('click', () => {
+        let globalStatus = document.getElementById('globalStatus');
+        let activeSets = Object.entries(ruleSetsData).filter(([id, arr]) => arr.length > 0);
+        
+        if (activeSets.length === 0) { globalStatus.innerText = "Нет посчитанных наборов!"; globalStatus.style.color = "#e74c3c"; return; }
+
+        let N2 = currentConfig.hasField2 ? parseInt(document.getElementById('inputN2').value) : 0;
+        if (currentConfig.hasField2 && (isNaN(N2) || N2 < 1)) N2 = 1;
+
+        let totalTickets = parseInt(document.getElementById('inputAmount').value);
+        if (isNaN(totalTickets) || totalTickets <= 0) { globalStatus.innerText = "Введите кол-во билетов!"; globalStatus.style.color = "#e74c3c"; return; }
+
+        let exclusionsF2 = currentConfig.hasField2 ? parseNumList(document.getElementById('excN2').value) : [];
+        let inclusionsF2 = currentConfig.hasField2 ? parseNumList(document.getElementById('incN2').value) : [];
+
+        // Проверка: нельзя включить во второе поле больше чисел, чем там должно быть по правилам
+        if (inclusionsF2.length > N2) {
+            globalStatus.innerText = `❌ Во Поле 2 нельзя включить ${inclusionsF2.length} чисел (задано только ${N2})!`;
+            globalStatus.style.color = "#e74c3c"; 
+            return; 
+        }
+
+        let csv = "\uFEFF" + (currentConfig.hasField2 ? "Поле 1;Поле 2\n" : "Поле 1\n");
+        let setsToProcess = activeSets.length;
+        let baseQuota = Math.floor(totalTickets / setsToProcess);
+        let extraTickets = totalTickets % setsToProcess;
+        let reportDetails = []; 
+
+        for (let i = 0; i < setsToProcess; i++) {
+            let [id, combos] = activeSets[i];
+            let currentQuota = baseQuota + (i < extraTickets ? 1 : 0);
+            if (currentQuota > combos.length) currentQuota = combos.length;
+            reportDetails.push(`Набор ${i + 1}: ${currentQuota} шт.`);
+
+            let shuffled = combos.sort(() => 0.5 - Math.random());
+            let selected = shuffled.slice(0, currentQuota);
+
+            for (let combo of selected) {
+                let field1 = combo.join(' ');
+                
+                if (currentConfig.hasField2) {
+                    let field2Arr = [];
+                    
+                    // 1. Сначала пихаем принудительные включения
+                    field2Arr = [...inclusionsF2];
+                    
+                    // 2. Добиваем оставшиеся места рандомом, избегая исключений и дублей включений
+                    let remainingSlots = N2 - field2Arr.length;
+                    let attempts = 0;
+                    while (remainingSlots > 0 && attempts < 100) {
+                        let randNum = Math.floor(Math.random() * 4) + 1;
+                        if (!exclusionsF2.includes(randNum) && !field2Arr.includes(randNum)) {
+                            field2Arr.push(randNum);
+                            remainingSlots--;
+                        }
+                        attempts++;
+                    }
+                    
+                    // Сортируем Поле 2 по возрастанию для красоты
+                    field2Arr.sort((a,b) => a - b);
+                    
+                    csv += `${field1};${field2Arr.join(' ')}\n`;
+                } else {
+                    csv += `${field1}\n`;
+                }
+            }
+        }
+
+        let blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        let link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = "lottery_export.csv";
+        link.click();
+        
+        globalStatus.style.color = "#27ae60";
+        globalStatus.innerText = `✅ Успешно выгружено: ${totalTickets} билетов.\n${reportDetails.join(' | ')}`;
+    });
+</script>
+
+</body>
+</html>
