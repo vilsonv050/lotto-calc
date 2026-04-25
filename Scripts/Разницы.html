@@ -116,11 +116,31 @@
 
         <div class="algo-box">
             <div class="algo-title">АЛГОРИТМ ВЫБОРКИ (по умолчанию: Классический)</div>
-            <div class="algo-row"><label class="custom-check"><input type="checkbox" class="algo-checkbox" data-algo="even"><span class="checkmark"></span>Равномерное распределение</label><span class="tip">?<span class="tiptext">Режет базу на равные куски и берет по 1 билету из каждого. Исключает скопление билетов с одинаковыми началами.</span></span></div>
-            <div class="algo-row"><label class="custom-check"><input type="checkbox" class="algo-checkbox" data-algo="anti"><span class="checkmark"></span>Анти-пересечение</label><span class="tip">?<span class="tiptext">Подбирает билеты так, чтобы они имели минимум общих чисел. Пытается покрыть максимум разных чисел из поля.</span></span></div>
-            <div class="algo-row"><label class="custom-check"><input type="checkbox" class="algo-checkbox" data-algo="weight"><span class="checkmark"></span>Взвешенный (По сумме)</label><span class="tip">?<span class="tiptext">Смещает рандом в пользу билетов, сумма которых ближе к математическому среднему (золотая середина).</span></span></div>
-            <div class="algo-row"><label class="custom-check"><input type="checkbox" class="algo-checkbox" data-algo="reservoir"><span class="checkmark"></span>Интеллектуальный поток</label><span class="tip">?<span class="tiptext">Принимает решение "на лету" при переборе базы (подбрасывание монетки на каждом шаге).</span></span></div>
-            <div class="algo-row"><label class="custom-check"><input type="checkbox" class="algo-checkbox" data-algo="hist"><span class="checkmark"></span>Историческая эксклюзия</label><span class="tip">?<span class="tiptext">Запоминает в памяти браузера КАЖДЫЙ скачанный билет. Новые выгрузки никогда не будут содержать старые билеты.</span></span></div>
+            
+            <div class="algo-row">
+                <label class="custom-check"><input type="checkbox" class="algo-checkbox" data-algo="even"><span class="checkmark"></span>Равномерное распределение</label>
+                <span class="tip">?<span class="tiptext">Представьте базу как длинную палку колбасы. Скрипт режет её на равные куски (по количеству нужных билетов) и из каждого куска достает ровно 1 случайный билет. Гарантирует, что вы не получите 10 билетов, которые все начинаются с цифры 1 или 2.</span></span>
+            </div>
+
+            <div class="algo-row">
+                <label class="custom-check"><input type="checkbox" class="algo-checkbox" data-algo="anti"><span class="checkmark"></span>Анти-пересечение</label>
+                <span class="tip">?<span class="tiptext">Скрипт берет первый билет случайно. Второй билет он ищет специально: просматривает базу и находит тот, у которого минимум совпадающих чисел с первым. Третий — чтобы не пересекался с первыми двумя. Итог: билеты стараются покрыть как можно больше РАЗНЫХ чисел из поля.</span></span>
+            </div>
+
+            <div class="algo-row">
+                <label class="custom-check"><input type="checkbox" class="algo-checkbox" data-algo="weight"><span class="checkmark"></span>Взвешенный (По сумме)</label>
+                <span class="tip">?<span class="tiptext">У каждого билета есть сумма всех чисел (например, 1+2+3...=36, или 15+16+17...=132). Среднее значение для 8 чисел — 84. Этот алгоритм отсекает экстремальные билеты (слишком легкие или тяжелые) и тянет рандом только из тех, чья сумма ближе всего к "золотой середине".</span></span>
+            </div>
+
+            <div class="algo-row">
+                <label class="custom-check"><input type="checkbox" class="algo-checkbox" data-algo="reservoir"><span class="checkmark"></span>Интеллектуальный поток</label>
+                <span class="tip">?<span class="tiptext">Работает как конвейер. Скрипт не ждет, пока соберет всю базу. Он смотрит на 1-й билет — кладет в корзину. На 2-й — подбрасывает монетку (шанс 50%), возможно, заменяет им первый. На 100-й — шанс замены всего 1%. Результат математически идентичен полной перетасовке.</span></span>
+            </div>
+
+            <div class="algo-row">
+                <label class="custom-check"><input type="checkbox" class="algo-checkbox" data-algo="hist"><span class="checkmark"></span>Историческая эксклюзия</label>
+                <span class="tip">?<span class="tiptext">Скрипт записывает КАЖДЫЙ скачанный вами билет в скрытую память браузера. При новой генерации он сравнивает пул с этой черной книгой. Вы никогда не скачаете один и тот же билет дважды (пока не нажмете "Очистить всё").</span></span>
+            </div>
         </div>
 
         <div class="top-settings">
@@ -151,27 +171,40 @@
 
 <div id="helpModal" class="modal-overlay">
     <div class="modal-box">
-        <div class="modal-header">Справка по функционалу <button class="modal-close" id="closeHelp">✕</button></div>
+        <div class="modal-header">Справка по основному функционалу <button class="modal-close" id="closeHelp">✕</button></div>
         <div class="modal-text">
             
             <div class="version-box">
-                <b>Версия: 1.1 | Дата: 24.05.2024</b>
+                <b>Версия: 1.1 | Дата: 25.04.2026</b>
             </div>
 
             <b>Принцип работы</b>
-            Если не задавать правила разниц, скрипт работает как обычный генератор случайных чисел, учитывая только базовые настройки. Если задать правила — скрипт переключается на сложную генерацию по математическим "шагам".
-            <b>1. Выбор лотереи</b>
-            <ul>
-                <li><b>Восьмерки:</b> Поле 1 от 1 до 20. Поле 2 от 1 до 4.</li>
-                <li><b>Премьер:</b> Поле 1 от 1 до 20. Поле 2 от 1 до 20. Лимит: макс. 12 чисел в одном поле, макс. 18 чисел суммарно.</li>
-                <li><b>ТОП-12:</b> Поле 1 от 1 до 24. Поле 2 отсутствует.</li>
-            </ul>
-            <b>2. Формат разниц</b>
-            Задается как "разница-количество" (напр. 1-3). Остальные шаги добираются рандомно.
+            Скрипт не генерирует числа вслепую. Он собирает их по жестким математическим правилам "шагов" (разниц) между числами в билете, а затем фильтрует полученные комбинации.
+            
+            <b>1. Выбор лотереи и базовые поля</b>
+            Меняет лимиты (до 20 или до 24) и автоматически скрывает Поле 2, если оно не предусмотрено форматом. Стрелочками задается объем выгрузки.
+            
+            <b>2. Формат разниц (Основа скрипта)</b>
+            Задается в виде "разница-количество" (напр. 1-3 означает, что в билете шаг "1" встретится ровно 3 раза). Остальные шаги добираются рандомно, чтобы вписаться в лимит поля.
+            
             <b>3. Мульти-наборы</b>
-            Создание независимых блоков правил. Билеты честно делятся между этими блоками.
+            Позволяет создать несколько независимых блоков с разными правилами разниц. При выгрузке общее количество билетов честно делится между этими блоками.
+            
             <b>4. Исключения и Включения</b>
-            Работают с учетом выбранной лотереи (для Премьера во втором поле исключаются цифры до 20).
+            <ul>
+                <li><b>Исключения:</b> Гарантируют, что этих цифр в билете 100% не будет.</li>
+                <li><b>Включения:</b> Гарантируют, что эти цифры в билете 100% будут. Остальные места заполнятся по правилам.</li>
+            </ul>
+
+            <b>5. Алгоритмы выборки (Как скрипт берет 10 билетов из 17 000)</b>
+            <ul>
+                <li><b>Классический (по умолчанию):</b> Простой честный рандом. Перемешивает все 17 тысяч как колоду карт и берет верхние 10.</li>
+                <li><b>Равномерное:</b> Режет колоду на 10 равных частей и из каждой берет по 1 билету. Исключает скопление одинаковых стартовых чисел.</li>
+                <li><b>Анти-пересечение:</b> Ищет билеты так, чтобы у них было минимум общих цифр. Цель — зацепить как можно больше разных чисел из поля.</li>
+                <li><b>Взвешенный:</b> Отсекает экстремальные билеты (слишком маленькая или большая сумма чисел) и тянет только те, что ближе к математической норме.</li>
+                <li><b>Интеллектуальный поток:</b> Принимает решение "на лету" при переборе базы (подбрасывание монетки на каждом шаге).</li>
+                <li><b>Историческая эксклюзия:</b> Запоминает скачанные билеты в памяти браузера. Никогда не выдаст дубль из прошлых генераций.</li>
+            </ul>
         </div>
     </div>
 </div>
@@ -313,7 +346,7 @@
                     if (currentQuota > combos.length) currentQuota = combos.length; reportDetails.push(`Набор ${i + 1}: ${currentQuota} шт.`);
                     let selected = pickTickets(combos, currentQuota);
                     for (let combo of selected) { 
-                        let f2 = []; if(currentConfig.hasField2) { f2 = [...incF2]; let rem = N2 - f2.length; let att = 0; while (rem > 0 && att < 100) { let r = Math.floor(Math.random() * currentConfig.maxNumF2) + 1; if (!excF2.includes(r) && !f2.includes(r)) { f2.push(r); rem--; } att++; } f2.sort((a,b) => a - b); }
+                        let f2 = []; if(currentConfig.hasField2) { f2 = [...incF2]; let rem = N2 - f2.length; let att = 0; while (rem > 0 && att < 100) { let r = Math.floor(Math.random() * currentConfig.maxNumF2) + 1; if (!excF2.includes(r) && !f2.includes(r)) { f2.push(r); rem--; } att++; } f2.sort((a,b) => a - b; }
                         csv += formatCsvRow(combo, f2); 
                     }
                 }
