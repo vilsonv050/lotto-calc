@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Генератор Разниц [ 86 ]</title>
+    <title>Генератор Разниц [ 87 ]</title>
     <!-- AI COMMENT: При каждом изменении или дополнении функционала скрипта ОБЯЗАТЕЛЬНО обновлять версию и дату в справке (в блоке class="version-box"), чтобы пользователь мог отслеживать актуальность. -->
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -48,12 +48,14 @@
 
         .tip { position: relative; display: inline-block; margin-left: auto; cursor: help; color: #bdc3c7; font-weight: bold; flex-shrink: 0; }
         .tip .tiptext {
-            visibility: hidden; opacity: 0; width: 260px; background: #2c3e50; color: #fff; text-align: left;
-            border-radius: 4px; padding: 10px; position: absolute; z-index: 10000; 
-            top: 50%; right: 115%; transform: translateY(-50%); transition: opacity 0.3s; font-size: 11px; font-weight: normal; line-height: 1.4;
+            visibility: hidden; opacity: 0; width: 340px; background: #2c3e50; color: #fff; text-align: left;
+            border-radius: 6px; padding: 12px 14px; position: absolute; z-index: 10000; 
+            top: 50%; right: 120%; transform: translateY(-50%); transition: opacity 0.3s; font-size: 11px; font-weight: normal; line-height: 1.5;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
         }
-        .tip .tiptext::after { content: ""; position: absolute; top: 50%; left: 100%; margin-top: -5px; border-width: 5px; border-style: solid; border-color: transparent transparent transparent #2c3e50; }
+        .tip .tiptext::after { content: ""; position: absolute; top: 50%; left: 100%; margin-top: -6px; border-width: 6px; border-style: solid; border-color: transparent transparent transparent #2c3e50; }
         .tip:hover .tiptext { visibility: visible; opacity: 1; }
+        .tip .tiptext b { color: #f1c40f; display: inline; margin: 0; font-size: 11px; }
 
         .top-settings { background: #ecf0f1; padding: 10px; border-radius: 6px; display: flex; flex-direction: column; gap: 8px; }
         .top-row { display: flex; gap: 8px; align-items: flex-end; }
@@ -84,23 +86,27 @@
         .hidden { display: none !important; }
 
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 100000; justify-content: center; align-items: center; }
-        .modal-box { background: white; padding: 20px; border-radius: 8px; width: 90%; max-width: 500px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); position: relative; max-height: 90vh; overflow-y: auto; }
+        .modal-box { background: white; padding: 20px; border-radius: 8px; width: 90%; max-width: 520px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); position: relative; max-height: 90vh; overflow-y: auto; }
         .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; font-size: 16px; font-weight: bold; color: #2c3e50;}
         .modal-close { background: none; border: none; font-size: 20px; color: #7f8c8d; cursor: pointer; }
         .modal-text { font-size: 13px; color: #333; line-height: 1.6; }
-        .modal-text b { color: #2c3e50; display: block; margin-top: 10px; margin-bottom: 4px; }
+        .modal-text b { color: #2c3e50; display: block; margin-top: 12px; margin-bottom: 4px; }
         .modal-text b:first-child { margin-top: 0; }
         .modal-text ul { margin-left: 20px; margin-top: 5px; }
+        .modal-text li { margin-bottom: 3px; }
+        .modal-text em { color: #7f8c8d; font-size: 12px; }
         
-        .version-box { background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 4px; padding: 10px; margin-bottom: 15px; font-size: 12px; color: #495057; }
+        .version-box { background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 4px; padding: 10px 12px; margin-bottom: 15px; font-size: 12px; color: #495057; }
         .version-box b { color: #3498db; margin: 0; }
+        .changelog { margin-top: 6px; font-size: 11px; color: #7f8c8d; line-height: 1.5; }
+        .changelog li { margin-bottom: 2px; }
     </style>
 </head>
 <body>
 
 <div id="widget">
     <div id="header">
-        <span>Генератор Разниц [ 86 ]</span>
+        <span>Генератор Разниц [ 87 ]</span>
         <div class="header-btns">
             <button id="helpBtn" title="Справка">?</button>
             <button id="closeBtn" title="Закрыть">✕</button>
@@ -116,11 +122,11 @@
 
         <div class="algo-box">
             <div class="algo-title">АЛГОРИТМ ВЫБОРКИ (по умолчанию: Классический)</div>
-            <div class="algo-row"><label class="custom-check"><input type="checkbox" class="algo-checkbox" data-algo="even"><span class="checkmark"></span>Равномерное распределение</label><span class="tip">?<span class="tiptext">Режет базу на равные куски и берет по 1 билету из каждого. Исключает скопление билетов с одинаковыми началами.</span></span></div>
-            <div class="algo-row"><label class="custom-check"><input type="checkbox" class="algo-checkbox" data-algo="anti"><span class="checkmark"></span>Анти-пересечение</label><span class="tip">?<span class="tiptext">Подбирает билеты так, чтобы они имели минимум общих чисел. Пытается покрыть максимум разных чисел из поля.</span></span></div>
-            <div class="algo-row"><label class="custom-check"><input type="checkbox" class="algo-checkbox" data-algo="weight"><span class="checkmark"></span>Взвешенный (По сумме)</label><span class="tip">?<span class="tiptext">Смещает рандом в пользу билетов, сумма которых ближе к математическому среднему (золотая середина).</span></span></div>
-            <div class="algo-row"><label class="custom-check"><input type="checkbox" class="algo-checkbox" data-algo="reservoir"><span class="checkmark"></span>Интеллектуальный поток</label><span class="tip">?<span class="tiptext">Принимает решение "на лету" при переборе базы (подбрасывание монетки на каждом шаге).</span></span></div>
-            <div class="algo-row"><label class="custom-check"><input type="checkbox" class="algo-checkbox" data-algo="hist"><span class="checkmark"></span>Историческая эксклюзия</label><span class="tip">?<span class="tiptext">Запоминает в памяти браузера КАЖДЫЙ скачанный билет. Новые выгрузки никогда не будут содержать старые билеты.</span></span></div>
+            <div class="algo-row"><label class="custom-check"><input type="checkbox" class="algo-checkbox" data-algo="even"><span class="checkmark"></span>Равномерное распределение</label><span class="tip">?<span class="tiptext"><b>Равномерное распределение</b><br><br>Всю найденную базу комбинаций скрипт делит на ровные куски (по количеству запрошенных билетов). Из каждого куска берётся ровно 1 случайный билет.<br><br><b>Результат:</b> билеты будут равномерно «размазаны» по всей базе — не будет скоплений с похожими началами или концами.<br><br><b>Когда полезно:</b> если хотите максимальное разнообразие по структуре билетов, а не по их числовому составу.<br><br><em>Минус: не учитывает пересечения чисел между билетами.</em></span></span></div>
+            <div class="algo-row"><label class="custom-check"><input type="checkbox" class="algo-checkbox" data-algo="anti"><span class="checkmark"></span>Анти-пересечение</label><span class="tip">?<span class="tiptext"><b>Анти-пересечение</b><br><br>Первый билет берётся случайно. Каждый следующий подбирается так, чтобы иметь <b>минимум общих чисел со ВСЕМИ уже выбранными</b> билетами (а не только с предыдущим).<br><br><b>Как работает:</b> из оставшихся кандидатов проверяется до 100 вариантов, выбирается тот, чьё пересечение с общим набором уже выбранных чисел минимально. Если найден с нулевым пересечением — берётся сразу.<br><br><b>Когда полезно:</b> когда нужно покрыть максимум разных чисел из поля. Идеально для стратегий «широго охвата».<br><br><em>Минус: билеты могут получиться с неестественными суммами (очень низкие или очень высокие).</em></span></span></div>
+            <div class="algo-row"><label class="custom-check"><input type="checkbox" class="algo-checkbox" data-algo="weight"><span class="checkmark"></span>Взвешенный (По сумме)</label><span class="tip">?<span class="tiptext"><b>Взвешенный по сумме</b><br><br>Вычисляется «золотая середина» — математическое среднее суммы всех чисел билета: <b>N × (MaxNum + 1) / 2</b>.<br><br>Например, для 8 из 20 средняя сумма = 8 × 10.5 = 84. Все комбинации сортируются по близости суммы к этому значению. Из лучших 20% берётся случайная выборка.<br><br><b>Когда полезно:</b> если верите, что тиражи стремятся к средним суммам, и хотите исключить экстремально «лёгкие» (1,2,3,4,5...) или «тяжёлые» (16,17,18,19,20...) билеты.<br><br><em>Минус: сужает разнообразие, все билеты будут иметь похожие суммы.</em></span></span></div>
+            <div class="algo-row"><label class="custom-check"><input type="checkbox" class="algo-checkbox" data-algo="reservoir"><span class="checkmark"></span>Интеллектуальный поток</label><span class="tip">?<span class="tiptext"><b>Интеллектуальный поток (Reservoir Sampling)</b><br><br>Классический алгоритм из теории вероятностей. Скрипт «проходит» по всей базе комбинаций и на каждом шаге подбрасывает монетку — заменить ли текущий билет в выдаче на этот.<br><br><b>Математическое свойство:</b> каждая комбинация из базы имеет абсолютно равную вероятность попасть в итоговую выборку, независимо от порядка перебора и размера базы.<br><br><b>Когда полезно:</b> когда нужна математически честная выборка без перекосов. Работает за один проход по данным — эффективно даже на огромных базах.<br><br><em>Минус: результат неотличим от обычного рандома по виду, но математически чище.</em></span></span></div>
+            <div class="algo-row"><label class="custom-check"><input type="checkbox" class="algo-checkbox" data-algo="hist"><span class="checkmark"></span>Историческая эксклюзия</label><span class="tip">?<span class="tiptext"><b>Историческая эксклюзия</b><br><br>Скрипт запоминает <b>КАЖДЫЙ скачанный билет</b> в памяти браузера (localStorage). При новой генерации все ранее выгруженные билеты исключаются из выдачи.<br><br><b>Как работает:</b> из базы фильтруются все билеты, которые уже были скачаны. Если после фильтрации осталось достаточно — берутся только новые. Если уникальные билеты исчерпаны — выводится предупреждение и берутся случайные (с повторами).<br><br><b>Когда полезно:</b> для серии выгрузок — гарантирует, что вы никогда не скачаете один и тот же билет дважды.<br><br><em>Минус: со временем пул уникальных билетов исчерпается. Очистить историю можно кнопкой «Очистить всё».</em></span></span></div>
         </div>
 
         <div class="top-settings">
@@ -155,23 +161,98 @@
         <div class="modal-text">
             
             <div class="version-box">
-                <b>Версия: 1.1 | Дата: 24.05.2024</b>
+                <b>Версия: 1.2 | Дата: 25.04.2026</b>
+                <ul class="changelog">
+                    <li>Дедупликация чисел во включениях (ввод "3,3,3" больше не создаёт дубли)</li>
+                    <li>Авто-подсчёт правил при генерации (больше не нужно вручную нажимать «Посчитать»)</li>
+                    <li>Анти-пересечение теперь сравнивает со ВСЕМИ выбранными билетами, а не с последним</li>
+                    <li>Очистка исключений/включений при смене лотереи</li>
+                    <li>Проверка достаточности пула чисел в режиме обычного рандома</li>
+                </ul>
             </div>
 
-            <b>Принцип работы</b>
-            Если не задавать правила разниц, скрипт работает как обычный генератор случайных чисел, учитывая только базовые настройки. Если задать правила — скрипт переключается на сложную генерацию по математическим "шагам".
+            <b>Общий принцип работы</b>
+            Скрипт — это генератор лотерейных билетов с двумя режимами:
+            <ul>
+                <li><b>Без правил разниц</b> — работает как обычный генератор случайных чисел с учётом базовых настроек (кол-во чисел, исключения, включения).</li>
+                <li><b>С правилами разниц</b> — переключается на сложную математическую генерацию: перебирает ВСЕ возможные комбинации, отфильтровывает по заданным шагам (разницам между соседними числами), и из оставшегося пула выбирает билеты через указанный алгоритм.</li>
+            </ul>
+
             <b>1. Выбор лотереи</b>
             <ul>
-                <li><b>Восьмерки:</b> Поле 1 от 1 до 20. Поле 2 от 1 до 4.</li>
-                <li><b>Премьер:</b> Поле 1 от 1 до 20. Поле 2 от 1 до 20. Лимит: макс. 12 чисел в одном поле, макс. 18 чисел суммарно.</li>
-                <li><b>ТОП-12:</b> Поле 1 от 1 до 24. Поле 2 отсутствует.</li>
+                <li><b>Восьмерки:</b> Поле 1 — числа от 1 до 20. Поле 2 — числа от 1 до 4. Стандартный формат: 8 чисел + 1 число.</li>
+                <li><b>Премьер:</b> Поле 1 — числа от 1 до 20. Поле 2 — числа от 1 до 20. <em>Лимиты: максимум 12 чисел в одном поле, максимум 18 чисел суммарно за оба поля.</em></li>
+                <li><b>ТОП-12:</b> Поле 1 — числа от 1 до 24. Поле 2 отсутствует. Стандартный формат: 12 чисел.</li>
             </ul>
-            <b>2. Формат разниц</b>
-            Задается как "разница-количество" (напр. 1-3). Остальные шаги добираются рандомно.
-            <b>3. Мульти-наборы</b>
-            Создание независимых блоков правил. Билеты честно делятся между этими блоками.
-            <b>4. Исключения и Включения</b>
-            Работают с учетом выбранной лотереи (для Премьера во втором поле исключаются цифры до 20).
+            <em>При смене лотереи все поля исключений/включений автоматически очищаются, настройки сбрасываются на значения по умолчанию.</em>
+
+            <b>2. Настройка полей</b>
+            <ul>
+                <li><b>Поле 1 (чисел):</b> сколько чисел выпадет в первом поле билета. Можно ставить любое значение в пределах лотереи, не только стандартное.</li>
+                <li><b>Поле 2 (чисел):</b> сколько чисел выпадет во втором поле. Отображается только если лотерея поддерживает второе поле.</li>
+                <li><b>Кол-во билетов:</b> сколько билетов будет сгенерировано в текущей выгрузке.</li>
+            </ul>
+
+            <b>3. Исключения</b>
+            Указанные числа <b>никогда не появятся</b> в сгенерированных билетах. Ввод через запятую. Например: "5, 12, 18" — эти числа будут вычеркнуты из пула.
+            <ul>
+                <li>Работают отдельно для каждого поля.</li>
+                <li>Учитывают диапазон выбранной лотереи (числа вне диапазона игнорируются).</li>
+                <li>Если исключений слишком много и остаётся недостаточно чисел для заполнения билета — скрипт выдаст ошибку с пояснением.</li>
+            </ul>
+
+            <b>4. Включения</b>
+            Указанные числа <b>гарантированно появятся</b> в каждом билете. Ввод через запятую. Например: "3, 10" — каждый билет будет содержать эти числа.
+            <ul>
+                <li>Нельзя указать больше включений, чем чисел в поле (ошибка).</li>
+                <li>Включение не может одновременно быть в исключениях (ошибка).</li>
+                <li>Дубликаты автоматически удаляются: ввод "3, 3, 10" эквивалентен "3, 10".</li>
+                <li>Остальные слоты билета заполняются случайными числами из оставшегося пула.</li>
+            </ul>
+
+            <b>5. Правила разниц (ключевая функция)</b>
+            Разница — это шаг между двумя соседними числами в отсортированном билете. Например, билет [2, 5, 9, 12] имеет разницы: 3, 4, 3.
+            <ul>
+                <li><b>Формат:</b> "разница-количество". Например, "1-3" означает «ровно 3 шага по 1».</li>
+                <li><b>Несколько правил:</b> через запятую: "1-3, 5-1" — три шага по 1 и один шаг по 5.</li>
+                <li><b>Остальные шаги</b> (не указанные в правилах) подбираются случайно из допустимых значений.</li>
+                <li>Сумма всех разниц не может превышать (МаксЧисло − 1).</li>
+                <li>Нажмите <b>«Посчитать»</b> чтобы увидеть сколько комбинаций нашлось по правилу. Это делается автоматически при генерации, но ручной подсчёт позволяет оценить адекватность правил заранее.</li>
+            </ul>
+
+            <b>6. Мульти-наборы правил</b>
+            Можно создать несколько независимых блоков правил кнопкой <b>«+»</b>.
+            <ul>
+                <li>Каждый набор формирует свой пул комбинаций.</li>
+                <li>Запрошенные билеты честно делятся между наборами (поровну, остаток — первому набору).</li>
+                <li>Пример: 15 билетов, 3 набора → по 5 билетов из каждого набора.</li>
+                <li>Нельзя удалить единственный набор (минимум 1).</li>
+            </ul>
+
+            <b>7. Алгоритмы выборки</b>
+            Когда база комбинаций готова (из правил или из обычного рандома), алгоритм решает <b>какие именно билеты</b> из базы попадут в выгрузку. Подробное описание каждого алгоритма доступно по кнопке <b>«?»</b> рядом с чекбоксом. Можно выбрать только один алгоритм или не выбирать ни одного (тогда используется Классический — простой перемешанный случайный отбор).
+
+            <b>8. Выгрузка</b>
+            <ul>
+                <li>Формат: <b>CSV</b> с кодировкой UTF-8 (BOM), корректно открывается в Excel на русском языке.</li>
+                <li>Разделитель полей — точка с запятой (;).</li>
+                <li>Числа внутри поля разделены пробелом.</li>
+                <li>Файл скачивается автоматически под именем "lottery_export.csv".</li>
+            </ul>
+
+            <b>9. Кнопка «Очистить всё»</b>
+            Полный сброс скрипта в начальное состояние:
+            <ul>
+                <li>Лотерея → Восьмерки.</li>
+                <li>Все поля исключений/включений → пусто.</li>
+                <li>Кол-во билетов → 15.</li>
+                <li>Алгоритм → Классический (сняты все галочки).</li>
+                <li>Все наборы правил → удалены и создан один пустой.</li>
+                <li>История скачанных билетов → полностью стёрта из памяти браузера.</li>
+            </ul>
+
+            <b>10. Перетаскивание виджета</b>
+            Виджет можно перемещать по экрану за тёмную шапку (зажать мышкой и тянуть). Закрытие — кнопка «✕» в шапке.
         </div>
     </div>
 </div>
@@ -198,12 +279,13 @@
         } else { document.getElementById('field2Block').classList.add('hidden'); document.getElementById('exc2Block').classList.add('hidden'); document.getElementById('inc2Block').classList.add('hidden'); }
         document.getElementById('excN1').placeholder = `Напр: 5, 12, ${currentConfig.maxNum - 2}`; 
         document.getElementById('excN2').placeholder = `1..${currentConfig.maxNumF2}`;
+        document.getElementById('excN1').value = ''; document.getElementById('incN1').value = ''; 
+        document.getElementById('excN2').value = ''; document.getElementById('incN2').value = '';
         ruleSetsData = {}; document.querySelectorAll('.rule-status').forEach(el => el.innerText = "Ожидание ввода..."); document.getElementById('globalStatus').innerText = "";
     });
 
     document.getElementById('btnClear').addEventListener('click', () => {
         localStorage.removeItem('lottery_history'); document.getElementById('lotterySelect').value = 'vosmerki'; lotterySelect.dispatchEvent(new Event('change'));
-        document.getElementById('excN1').value = ''; document.getElementById('incN1').value = ''; document.getElementById('excN2').value = ''; document.getElementById('incN2').value = '';
         document.getElementById('inputAmount').value = 15; document.querySelectorAll('.algo-checkbox').forEach(cb => cb.checked = false);
         ruleSetsData = {}; ruleIdCounter = 0; document.getElementById('rulesContainer').innerHTML = ''; addRuleRow(); document.getElementById('globalStatus').innerText = "✅ Скрипт полностью сброшен.";
     });
@@ -223,7 +305,7 @@
     document.getElementById('closeBtn').addEventListener('click', () => widget.style.display = 'none');
 
     let ruleSetsData = {}; let ruleIdCounter = 0;
-    function parseNumList(str) { if (!str.trim()) return []; return str.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n)); }
+    function parseNumList(str) { if (!str.trim()) return []; return [...new Set(str.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n)))]; }
 
     function addRuleRow() {
         ruleIdCounter++; let currentId = ruleIdCounter; ruleSetsData[currentId] = []; 
@@ -259,7 +341,23 @@
     function pickTickets(arr, count) { let algo = getSelectedAlgo(); if (arr.length <= count) return arr; switch(algo) { case 'even': return pickEven(arr, count); case 'anti': return pickAnti(arr, count); case 'weight': return pickWeight(arr, count); case 'reservoir': return pickReservoir(arr, count); case 'hist': return pickHist(arr, count); default: return pickClassic(arr, count); } }
     function pickClassic(arr, count) { return arr.sort(() => Math.random() - 0.5).slice(0, count); }
     function pickEven(arr, count) { let chunkSize = Math.floor(arr.length / count); if (chunkSize < 1) return pickClassic(arr, count); let res = []; for (let i = 0; i < count; i++) { let start = i * chunkSize; let end = (i === count - 1) ? arr.length : start + chunkSize; res.push(arr.slice(start, end)[Math.floor(Math.random() * (end-start))]); } return res; }
-    function pickAnti(arr, count) { let pool = [...arr].sort(() => Math.random() - 0.5); let res = [pool.shift()]; while (res.length < count && pool.length > 0) { let bestIdx = 0, minI = Infinity; let lim = Math.min(pool.length, 100); for (let i = 0; i < lim; i++) { let inter = pool[i].filter(x => res[res.length - 1].includes(x)).length; if (inter < minI) { minI = inter; bestIdx = i; if(inter === 0) break; } } res.push(pool.splice(bestIdx, 1)[0]); } return res; }
+    function pickAnti(arr, count) { 
+        let pool = [...arr].sort(() => Math.random() - 0.5); 
+        let res = [pool.shift()]; 
+        let usedNums = new Set(res[0]); 
+        while (res.length < count && pool.length > 0) { 
+            let bestIdx = 0, minI = Infinity; 
+            let lim = Math.min(pool.length, 100); 
+            for (let i = 0; i < lim; i++) { 
+                let inter = pool[i].filter(x => usedNums.has(x)).length;
+                if (inter < minI) { minI = inter; bestIdx = i; if(inter === 0) break; } 
+            } 
+            let picked = pool.splice(bestIdx, 1)[0];
+            res.push(picked);
+            picked.forEach(n => usedNums.add(n)); 
+        } 
+        return res; 
+    }
     function pickWeight(arr, count) { let N1 = parseInt(document.getElementById('inputN1').value); let avg = N1 * (currentConfig.maxNum + 1) / 2; let sorted = [...arr].sort((a, b) => Math.abs(a.reduce((s,v)=>s+v,0) - avg) - Math.abs(b.reduce((s,v)=>s+v,0) - avg)); return sorted.slice(0, Math.ceil(sorted.length * 0.2)).sort(() => Math.random() - 0.5).slice(0, count); }
     function pickReservoir(arr, count) { let res = arr.slice(0, count); for (let i = count; i < arr.length; i++) { let j = Math.floor(Math.random() * (i + 1)); if (j < count) res[j] = arr[i]; } return res; }
     function pickHist(arr, count) { let hist = JSON.parse(localStorage.getItem('lottery_history') || '[]'); let hSet = new Set(hist.map(h => h.join(','))); let f = arr.filter(c => !hSet.has(c.join(','))); if (f.length < count) { if(f.length === 0) return pickClassic(arr, count); f = arr; } let p = pickClassic(f, count); localStorage.setItem('lottery_history', JSON.stringify([...hist, ...p])); return p; }
@@ -267,12 +365,19 @@
     function generatePureRandom(N1, N2, totalTickets, excF1, incF1, excF2, incF2) {
         let pool1 = []; for(let i=1; i<=currentConfig.maxNum; i++) { if(!excF1.includes(i)) pool1.push(i); }
         if(incF1.some(inc => !pool1.includes(inc))) throw "Включенное число есть в исключениях Поля 1!";
-        let pool2 = []; for(let i=1; i<=currentConfig.maxNumF2; i++) { if(!excF2.includes(i)) pool2.push(i); }
-        if(currentConfig.hasField2 && incF2.some(inc => !pool2.includes(inc))) throw "Включенное число есть в исключениях Поля 2!";
+        let rem1 = pool1.filter(n => !incF1.includes(n));
+        if (rem1.length < N1 - incF1.length) throw `Недостаточно чисел в Поле 1! Нужно ещё ${N1 - incF1.length}, доступно ${rem1.length}.`;
+        let pool2 = []; 
+        if (currentConfig.hasField2) {
+            for(let i=1; i<=currentConfig.maxNumF2; i++) { if(!excF2.includes(i)) pool2.push(i); }
+            if(incF2.some(inc => !pool2.includes(inc))) throw "Включенное число есть в исключениях Поля 2!";
+            let rem2 = pool2.filter(n => !incF2.includes(n));
+            if (rem2.length < N2 - incF2.length) throw `Недостаточно чисел в Поле 2! Нужно ещё ${N2 - incF2.length}, доступно ${rem2.length}.`;
+        }
         let tickets = []; let attempts = 0;
         while(tickets.length < totalTickets && attempts < totalTickets * 100) {
             attempts++;
-            let t1 = [...incF1]; let rem1 = pool1.filter(n => !incF1.includes(n)); rem1.sort(() => Math.random() - 0.5); t1 = t1.concat(rem1.slice(0, N1 - incF1.length)).sort((a,b) => a - b);
+            let t1 = [...incF1]; rem1.sort(() => Math.random() - 0.5); t1 = t1.concat(rem1.slice(0, N1 - incF1.length)).sort((a,b) => a - b);
             let t2 = []; if(currentConfig.hasField2) { t2 = [...incF2]; let rem2 = pool2.filter(n => !incF2.includes(n)); rem2.sort(() => Math.random() - 0.5); t2 = t2.concat(rem2.slice(0, N2 - incF2.length)).sort((a,b) => a - b); }
             let key = JSON.stringify({f1: t1, f2: t2}); if(!tickets.find(t => JSON.stringify(t) === key)) tickets.push({f1: t1, f2: t2});
         }
@@ -298,9 +403,26 @@
         let excF2 = currentConfig.hasField2 ? parseNumList(document.getElementById('excN2').value) : [];
         let incF2 = currentConfig.hasField2 ? parseNumList(document.getElementById('incN2').value) : [];
         if (currentConfig.hasField2 && incF2.length > N2) { globalStatus.innerText = `Слишком много включений для Поля 2!`; globalStatus.style.color = "#e74c3c"; return; }
+
+        document.querySelectorAll('.rule-input').forEach(input => {
+            if (input.value.trim()) {
+                let ruleId = parseInt(input.closest('.rule-row').id.replace('rule-', ''));
+                countRule(ruleId);
+            }
+        });
+
         let csv = "\uFEFF" + (currentConfig.hasField2 ? "Поле 1;Поле 2\n" : "Поле 1\n");
         let reportDetails = []; let useAlgo = false;
         let activeSets = Object.entries(ruleSetsData).filter(([id, arr]) => arr.length > 0);
+
+        let hasRuleInputs = document.querySelectorAll('.rule-input');
+        let anyRuleEntered = false;
+        hasRuleInputs.forEach(inp => { if (inp.value.trim()) anyRuleEntered = true; });
+        if (anyRuleEntered && activeSets.length === 0) {
+            globalStatus.innerText = "❌ Правила разниц заданы, но ни один набор не прошёл подсчёт. Проверьте ошибки в строках правил."; 
+            globalStatus.style.color = "#e74c3c"; return;
+        }
+
         try {
             if (activeSets.length === 0) {
                 let pureTickets = generatePureRandom(N1, N2, totalTickets, excF1, incF1, excF2, incF2);
