@@ -28,7 +28,7 @@
         #helpBtn { background: #3498db; } #helpBtn:hover { background: #2980b9; }
         #closeBtn { background: #e74c3c; } #closeBtn:hover { background: #c0392b; }
         
-        #body { padding: 12px 15px 15px 15px; display: flex; flex-direction: column; gap: 10px; overflow: hidden; }
+        #body { padding: 12px 15px 15px 15px; display: flex; flex-direction: column; gap: 8px; overflow: hidden; }
 
         #lotterySelect {
             width: 100%; padding: 8px; border: 2px solid #3498db; border-radius: 6px;
@@ -57,6 +57,17 @@
         .tip:hover .tiptext { visibility: visible; opacity: 1; }
         .tip .tiptext b { color: #f1c40f; display: inline; margin: 0; font-size: 11px; }
 
+        .filters-box { border: 1px solid #dcdcdc; border-radius: 6px; padding: 8px 10px; background: #fdfdfd; display: flex; flex-direction: column; gap: 5px; }
+        .filters-title { font-size: 11px; color: #7f8c8d; font-weight: bold; text-align: center; display: flex; align-items: center; justify-content: center; gap: 4px; }
+        .filters-row { display: flex; gap: 6px; align-items: flex-end; }
+        .filters-group { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+        .filters-group label { font-size: 10px; color: #7f8c8d; font-weight: bold; }
+        .filters-group input { padding: 4px 6px; border: 1px solid #bdc3c7; border-radius: 3px; font-size: 11px; width: 100%; font-weight: bold; }
+        .filters-nb-check { flex-shrink: 0; flex-grow: 0; width: auto; font-size: 11px; align-self: flex-end; padding-bottom: 4px; }
+        .filters-nb-check .checkmark { width: 14px; height: 14px; margin-right: 4px; }
+        .filters-nb-check input:checked ~ .checkmark::after { font-size: 10px; top: -3px; left: 1px; }
+        .filters-sep { font-size: 9px; color: #bdc3c7; text-align: center; border-top: 1px dashed #e0e0e0; padding-top: 4px; letter-spacing: 1px; }
+
         .top-settings { background: #ecf0f1; padding: 10px; border-radius: 6px; display: flex; flex-direction: column; gap: 8px; }
         .top-row { display: flex; gap: 8px; align-items: flex-end; }
         .top-group { display: flex; flex-direction: column; gap: 3px; flex: 1; min-width: 0; }
@@ -72,14 +83,33 @@
         .inc-rand-count { width: 32px !important; text-align: center; font-size: 12px !important; padding: 5px 2px !important; flex-shrink: 0; font-weight: bold !important; }
         .inc-rand-count:disabled { background: #ecf0f1; color: #aab; border-color: #dcdcdc; cursor: not-allowed; }
 
-        .btn-row { display: flex; gap: 8px; }
-        #btnClear { background: #95a5a6; color: white; border: none; border-radius: 4px; padding: 8px; font-size: 13px; font-weight: bold; cursor: pointer; width: 30%; height: 34px; }
+        .btn-row { display: flex; gap: 8px; align-items: center; }
+        #btnClear { background: #95a5a6; color: white; border: none; border-radius: 4px; padding: 8px; font-size: 13px; font-weight: bold; cursor: pointer; height: 34px; white-space: nowrap; }
         #btnClear:hover { background: #7f8c8d; }
-        #btnGenerate { background: #27ae60; color: white; border: none; border-radius: 4px; padding: 8px; font-size: 13px; font-weight: bold; cursor: pointer; width: 70%; height: 34px; }
+        .freeze-check { flex-shrink: 0; flex-grow: 0; width: auto; }
+        .freeze-check .checkmark { border-color: #e67e22; }
+        .freeze-check input:checked ~ .checkmark { background: #e67e22; border-color: #e67e22; }
+        .freeze-check input:checked ~ .checkmark::after { font-size: 10px; top: -3px; left: 1px; }
+        .freeze-check span:last-child { font-size: 11px; color: #d35400; font-weight: bold; white-space: nowrap; }
+        #btnGenerate { background: #27ae60; color: white; border: none; border-radius: 4px; padding: 8px; font-size: 13px; font-weight: bold; cursor: pointer; height: 34px; flex-grow: 1; white-space: nowrap; }
         #btnGenerate:hover { background: #2ecc71; }
 
-        .rules-section { display: flex; flex-direction: column; gap: 8px; }
-        .rule-row { border: 1px solid #dcdcdc; border-radius: 6px; padding: 8px; background: #fff; display: flex; flex-direction: column; gap: 5px; }
+        .rules-scroll-box {
+            max-height: 160px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            padding-right: 4px;
+        }
+        .rules-scroll-box::-webkit-scrollbar { width: 6px; }
+        .rules-scroll-box::-webkit-scrollbar-track { background: #ecf0f1; border-radius: 3px; }
+        .rules-scroll-box::-webkit-scrollbar-thumb { background: #bdc3c7; border-radius: 3px; }
+        .rules-scroll-box::-webkit-scrollbar-thumb:hover { background: #95a5a6; }
+        .rules-scroll-box { scrollbar-width: 6px; scrollbar-color: #bdc3c7 #ecf0f1; }
+
+        .rule-row { border: 1px solid #dcdcdc; border-radius: 6px; padding: 8px; background: #fff; display: flex; flex-direction: column; gap: 5px; flex-shrink: 0; }
         .rule-checks { display: flex; gap: 14px; }
         .rule-checks .custom-check { font-size: 11px; flex-grow: 0; }
         .rule-checks .custom-check .checkmark { width: 14px; height: 14px; margin-right: 5px; }
@@ -98,15 +128,16 @@
         .hidden { display: none !important; }
 
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 100000; justify-content: center; align-items: center; }
-        .modal-box { background: white; padding: 20px; border-radius: 8px; width: 90%; max-width: 520px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); position: relative; max-height: 90vh; overflow-y: auto; }
+        .modal-box { background: white; padding: 20px; border-radius: 8px; width: 90%; max-width: 540px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); position: relative; max-height: 90vh; overflow-y: auto; }
         .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; font-size: 16px; font-weight: bold; color: #2c3e50;}
         .modal-close { background: none; border: none; font-size: 20px; color: #7f8c8d; cursor: pointer; }
         .modal-text { font-size: 13px; color: #333; line-height: 1.6; }
         .modal-text b { color: #2c3e50; display: block; margin-top: 12px; margin-bottom: 4px; }
         .modal-text b:first-child { margin-top: 0; }
         .modal-text ul { margin-left: 20px; margin-top: 5px; }
-        .modal-text li { margin-bottom: 3px; }
+        .modal-text li { margin-bottom: 4px; }
         .modal-text em { color: #7f8c8d; font-size: 12px; }
+        .modal-text .ex { color: #2980b9; font-size: 12px; font-style: italic; }
         
         .version-box { background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 4px; padding: 10px 12px; margin-bottom: 15px; font-size: 12px; color: #495057; }
         .version-box b { color: #3498db; margin: 0; }
@@ -134,11 +165,28 @@
 
         <div class="algo-box">
             <div class="algo-title">АЛГОРИТМ ВЫБОРКИ (по умолчанию: Классический)</div>
-            <div class="algo-row"><label class="custom-check"><input type="checkbox" class="algo-checkbox" data-algo="even"><span class="checkmark"></span>Равномерное распределение</label><span class="tip">?<span class="tiptext"><b>Равномерное распределение</b><br><br>Всю найденную базу комбинаций скрипт делит на ровные куски (по количеству запрошенных билетов). Из каждого куска берётся ровно 1 случайный билет.<br><br><b>Результат:</b> билеты будут равномерно «размазаны» по всей базе.<br><br><b>Когда полезно:</b> если хотите максимальное разнообразие по структуре билетов.<br><br><em>Минус: не учитывает пересечения чисел между билетами.</em></span></span></div>
-            <div class="algo-row"><label class="custom-check"><input type="checkbox" class="algo-checkbox" data-algo="anti"><span class="checkmark"></span>Анти-пересечение</label><span class="tip">?<span class="tiptext"><b>Анти-пересечение</b><br><br>Первый билет берётся случайно. Каждый следующий подбирается так, чтобы иметь <b>минимум общих чисел со ВСЕМИ уже выбранными</b> билетами.<br><br><b>Как работает:</b> из оставшихся кандидатов проверяется до 100 вариантов, выбирается тот, чьё пересечение с общим набором выбранных чисел минимально.<br><br><b>Когда полезно:</b> когда нужно покрыть максимум разных чисел из поля.<br><br><em>Минус: билеты могут получиться с неестественными суммами.</em></span></span></div>
-            <div class="algo-row"><label class="custom-check"><input type="checkbox" class="algo-checkbox" data-algo="weight"><span class="checkmark"></span>Взвешенный (По сумме)</label><span class="tip">?<span class="tiptext"><b>Взвешенный по сумме</b><br><br>Вычисляется «золотая середина» — математическое среднее суммы: <b>N × (MaxNum + 1) / 2</b>.<br><br>Все комбинации сортируются по близости суммы к этому значению. Из лучших 20% берётся случайная выборка.<br><br><b>Когда полезно:</b> если хотите исключить экстремально «лёгкие» или «тяжёлые» билеты.<br><br><em>Минус: сужает разнообразие, все билеты имеют похожие суммы.</em></span></span></div>
-            <div class="algo-row"><label class="custom-check"><input type="checkbox" class="algo-checkbox" data-algo="reservoir"><span class="checkmark"></span>Интеллектуальный поток</label><span class="tip">?<span class="tiptext"><b>Интеллектуальный поток (Reservoir Sampling)</b><br><br>Классический алгоритм из теории вероятностей. Скрипт «проходит» по всей базе и на каждом шаге подбрасывает монетку — заменить ли текущий билет в выдаче.<br><br><b>Математическое свойство:</b> каждая комбинация имеет абсолютно равную вероятность попасть в выборку.<br><br><b>Когда полезно:</b> когда нужна математически честная выборка без перекосов.<br><br><em>Минус: результат неотличим от обычного рандома по виду.</em></span></span></div>
-            <div class="algo-row"><label class="custom-check"><input type="checkbox" class="algo-checkbox" data-algo="hist"><span class="checkmark"></span>Историческая эксклюзия</label><span class="tip">?<span class="tiptext"><b>Историческая эксклюзия</b><br><br>Запоминает <b>КАЖДЫЙ скачанный билет</b> в памяти браузера. При новой генерации все ранее выгруженные билеты исключаются.<br><br><b>Как работает:</b> фильтруются билеты из базы. Если уникальные билеты исчерпаны — берутся случайные (с повторами).<br><br><b>Когда полезно:</b> для серии выгрузок — гарантирует отсутствие дублей между выгрузками.<br><br><em>Минус: пул со временем исчерпается. Сброс — кнопка «Очистить всё».</em></span></span></div>
+            <div class="algo-row"><label class="custom-check"><input type="checkbox" class="algo-checkbox" data-algo="even"><span class="checkmark"></span>Равномерное распределение</label><span class="tip">?<span class="tiptext"><b>Равномерное распределение</b><br><br>Делит базу на ровные куски. Из каждого — 1 случайный билет.<br><br><em>Минус: не учитывает пересечения.</em></span></span></div>
+            <div class="algo-row"><label class="custom-check"><input type="checkbox" class="algo-checkbox" data-algo="anti"><span class="checkmark"></span>Анти-пересечение</label><span class="tip">?<span class="tiptext"><b>Анти-пересечение</b><br><br>Минимум общих чисел со <b>ВСЕМИ</b> выбранными. Проверяет до 100 кандидатов.<br><br><em>Минус: неестественные суммы.</em></span></span></div>
+            <div class="algo-row"><label class="custom-check"><input type="checkbox" class="algo-checkbox" data-algo="weight"><span class="checkmark"></span>Взвешенный (По сумме)</label><span class="tip">?<span class="tiptext"><b>Взвешенный по сумме</b><br><br>Сортирует по близости к «золотой середине» <b>N×(Max+1)/2</b>. Берёт из лучших 20%.<br><br><em>Минус: похожие суммы.</em></span></span></div>
+            <div class="algo-row"><label class="custom-check"><input type="checkbox" class="algo-checkbox" data-algo="reservoir"><span class="checkmark"></span>Интеллектуальный поток</label><span class="tip">?<span class="tiptext"><b>Reservoir Sampling</b><br><br>На каждом шаге «подбрасывает монетку». Каждая комбинация имеет равную вероятность.<br><br><em>Минус: неотличим от рандома визуально.</em></span></span></div>
+            <div class="algo-row"><label class="custom-check"><input type="checkbox" class="algo-checkbox" data-algo="hist"><span class="checkmark"></span>Историческая эксклюзия</label><span class="tip">?<span class="tiptext"><b>Историческая эксклюзия</b><br><br>Запоминает КАЖДЫЙ скачанный билет в localStorage. Новые не содержат старые.<br><br><em>Минус: пул исчерпается. Сброс — «Очистить всё».</em></span></span></div>
+        </div>
+
+        <div class="filters-box">
+            <div class="filters-title">ФИЛЬТРЫ КОМБИНАЦИЙ <span class="tip">?<span class="tiptext"><b>Кратко:</b> верхние 4 — отсекают неподходящие билеты. Нижние 2 — анализируют всю пачку целиком. Подробности — в справке (кнопка ? в шапке).</span></span></div>
+            <div class="filters-row">
+                <div class="filters-group"><label>Сумма:</label><input type="text" id="filterSum" placeholder="75-85"></div>
+                <div class="filters-group"><label>Разброс:</label><input type="text" id="filterSpread" placeholder="12-16"></div>
+                <label class="custom-check filters-nb-check"><input type="checkbox" id="filterNoNeighbors"><span class="checkmark"></span>Без соседей</label>
+            </div>
+            <div class="filters-row">
+                <div class="filters-group"><label>Секторы:</label><input type="text" id="filterSectors" placeholder="1-10:3, 11-20:5"></div>
+            </div>
+            <div class="filters-sep">ПАКЕТНЫЕ</div>
+            <div class="filters-row">
+                <div class="filters-group"><label>Связь N:</label><input type="number" id="filterChain" min="0" max="20" placeholder="2"></div>
+                <div class="filters-group"><label>Покрытие ≥:</label><input type="number" id="filterCoverage" min="0" max="99" placeholder="3"></div>
+            </div>
         </div>
 
         <div class="top-settings">
@@ -172,11 +220,12 @@
             
             <div class="btn-row">
                 <button id="btnClear">Очистить всё</button>
+                <label class="custom-check freeze-check" title="При повторной генерации Поле 1 не пересчитывается"><input type="checkbox" id="freezeF1"><span class="checkmark"></span><span>Заморозить П1</span></label>
                 <button id="btnGenerate">Сформировать и скачать CSV</button>
             </div>
         </div>
 
-        <div id="rulesContainer" class="rules-section"></div>
+        <div id="rulesContainer" class="rules-scroll-box"></div>
         <div id="globalStatus"></div>
     </div>
 </div>
@@ -185,57 +234,71 @@
     <div class="modal-box">
         <div class="modal-header">Справка по функционалу <button class="modal-close" id="closeHelp">✕</button></div>
         <div class="modal-text">
-            
             <div class="version-box">
-                <b>Версия: 1.4 | Дата: 25.04.2026</b>
+                <b>Версия: 1.6.1 | Дата: 25.04.2026</b>
                 <ul class="changelog">
-                    <li>Фильтр «Случайных N из включений» — чекбокс и поле N рядом с включениями</li>
-                    <li>Чекбоксы «Поле 1» / «Поле 2» в правилах разниц</li>
-                    <li>Дедупликация, авто-подсчёт, анти-пересечение со всеми</li>
+                    <li>Исправлен краш при генерации (ошибка в блоке анализа покрытия)</li>
+                    <li>Прокрутка блока правил разниц (фиксированная высота)</li>
+                    <li>Фильтры комбинаций: сумма, разброс, запрет соседей, секторы</li>
+                    <li>Пакетные фильтры: цепная связь N, покрытие базы</li>
+                    <li>Заморозить П1, случайных N из включений, чекбоксы полей в разницах</li>
                 </ul>
             </div>
 
-            <b>Общий принцип работы</b>
-            Скрипт — генератор лотерейных билетов с двумя режимами: обычный рандом и генерация по математическим шагам (разницам).
-
             <b>1. Выбор лотереи</b>
             <ul>
-                <li><b>Восьмерки:</b> Поле 1 — 1–20. Поле 2 — 1–4.</li>
-                <li><b>Премьер:</b> Поле 1 — 1–20. Поле 2 — 1–20. Лимиты: макс. 12 в поле, 18 суммарно.</li>
-                <li><b>ТОП-12:</b> Поле 1 — 1–24. Поле 2 отсутствует.</li>
+                <li><b>Восьмерки:</b> П1 1–20, П2 1–4.</li>
+                <li><b>Премьер:</b> П1 1–20, П2 1–20. Макс: 12 в поле, 18 суммарно.</li>
+                <li><b>ТОП-12:</b> П1 1–24. П2 нет.</li>
             </ul>
 
-            <b>2. Исключения</b>
-            Указанные числа <b>никогда не появятся</b> в билете. Приоритет №1 — фильтруют и основной пул, и список включений.
+            <b>2. Исключения / Включения</b>
+            Исключения — приоритет №1. Включения с фильтром «Случайных N» — берёт N из списка вместо обязательных всех.
 
-            <b>3. Включения и фильтр «Случайных N»</b>
-            Рядом с полем включений есть чекбокс и маленькое поле для цифры <b>N</b>.
+            <b>3. Правила разниц</b>
+            Формат "раз-кол". Чекбоксы П1/П2 для выбора поля применения. Блок правил имеет фиксированную высоту с прокруткой — добавление любого количества правил не сдвигает интерфейс.
+
+            <b>4. Фильтры комбинаций (по билету)</b>
+            Эти фильтры <b>отбрасывают</b> неподходящие билеты из базы. Работают как в режиме обычного рандома, так и при подсчёте правил разниц.
             <ul>
-                <li><b>Чекбокс снят (по умолчанию):</b> стандартное поведение. Все введённые числа обязательны в КАЖДОМ билете.</li>
-                <li><b>Чекбокс включён:</b> список включений становится «базой-кандидатом». Для каждого билета скрипт случайно берёт ровно <b>N</b> чисел из этого списка, а остальные слоты заполняет рандомом из общего пула.</li>
-                <li><b>Пример:</b> Включения: "1, 2, 3, 4". N = 2. В первом билете выпадет [2, 4] + 6 рандомных. Во втором — [1, 3] + 6 других рандомных.</li>
-                <li>Фильтр работает <b>в сочетании со всем остальным</b>: исключения вычитаются из кандидатов; при правилах разниц фильтруются только те комбинации, где ровно N чисел из списка; алгоритмы выборки применяются к отфильтрованной базе.</li>
-                <li><b>Ограничения:</b> N не может быть больше размера списка включений (после вычета исключений) и больше количества чисел в поле.</li>
+                <li><b>Сумма (75-85):</b> оставляет только билеты, сумма чисел которых попадает в коридор включительно.
+                <br><span class="ex">Пример для 8 из 20: "75-85". Билет [1,2,3,4,5,6,7,8] имеет сумму 36 — отбрасывается. Билет [5,8,10,11,13,14,17,19] имеет сумму 87 — не в коридоре, отбрасывается.</span></li>
+
+                <li><b>Разброс (12-16):</b> разница между максимальным и минимальным числом в билете.
+                <br><span class="ex">Пример: "12-16". Билет [2,5,9,11,15,17,19,20] имеет разброс 18 — отбрасывается. Билет [5,8,10,12,14,15,17,19] имеет разброс 14 — проходит.</span>
+                <br><em>Позволяет получать "компактные" билеты.</em></li>
+
+                <li><b>Без соседей:</b> чекбокс. Запрещает числа идущие подряд с шагом +1.
+                <br><span class="ex">Пример: [3, 7, 12, 15] — проходит. [3, 4, 12, 15] — отбрасывается (3 и 4 соседние).</span></li>
+
+                <li><b>Секторы (1-10:3, 11-20:5):</b> жёсткие квоты по диапазонам. Сумма количеств = числам в поле.
+                <br><span class="ex">Пример для 8 чисел: "1-10:3, 11-20:5". Билет содержит ровно 3 из 1-10 и ровно 5 из 11-20. Билет [1,2,3,4,5,11,12,13] — отбрасывается (5 из 1-10 вместо 3).</span></li>
             </ul>
 
-            <b>4. Правила разниц</b>
-            Разница — шаг между соседними числами. Формат: "раз-кол" (напр. "1-3, 5-1"). Под строкой ввода — чекбоксы выбора поля (Поле 1 / Поле 2). Для двухполевых лотерей можно применять разницы к любому полю или к обоим сразу.
+            <b>5. Пакетные фильтры (связь между билетами)</b>
+            <ul>
+                <li><b>Связь N:</b> переставляет билеты в пачке так, чтобы каждый имел ровно N общих чисел с предыдущим.
+                <br><span class="ex">N=2. Билет 1: [3,7,10,15]. Билет 2 подбирается с ровно 2 общими числами (например, [3,10,12,18]). Если подходящего нет — ставится любой, в статусе пишется количество сбоев.</span></li>
 
-            <b>5. Алгоритмы выборки</b>
-            Решают, какие именно билеты из базы попадут в выгрузку. Описание по кнопке <b>«?»</b>.
+                <li><b>Покрытие ≥:</b> информационный анализ — проверяет, что каждое число поля встретилось ≥ N раз.
+                <br><span class="ex">Покрытие ≥ 3. Если число 14 встретилось 1 раз — предупреждение: "⚠️ Покрытие: 14(1) < 3". Не отсекает билеты, только анализирует.</span></li>
+            </ul>
 
-            <b>6. Выгрузка</b>
-            CSV (UTF-8 BOM), разделитель полей — точка с запятой, чисел — пробел. Файл: "lottery_export.csv".
+            <b>6. Сочетание фильтров</b>
+            Все 6 фильтров работают одновременно. При правилах разниц фильтры по билету встраиваются в перебор — кнопка "Посчитать" покажет количество с их учётом. При заморозке П1 — только к П2.
 
-            <b>7. Кнопка «Очистить всё»</b>
-            Полный сброс: лотерея → Восьмерки, все поля пусты, алгоритмы сброшены, правила удалены, история стёрта.
+            <b>7. Заморозить П1</b>
+            Первая генерация запоминает П1. Последующие — берут тот же П1, пересчитывают только П2.
+
+            <b>8. Алгоритмы выборки</b>
+            Описание по кнопке <b>«?»</b>.
         </div>
     </div>
 </div>
 
 <script>
     document.querySelectorAll('.algo-checkbox').forEach(cb => { cb.addEventListener('change', function() { if (this.checked) { document.querySelectorAll('.algo-checkbox').forEach(other => { if (other !== this) other.checked = false; }); } }); });
-    function getSelectedAlgo() { const checked = document.querySelector('.algo-checkbox:checked'); return checked ? checked.dataset.algo : 'classic'; }
+    function getSelectedAlgo() { const c = document.querySelector('.algo-checkbox:checked'); return c ? c.dataset.algo : 'classic'; }
 
     const configs = {
         vosmerki: { maxNum: 20, maxNumF2: 4, defN1: 8, defN2: 1, maxN1: 20, maxN2: 4, hasField2: true, maxTotal: 24 },
@@ -243,21 +306,46 @@
         top12: { maxNum: 24, maxNumF2: 0, defN1: 12, defN2: 0, maxN1: 24, maxN2: 0, hasField2: false, maxTotal: 24 }
     };
     let currentConfig = configs.vosmerki;
+    let frozenField1 = null;
+    const freezeCb = document.getElementById('freezeF1');
+    freezeCb.addEventListener('change', () => { if (!freezeCb.checked) frozenField1 = null; });
 
-    function toggleIncRand(fieldId) {
-        let cb = document.getElementById(`incRandF${fieldId}`);
-        let input = document.getElementById(`incRandCountF${fieldId}`);
-        input.disabled = !cb.checked;
-        if (!cb.checked) input.value = '';
-    }
+    function toggleIncRand(f) { let cb = document.getElementById(`incRandF${f}`), inp = document.getElementById(`incRandCountF${f}`); inp.disabled = !cb.checked; if (!cb.checked) inp.value = ''; }
     document.getElementById('incRandF1').addEventListener('change', () => toggleIncRand(1));
     document.getElementById('incRandF2').addEventListener('change', () => toggleIncRand(2));
+    function getIncSettings(f) { let l = parseNumList(document.getElementById(`incN${f}`).value); let r = document.getElementById(`incRandF${f}`).checked; let c = r ? (parseInt(document.getElementById(`incRandCountF${f}`).value) || 0) : 0; return { incList: l, isRandomMode: r, randCount: c }; }
 
-    function getIncSettings(fieldId) {
-        let incList = parseNumList(document.getElementById(`incN${fieldId}`).value);
-        let isRandomMode = document.getElementById(`incRandF${fieldId}`).checked;
-        let randCount = isRandomMode ? (parseInt(document.getElementById(`incRandCountF${fieldId}`).value) || 0) : 0;
-        return { incList, isRandomMode, randCount };
+    function parseRange(str) { if (!str.trim()) return null; let p = str.split('-'); if (p.length !== 2) throw "Формат: 'мин-макс'"; let mn = parseInt(p[0]), mx = parseInt(p[1]); if (isNaN(mn) || isNaN(mx)) throw "Целые числа!"; if (mn > mx) throw "Мин > Макс!"; return { min: mn, max: mx }; }
+    function parseSectors(str) { if (!str.trim()) return []; let s = []; let p = str.split(','); for (let pt of p) { pt = pt.trim(); if (!pt) continue; let sp = pt.split(':'); if (sp.length !== 2) throw "Формат: 'от-до:кол'"; let rng = sp[0].split('-'); if (rng.length !== 2) throw "Формат диапазона: 'от-до'"; let from = parseInt(rng[0]), to = parseInt(rng[1]), cnt = parseInt(sp[1]); if (isNaN(from) || isNaN(to) || isNaN(cnt)) throw "Целые числа!"; if (from > to) throw "От > До!"; if (cnt < 0) throw "Кол ≥ 0!"; s.push({ from, to, count: cnt }); } return s; }
+
+    function getFilterSettings() {
+        let sumR, spreadR, sectors;
+        try { sumR = parseRange(document.getElementById('filterSum').value); } catch(e) { sumR = 'err'; }
+        try { spreadR = parseRange(document.getElementById('filterSpread').value); } catch(e) { spreadR = 'err'; }
+        try { sectors = parseSectors(document.getElementById('filterSectors').value); } catch(e) { sectors = 'err'; }
+        return { sumRange: sumR, spreadRange: spreadR, noNeighbors: document.getElementById('filterNoNeighbors').checked, sectors, chainN: parseInt(document.getElementById('filterChain').value) || 0, coverageMin: parseInt(document.getElementById('filterCoverage').value) || 0 };
+    }
+
+    function checkTicketFilters(combo, f) {
+        if (!f) return true;
+        if (f.sumRange && f.sumRange !== 'err') { let s = combo.reduce((a, b) => a + b, 0); if (s < f.sumRange.min || s > f.sumRange.max) return false; }
+        if (f.spreadRange && f.spreadRange !== 'err') { let sp = combo[combo.length - 1] - combo[0]; if (sp < f.spreadRange.min || sp > f.spreadRange.max) return false; }
+        if (f.noNeighbors) { for (let i = 1; i < combo.length; i++) { if (combo[i] - combo[i - 1] === 1) return false; } }
+        if (f.sectors && f.sectors !== 'err' && f.sectors.length > 0) { for (let sec of f.sectors) { if (combo.filter(n => n >= sec.from && n <= sec.to).length !== sec.count) return false; } }
+        return true;
+    }
+
+    function validateFilters(f) {
+        let errs = [];
+        if (f.sumRange === 'err') errs.push('Сумма');
+        if (f.spreadRange === 'err') errs.push('Разброс');
+        if (f.sectors === 'err') errs.push('Секторы');
+        if (errs.length > 0) throw `Ошибка формата в: ${errs.join(', ')}`;
+    }
+
+    function generateFilteredField(N, exc, inc, maxNum, filters) {
+        for (let att = 0; att < 500; att++) { let fld = generateRandomField(N, exc, inc, maxNum); if (checkTicketFilters(fld, filters)) return fld; }
+        return generateRandomField(N, exc, inc, maxNum);
     }
 
     const lotterySelect = document.getElementById('lotterySelect');
@@ -265,27 +353,23 @@
         currentConfig = configs[e.target.value]; 
         const in1 = document.getElementById('inputN1'); const in2 = document.getElementById('inputN2');
         in1.value = currentConfig.defN1; in1.max = currentConfig.maxN1;
-        if (currentConfig.hasField2) {
-            in2.value = currentConfig.defN2; in2.max = currentConfig.maxN2;
-            document.getElementById('field2Block').classList.remove('hidden'); document.getElementById('exc2Block').classList.remove('hidden'); document.getElementById('inc2Block').classList.remove('hidden');
-        } else { document.getElementById('field2Block').classList.add('hidden'); document.getElementById('exc2Block').classList.add('hidden'); document.getElementById('inc2Block').classList.add('hidden'); }
-        document.getElementById('excN1').placeholder = `Напр: 5, 12, ${currentConfig.maxNum - 2}`; 
-        document.getElementById('excN2').placeholder = `1..${currentConfig.maxNumF2}`;
-        document.getElementById('excN1').value = ''; document.getElementById('incN1').value = ''; 
-        document.getElementById('excN2').value = ''; document.getElementById('incN2').value = '';
-        document.getElementById('incRandF1').checked = false; document.getElementById('incRandCountF1').value = ''; document.getElementById('incRandCountF1').disabled = true;
-        document.getElementById('incRandF2').checked = false; document.getElementById('incRandCountF2').value = ''; document.getElementById('incRandCountF2').disabled = true;
-
-        document.querySelectorAll('.rule-cb-f2-wrap').forEach(el => {
-            if (currentConfig.hasField2) el.classList.remove('hidden');
-            else { el.classList.add('hidden'); el.querySelector('input').checked = false; }
-        });
+        if (currentConfig.hasField2) { in2.value = currentConfig.defN2; in2.max = currentConfig.maxN2; document.getElementById('field2Block').classList.remove('hidden'); document.getElementById('exc2Block').classList.remove('hidden'); document.getElementById('inc2Block').classList.remove('hidden'); }
+        else { document.getElementById('field2Block').classList.add('hidden'); document.getElementById('exc2Block').classList.add('hidden'); document.getElementById('inc2Block').classList.add('hidden'); }
+        document.getElementById('excN1').placeholder = `Напр: 5, 12, ${currentConfig.maxNum - 2}`; document.getElementById('excN2').placeholder = `1..${currentConfig.maxNumF2}`;
+        ['excN1','incN1','excN2','incN2'].forEach(id => document.getElementById(id).value = '');
+        ['incRandF1','incRandF2'].forEach(id => { document.getElementById(id).checked = false; });
+        ['incRandCountF1','incRandCountF2'].forEach(id => { let el = document.getElementById(id); el.value = ''; el.disabled = true; });
+        freezeCb.disabled = !currentConfig.hasField2; if (!currentConfig.hasField2) { freezeCb.checked = false; frozenField1 = null; }
+        document.querySelectorAll('.rule-cb-f2-wrap').forEach(el => { if (currentConfig.hasField2) el.classList.remove('hidden'); else { el.classList.add('hidden'); el.querySelector('input').checked = false; } });
         ruleSetsData = {}; document.querySelectorAll('.rule-status').forEach(el => el.innerText = "Ожидание ввода..."); document.getElementById('globalStatus').innerText = "";
     });
 
     document.getElementById('btnClear').addEventListener('click', () => {
         localStorage.removeItem('lottery_history'); document.getElementById('lotterySelect').value = 'vosmerki'; lotterySelect.dispatchEvent(new Event('change'));
         document.getElementById('inputAmount').value = 15; document.querySelectorAll('.algo-checkbox').forEach(cb => cb.checked = false);
+        ['filterSum','filterSpread','filterSectors','filterChain','filterCoverage'].forEach(id => document.getElementById(id).value = '');
+        document.getElementById('filterNoNeighbors').checked = false;
+        frozenField1 = null; freezeCb.checked = false;
         ruleSetsData = {}; ruleIdCounter = 0; document.getElementById('rulesContainer').innerHTML = ''; addRuleRow(); document.getElementById('globalStatus').innerText = "✅ Скрипт полностью сброшен.";
     });
 
@@ -306,233 +390,168 @@
     let ruleSetsData = {}; let ruleIdCounter = 0;
     function parseNumList(str) { if (!str.trim()) return []; return [...new Set(str.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n)))]; }
 
-    function generateRandomField(N, exc, incSettings, maxNum) {
+    function generateRandomField(N, exc, inc, maxNum) {
         let pool = []; for (let i = 1; i <= maxNum; i++) { if (!exc.includes(i)) pool.push(i); }
         let t = [];
-        if (incSettings.isRandomMode && incSettings.randCount > 0) {
-            let validInc = incSettings.incList.filter(n => pool.includes(n));
-            validInc.sort(() => Math.random() - 0.5);
-            t = validInc.slice(0, incSettings.randCount);
-            let rem = pool.filter(n => !t.includes(n));
-            rem.sort(() => Math.random() - 0.5);
-            t = t.concat(rem.slice(0, N - t.length)).sort((a, b) => a - b);
-        } else {
-            let inc = incSettings.incList;
-            t = [...inc]; 
-            let rem = pool.filter(n => !inc.includes(n));
-            rem.sort(() => Math.random() - 0.5);
-            t = t.concat(rem.slice(0, N - inc.length)).sort((a, b) => a - b);
-        }
+        if (inc.isRandomMode && inc.randCount > 0) { let v = inc.incList.filter(n => pool.includes(n)); v.sort(() => Math.random() - 0.5); t = v.slice(0, inc.randCount); let r = pool.filter(n => !t.includes(n)); r.sort(() => Math.random() - 0.5); t = t.concat(r.slice(0, N - t.length)).sort((a, b) => a - b); }
+        else { t = [...inc.incList]; let r = pool.filter(n => !inc.incList.includes(n)); r.sort(() => Math.random() - 0.5); t = t.concat(r.slice(0, N - inc.incList.length)).sort((a, b) => a - b); }
         return t;
     }
 
     function addRuleRow() {
-        ruleIdCounter++; let currentId = ruleIdCounter;
-        ruleSetsData[currentId] = { combos1: [], combos2: [], target1: true, target2: false };
-        let rowDiv = document.createElement('div'); rowDiv.className = 'rule-row'; rowDiv.id = `rule-${currentId}`;
-        rowDiv.innerHTML = `
-            <div class="rule-checks">
-                <label class="custom-check"><input type="checkbox" class="rule-cb-f1" checked><span class="checkmark"></span>Поле 1</label>
-                <label class="custom-check rule-cb-f2-wrap"><input type="checkbox" class="rule-cb-f2"><span class="checkmark"></span>Поле 2</label>
-            </div>
-            <div class="rule-top">
-                <input type="text" class="rule-input" placeholder="Разницы: 1-3, 5-1" value="">
-                <button class="btn-count" onclick="countRule(${currentId})">Посчитать</button>
-                <button class="btn-add" onclick="addRuleRow()" title="Добавить">+</button>
-                <button class="btn-del" onclick="removeRuleRow(${currentId})" title="Удалить">x</button>
-            </div>
-            <div class="rule-status" id="status-${currentId}">Ожидание ввода...</div>`;
-        document.getElementById('rulesContainer').appendChild(rowDiv);
-        if (!currentConfig.hasField2) rowDiv.querySelector('.rule-cb-f2-wrap').classList.add('hidden');
+        ruleIdCounter++; let id = ruleIdCounter; ruleSetsData[id] = { combos1: [], combos2: [], target1: true, target2: false };
+        let d = document.createElement('div'); d.className = 'rule-row'; d.id = `rule-${id}`;
+        d.innerHTML = `<div class="rule-checks"><label class="custom-check"><input type="checkbox" class="rule-cb-f1" checked><span class="checkmark"></span>Поле 1</label><label class="custom-check rule-cb-f2-wrap"><input type="checkbox" class="rule-cb-f2"><span class="checkmark"></span>Поле 2</label></div><div class="rule-top"><input type="text" class="rule-input" placeholder="Разницы: 1-3, 5-1" value=""><button class="btn-count" onclick="countRule(${id})">Посчитать</button><button class="btn-add" onclick="addRuleRow()" title="+">+</button><button class="btn-del" onclick="removeRuleRow(${id})" title="x">x</button></div><div class="rule-status" id="status-${id}">Ожидание ввода...</div>`;
+        document.getElementById('rulesContainer').appendChild(d);
+        document.getElementById('rulesContainer').scrollTop = document.getElementById('rulesContainer').scrollHeight;
+        if (!currentConfig.hasField2) d.querySelector('.rule-cb-f2-wrap').classList.add('hidden');
     }
-
     function removeRuleRow(id) { if (Object.keys(ruleSetsData).length <= 1) { alert("Нельзя удалить единственный набор!"); return; } delete ruleSetsData[id]; document.getElementById(`rule-${id}`).remove(); }
+    function parseReqs(str, g) { let r = {}; if (!str.trim()) return r; for (let p of str.split(',')) { p = p.trim(); if (!p) continue; let s = p.split('-'); if (s.length !== 2) throw "Формат: 'раз-кол'"; let d = parseInt(s[0]), c = parseInt(s[1]); if (d < 1) throw "Раз >= 1"; if (c < 0) throw "Кол >= 0"; r[d] = c; } if (Object.values(r).reduce((a, b) => a + b, 0) > g) throw `Сумма разниц > ${g}!`; return r; }
 
-    function parseReqs(str, totalGaps) {
-        let reqs = {}; if (!str.trim()) return reqs;
-        let parts = str.split(',');
-        for (let p of parts) { p = p.trim(); if (!p) continue; let s = p.split('-'); if (s.length !== 2) throw "Формат: 'раз-кол'"; let d = parseInt(s[0]), c = parseInt(s[1]); if (d < 1) throw "Разница >= 1"; if (c < 0) throw "Кол-во >= 0"; reqs[d] = c; }
-        if (Object.values(reqs).reduce((a, b) => a + b, 0) > totalGaps) throw `Сумма разниц > ${totalGaps}!`;
-        return reqs;
-    }
-
-    function getGapSeqs(remLen, remReqs, restrDiff, curSum, maxNum) {
-        if (remLen === 0) return Object.values(remReqs).every(v => v === 0) ? [{ gaps: [], sum: curSum }] : [];
-        let res = [], maxGap = (maxNum - 1) - curSum - (remLen - 1); if (maxGap < 1) return res;
-        let totalReqLeft = Object.values(remReqs).reduce((a, b) => a + b, 0);
-        for (let diff in remReqs) { diff = parseInt(diff); if (remReqs[diff] > 0 && diff <= maxGap && (remLen - 1) >= (totalReqLeft - 1)) { let newReqs = { ...remReqs }; newReqs[diff]--; for (let seq of getGapSeqs(remLen - 1, newReqs, restrDiff, curSum + diff, maxNum)) res.push({ gaps: [diff, ...seq.gaps], sum: seq.sum }); } }
-        for (let v = 1; v <= maxGap; v++) { if (restrDiff.includes(v)) continue; if ((remLen - 1) >= totalReqLeft) for (let seq of getGapSeqs(remLen - 1, remReqs, restrDiff, curSum + v, maxNum)) res.push({ gaps: [v, ...seq.gaps], sum: seq.sum }); }
+    function getGapSeqs(rl, rr, rd, cs, mn) {
+        if (rl === 0) return Object.values(rr).every(v => v === 0) ? [{ gaps: [], sum: cs }] : [];
+        let res = [], mg = (mn - 1) - cs - (rl - 1); if (mg < 1) return res; let trl = Object.values(rr).reduce((a, b) => a + b, 0);
+        for (let d in rr) { d = parseInt(d); if (rr[d] > 0 && d <= mg && (rl - 1) >= (trl - 1)) { let nr = {...rr}; nr[d]--; for (let s of getGapSeqs(rl - 1, nr, rd, cs + d, mn)) res.push({ gaps: [d, ...s.gaps], sum: s.sum }); } }
+        for (let v = 1; v <= mg; v++) { if (rd.includes(v)) continue; if ((rl - 1) >= trl) for (let s of getGapSeqs(rl - 1, rr, rd, cs + v, mn)) res.push({ gaps: [v, ...s.gaps], sum: s.sum }); }
         return res;
     }
 
-    function countFieldCombos(N, reqsRaw, maxNum, exc, incSettings) {
-        let totalGaps = N - 1;
-        let reqs = parseReqs(reqsRaw, totalGaps);
-        let restrDiff = Object.keys(reqs).map(Number);
-        let sequences = getGapSeqs(totalGaps, reqs, restrDiff, 0, maxNum);
-        let unique = new Set();
-        let validInc = incSettings.incList.filter(n => !exc.includes(n));
-        for (let seq of sequences) {
-            let maxStart = maxNum - seq.sum;
-            for (let start = 1; start <= maxStart; start++) {
-                if (exc.includes(start)) continue;
-                let combo = [start]; let isValid = true;
-                for (let g of seq.gaps) { let next = combo[combo.length - 1] + g; if (exc.includes(next)) { isValid = false; break; } combo.push(next); }
-                if (isValid && validInc.length > 0) {
-                    if (incSettings.isRandomMode) {
-                        let matchCount = combo.filter(n => validInc.includes(n)).length;
-                        if (matchCount !== incSettings.randCount) isValid = false;
-                    } else {
-                        if (!validInc.every(incNum => combo.includes(incNum))) isValid = false;
-                    }
-                }
-                if (isValid) unique.add(combo.join(','));
-            }
-        }
-        return Array.from(unique).map(c => c.split(',').map(Number));
+    function countFieldCombos(N, reqsRaw, maxNum, exc, incSettings, filters) {
+        let tg = N - 1, reqs = parseReqs(reqsRaw, tg), rd = Object.keys(reqs).map(Number), seqs = getGapSeqs(tg, reqs, rd, 0, maxNum), uniq = new Set();
+        let vi = incSettings.incList.filter(n => !exc.includes(n));
+        for (let seq of seqs) { let ms = maxNum - seq.sum; for (let st = 1; st <= ms; st++) { if (exc.includes(st)) continue; let c = [st], ok = true; for (let g of seq.gaps) { let nx = c[c.length - 1] + g; if (exc.includes(nx)) { ok = false; break; } c.push(nx); }
+            if (ok && vi.length > 0) { if (incSettings.isRandomMode) { if (c.filter(n => vi.includes(n)).length !== incSettings.randCount) ok = false; } else { if (!vi.every(i => c.includes(i))) ok = false; } }
+            if (ok && filters && !checkTicketFilters(c, filters)) ok = false;
+            if (ok) uniq.add(c.join(','));
+        } }
+        return Array.from(uniq).map(c => c.split(',').map(Number));
     }
 
     function countRule(id) {
-        let statusEl = document.getElementById(`status-${id}`);
-        let row = document.getElementById(`rule-${id}`);
-        let inputEl = row.querySelector('.rule-input');
-        let cb1 = row.querySelector('.rule-cb-f1');
-        let cb2 = row.querySelector('.rule-cb-f2');
-        let target1 = cb1.checked;
-        let target2 = cb2.checked && currentConfig.hasField2;
+        let se = document.getElementById(`status-${id}`), row = document.getElementById(`rule-${id}`), inp = row.querySelector('.rule-input');
+        let t1 = row.querySelector('.rule-cb-f1').checked, t2 = row.querySelector('.rule-cb-f2').checked && currentConfig.hasField2;
         try {
-            if (!target1 && !target2) throw "Выберите хотя бы одно поле для применения разниц!";
-            let reqsRaw = inputEl.value;
-            let combos1 = [], combos2 = [], parts = [];
-            if (target1) {
-                let N1 = parseInt(document.getElementById('inputN1').value);
-                if (isNaN(N1) || N1 < 2) throw `Поле 1: минимум 2 числа для разниц`;
-                let incSettingsF1 = getIncSettings(1);
-                let excF1 = parseNumList(document.getElementById('excN1').value);
-                if (incSettingsF1.isRandomMode && incSettingsF1.randCount > incSettingsF1.incList.filter(n => !excF1.includes(n)).length) throw `П1: Нельзя взять ${incSettingsF1.randCount} из доступных ${incSettingsF1.incList.filter(n => !excF1.includes(n)).length} включений!`;
-                combos1 = countFieldCombos(N1, reqsRaw, currentConfig.maxNum, excF1, incSettingsF1);
-                parts.push(`П1: ${combos1.length}`);
-            }
-            if (target2) {
-                let N2 = parseInt(document.getElementById('inputN2').value);
-                if (isNaN(N2) || N2 < 2) throw `Поле 2: минимум 2 числа для разниц`;
-                let incSettingsF2 = getIncSettings(2);
-                let excF2 = parseNumList(document.getElementById('excN2').value);
-                if (incSettingsF2.isRandomMode && incSettingsF2.randCount > incSettingsF2.incList.filter(n => !excF2.includes(n)).length) throw `П2: Нельзя взять ${incSettingsF2.randCount} из доступных ${incSettingsF2.incList.filter(n => !excF2.includes(n)).length} включений!`;
-                combos2 = countFieldCombos(N2, reqsRaw, currentConfig.maxNumF2, excF2, incSettingsF2);
-                parts.push(`П2: ${combos2.length}`);
-            }
-            ruleSetsData[id] = { combos1, combos2, target1, target2 };
-            statusEl.innerText = `✅ ${parts.join(' | ')}`; statusEl.style.color = "#27ae60";
-        } catch (e) { ruleSetsData[id] = { combos1: [], combos2: [], target1: false, target2: false }; statusEl.innerText = "❌ " + e; statusEl.style.color = "#e74c3c"; }
+            if (!t1 && !t2) throw "Выберите поле!";
+            let raw = inp.value, c1 = [], c2 = [], p = [];
+            if (t1) { let N1 = parseInt(document.getElementById('inputN1').value); if (isNaN(N1) || N1 < 2) throw "П1: мин 2"; let is1 = getIncSettings(1), e1 = parseNumList(document.getElementById('excN1').value); if (is1.isRandomMode && is1.randCount > is1.incList.filter(n => !e1.includes(n)).length) throw `П1: Нельзя взять ${is1.randCount}!`; c1 = countFieldCombos(N1, raw, currentConfig.maxNum, e1, is1, null); p.push(`П1: ${c1.length}`); }
+            if (t2) { let N2 = parseInt(document.getElementById('inputN2').value); if (isNaN(N2) || N2 < 2) throw "П2: мин 2"; let is2 = getIncSettings(2), e2 = parseNumList(document.getElementById('excN2').value); if (is2.isRandomMode && is2.randCount > is2.incList.filter(n => !e2.includes(n)).length) throw `П2: Нельзя взять ${is2.randCount}!`; c2 = countFieldCombos(N2, raw, currentConfig.maxNumF2, e2, is2, null); p.push(`П2: ${c2.length}`); }
+            ruleSetsData[id] = { combos1: c1, combos2: c2, target1: t1, target2: t2 }; se.innerText = `✅ ${p.join(' | ')}`; se.style.color = "#27ae60";
+        } catch (e) { ruleSetsData[id] = { combos1: [], combos2: [], target1: false, target2: false }; se.innerText = "❌ " + e; se.style.color = "#e74c3c"; }
     }
 
-    function pickTickets(arr, count) { let algo = getSelectedAlgo(); if (arr.length <= count) return arr; switch (algo) { case 'even': return pickEven(arr, count); case 'anti': return pickAnti(arr, count); case 'weight': return pickWeight(arr, count); case 'reservoir': return pickReservoir(arr, count); case 'hist': return pickHist(arr, count); default: return pickClassic(arr, count); } }
-    function pickClassic(arr, count) { return arr.sort(() => Math.random() - 0.5).slice(0, count); }
-    function pickEven(arr, count) { let chunkSize = Math.floor(arr.length / count); if (chunkSize < 1) return pickClassic(arr, count); let res = []; for (let i = 0; i < count; i++) { let start = i * chunkSize; let end = (i === count - 1) ? arr.length : start + chunkSize; res.push(arr.slice(start, end)[Math.floor(Math.random() * (end - start))]); } return res; }
-    function pickAnti(arr, count) { let pool = [...arr].sort(() => Math.random() - 0.5); let res = [pool.shift()]; let usedNums = new Set(res[0]); while (res.length < count && pool.length > 0) { let bestIdx = 0, minI = Infinity; let lim = Math.min(pool.length, 100); for (let i = 0; i < lim; i++) { let inter = pool[i].filter(x => usedNums.has(x)).length; if (inter < minI) { minI = inter; bestIdx = i; if (inter === 0) break; } } let picked = pool.splice(bestIdx, 1)[0]; res.push(picked); picked.forEach(n => usedNums.add(n)); } return res; }
-    function pickWeight(arr, count) { let N1 = parseInt(document.getElementById('inputN1').value); let avg = N1 * (currentConfig.maxNum + 1) / 2; let sorted = [...arr].sort((a, b) => Math.abs(a.reduce((s, v) => s + v, 0) - avg) - Math.abs(b.reduce((s, v) => s + v, 0) - avg)); return sorted.slice(0, Math.ceil(sorted.length * 0.2)).sort(() => Math.random() - 0.5).slice(0, count); }
-    function pickReservoir(arr, count) { let res = arr.slice(0, count); for (let i = count; i < arr.length; i++) { let j = Math.floor(Math.random() * (i + 1)); if (j < count) res[j] = arr[i]; } return res; }
-    function pickHist(arr, count) { let hist = JSON.parse(localStorage.getItem('lottery_history') || '[]'); let hSet = new Set(hist.map(h => h.join(','))); let f = arr.filter(c => !hSet.has(c.join(','))); if (f.length < count) { if (f.length === 0) return pickClassic(arr, count); f = arr; } let p = pickClassic(f, count); localStorage.setItem('lottery_history', JSON.stringify([...hist, ...p])); return p; }
+    function pickTickets(a, c) { let al = getSelectedAlgo(); if (a.length <= c) return a; switch(al) { case 'even': return pickEven(a,c); case 'anti': return pickAnti(a,c); case 'weight': return pickWeight(a,c); case 'reservoir': return pickReservoir(a,c); case 'hist': return pickHist(a,c); default: return pickClassic(a,c); } }
+    function pickClassic(a,c) { return a.sort(() => Math.random() - 0.5).slice(0,c); }
+    function pickEven(a,c) { let cs = Math.floor(a.length/c); if(cs<1) return pickClassic(a,c); let r=[]; for(let i=0;i<c;i++){let s=i*cs,e=i===c-1?a.length:s+cs;r.push(a.slice(s,e)[Math.floor(Math.random()*(e-s))]);} return r; }
+    function pickAnti(a,c) { let p=[...a].sort(()=>Math.random()-0.5),r=[p.shift()],u=new Set(r[0]); while(r.length<c&&p.length>0){let bi=0,mi=Infinity,l=Math.min(p.length,100); for(let i=0;i<l;i++){let n=p[i].filter(x=>u.has(x)).length;if(n<mi){mi=n;bi=i;if(n===0)break;}} let pk=p.splice(bi,1)[0];r.push(pk);pk.forEach(n=>u.add(n));} return r; }
+    function pickWeight(a,c) { let N1=parseInt(document.getElementById('inputN1').value),av=N1*(currentConfig.maxNum+1)/2,s=[...a].sort((a,b)=>Math.abs(a.reduce((s,v)=>s+v,0)-av)-Math.abs(b.reduce((s,v)=>s+v,0)-av)); return s.slice(0,Math.ceil(s.length*0.2)).sort(()=>Math.random()-0.5).slice(0,c); }
+    function pickReservoir(a,c) { let r=a.slice(0,c); for(let i=c;i<a.length;i++){let j=Math.floor(Math.random()*(i+1));if(j<c)r[j]=a[i];} return r; }
+    function pickHist(a,c) { let h=JSON.parse(localStorage.getItem('lottery_history')||'[]'),hs=new Set(h.map(x=>x.join(','))),f=a.filter(c=>!hs.has(c.join(','))); if(f.length<c){if(!f.length)return pickClassic(a,c);f=a;} let p=pickClassic(f,c); localStorage.setItem('lottery_history',JSON.stringify([...h,...p])); return p; }
 
-    function generatePureRandom(N1, N2, totalTickets, excF1, incSettingsF1, excF2, incSettingsF2) {
-        let pool1 = []; for (let i = 1; i <= currentConfig.maxNum; i++) { if (!excF1.includes(i)) pool1.push(i); }
-        let validIncF1 = incSettingsF1.incList.filter(n => pool1.includes(n));
-        if (incSettingsF1.isRandomMode) {
-            if (incSettingsF1.incList.length === 0) throw "Включён случайный выбор, но список П1 пуст!";
-            if (incSettingsF1.randCount > validIncF1.length) throw `П1: Нельзя взять ${incSettingsF1.randCount} из ${validIncF1.length} доступных включений!`;
-            if (incSettingsF1.randCount > N1) throw `П1: Нельзя взять ${incSettingsF1.randCount} чисел, в поле всего ${N1} мест!`;
-        } else {
-            if (incSettingsF1.incList.some(inc => !pool1.includes(inc))) throw "Включенное число П1 есть в исключениях!";
-            if (incSettingsF1.incList.length > N1) throw `Слишком много включений для Поля 1!`;
+    function applyChainFilter(tickets, chainN, field) {
+        if (chainN <= 0 || tickets.length < 2) return { tickets, fail: 0 };
+        let res = [tickets[0]], used = new Set([0]), fail = 0;
+        for (let i = 1; i < tickets.length; i++) {
+            let prev = res[res.length - 1][field], found = false;
+            for (let j = 0; j < tickets.length; j++) { if (used.has(j)) continue; if (tickets[j][field].filter(x => prev.includes(x)).length === chainN) { res.push(tickets[j]); used.add(j); found = true; break; } }
+            if (!found) { fail++; for (let j = 0; j < tickets.length; j++) { if (!used.has(j)) { res.push(tickets[j]); used.add(j); break; } } }
         }
-        let pool2 = [];
-        if (currentConfig.hasField2) {
-            for (let i = 1; i <= currentConfig.maxNumF2; i++) { if (!excF2.includes(i)) pool2.push(i); }
-            let validIncF2 = incSettingsF2.incList.filter(n => pool2.includes(n));
-            if (incSettingsF2.isRandomMode) {
-                if (incSettingsF2.incList.length === 0) throw "Включён случайный выбор, но список П2 пуст!";
-                if (incSettingsF2.randCount > validIncF2.length) throw `П2: Нельзя взять ${incSettingsF2.randCount} из ${validIncF2.length} доступных включений!`;
-                if (incSettingsF2.randCount > N2) throw `П2: Нельзя взять ${incSettingsF2.randCount} чисел, в поле всего ${N2} мест!`;
-            } else {
-                if (incSettingsF2.incList.some(inc => !pool2.includes(inc))) throw "Включенное число П2 есть в исключениях!";
-                if (incSettingsF2.incList.length > N2) throw `Слишком много включений для Поля 2!`;
-            }
-        }
-        let tickets = []; let attempts = 0;
-        while (tickets.length < totalTickets && attempts < totalTickets * 100) {
-            attempts++;
-            let t1 = generateRandomField(N1, excF1, incSettingsF1, currentConfig.maxNum);
-            let t2 = [];
-            if (currentConfig.hasField2) { t2 = generateRandomField(N2, excF2, incSettingsF2, currentConfig.maxNumF2); }
-            let key = JSON.stringify({ f1: t1, f2: t2 }); if (!tickets.find(t => JSON.stringify(t) === key)) tickets.push({ f1: t1, f2: t2 });
-        }
-        return tickets;
+        return { tickets: res, fail };
     }
 
-    function formatCsvRow(f1, f2) {
-        let field1 = f1.join(' ');
-        if (currentConfig.hasField2) return `${field1};${f2.join(' ')}\n`;
-        return `${field1}\n`;
+    function analyzeCoverage(tickets, minCov, field, maxNum) {
+        if (minCov <= 0) return '';
+        let freq = {}; for (let i = 1; i <= maxNum; i++) freq[i] = 0;
+        for (let t of tickets) for (let n of t[field]) freq[n]++;
+        let bad = []; for (let i = 1; i <= maxNum; i++) if (freq[i] < minCov) bad.push(`${i}(${freq[i]})`);
+        return bad.length > 0 ? `⚠️ Покрытие: ${bad.join(', ')} < ${minCov}` : '';
     }
+
+    function generatePureRandom(N1, N2, tt, e1, is1, e2, is2, f1, f2) {
+        let p1=[]; for(let i=1;i<=currentConfig.maxNum;i++){if(!e1.includes(i))p1.push(i);} let vi1=is1.incList.filter(n=>p1.includes(n));
+        if(is1.isRandomMode){if(!is1.incList.length)throw"Случайный выбор, но список П1 пуст!";if(is1.randCount>vi1.length)throw`П1: нельзя ${is1.randCount} из ${vi1.length}!`;if(is1.randCount>N1)throw`П1: N>${N1}!`;}
+        else{if(is1.incList.some(i=>!p1.includes(i)))throw"Включение П1 в исключениях!";if(is1.incList.length>N1)throw"Много включений П1!";}
+        let p2=[]; if(currentConfig.hasField2){for(let i=1;i<=currentConfig.maxNumF2;i++){if(!e2.includes(i))p2.push(i);} let vi2=is2.incList.filter(n=>p2.includes(n));
+        if(is2.isRandomMode){if(!is2.incList.length)throw"Список П2 пуст!";if(is2.randCount>vi2.length)throw`П2: нельзя ${is2.randCount} из ${vi2.length}!`;if(is2.randCount>N2)throw`П2: N>${N2}!`;}
+        else{if(is2.incList.some(i=>!p2.includes(i)))throw"Включение П2 в исключениях!";if(is2.incList.length>N2)throw"Много включений П2!";}}
+        let tk=[],at=0;
+        while(tk.length<tt&&at<tt*300){at++;let t1=generateFilteredField(N1,e1,is1,currentConfig.maxNum,f1);let t2=[];if(currentConfig.hasField2){t2=generateFilteredField(N2,e2,is2,currentConfig.maxNumF2,f2);}let k=JSON.stringify({f1:t1,f2:t2});if(!tk.find(t=>JSON.stringify(t)===k))tk.push({f1:t1,f2:t2});}
+        return tk;
+    }
+
+    function formatCsvRow(f1, f2) { let s = f1.join(' '); return currentConfig.hasField2 ? `${s};${f2.join(' ')}\n` : `${s}\n`; }
 
     document.getElementById('btnGenerate').addEventListener('click', () => {
-        let globalStatus = document.getElementById('globalStatus');
-        let N1 = parseInt(document.getElementById('inputN1').value);
-        if (isNaN(N1) || N1 < 2 || N1 > currentConfig.maxN1) { globalStatus.innerText = `Поле 1: от 2 до ${currentConfig.maxN1}!`; globalStatus.style.color = "#e74c3c"; return; }
-        let N2 = currentConfig.hasField2 ? parseInt(document.getElementById('inputN2').value) : 0;
-        if (currentConfig.hasField2 && (isNaN(N2) || N2 < 1 || N2 > currentConfig.maxN2)) { globalStatus.innerText = `Поле 2: от 1 до ${currentConfig.maxN2}!`; globalStatus.style.color = "#e74c3c"; return; }
-        if (N1 + N2 > currentConfig.maxTotal) { globalStatus.innerText = `Макс. выбор: ${currentConfig.maxTotal} чисел!\n(Сейчас Поле 1: ${N1}, Поле 2: ${N2}. Сумма: ${N1 + N2})`; globalStatus.style.color = "#e74c3c"; return; }
-        let totalTickets = parseInt(document.getElementById('inputAmount').value); if (isNaN(totalTickets) || totalTickets <= 0) { globalStatus.innerText = "Введите кол-во билетов!"; globalStatus.style.color = "#e74c3c"; return; }
-        let excF1 = parseNumList(document.getElementById('excN1').value);
-        let excF2 = currentConfig.hasField2 ? parseNumList(document.getElementById('excN2').value) : [];
-        let incSettingsF1 = getIncSettings(1);
-        let incSettingsF2 = currentConfig.hasField2 ? getIncSettings(2) : { incList: [], isRandomMode: false, randCount: 0 };
+        let gs = document.getElementById('globalStatus');
+        let N1=parseInt(document.getElementById('inputN1').value); if(isNaN(N1)||N1<2||N1>currentConfig.maxN1){gs.innerText=`П1: 2..${currentConfig.maxN1}!`;gs.style.color="#e74c3c";return;}
+        let N2=currentConfig.hasField2?parseInt(document.getElementById('inputN2').value):0; if(currentConfig.hasField2&&(isNaN(N2)||N2<1||N2>currentConfig.maxN2)){gs.innerText=`П2: 1..${currentConfig.maxN2}!`;gs.style.color="#e74c3c";return;}
+        if(N1+N2>currentConfig.maxTotal){gs.innerText=`Макс: ${currentConfig.maxTotal}!`;gs.style.color="#e74c3c";return;}
+        let tt=parseInt(document.getElementById('inputAmount').value); if(isNaN(tt)||tt<=0){gs.innerText="Кол-во билетов!";gs.style.color="#e74c3c";return;}
+        let e1=parseNumList(document.getElementById('excN1').value), e2=currentConfig.hasField2?parseNumList(document.getElementById('excN2').value):[];
+        let is1=getIncSettings(1), is2=currentConfig.hasField2?getIncSettings(2):{incList:[],isRandomMode:false,randCount:0};
+        let filters; try { filters = getFilterSettings(); validateFilters(filters); } catch(err) { gs.innerText = "❌ Фильтры: " + err; gs.style.color = "#e74c3c"; return; }
 
-        document.querySelectorAll('.rule-input').forEach(input => { if (input.value.trim()) { let ruleId = parseInt(input.closest('.rule-row').id.replace('rule-', '')); countRule(ruleId); } });
+        let isFrozen = freezeCb.checked && currentConfig.hasField2 && frozenField1 !== null;
+        let useFreeze = freezeCb.checked && currentConfig.hasField2;
+        let frozenArr = [];
+        if (isFrozen) { frozenArr = frozenField1.slice(0, tt); tt = frozenArr.length; if(!tt){gs.innerText="❌ Заморожено 0!";gs.style.color="#e74c3c";return;} }
 
-        let csv = "\uFEFF" + (currentConfig.hasField2 ? "Поле 1;Поле 2\n" : "Поле 1\n");
-        let reportDetails = []; let useAlgo = false;
-        let activeSets = Object.entries(ruleSetsData).filter(([id, data]) => data.combos1.length > 0 || data.combos2.length > 0);
-        let anyRuleEntered = false;
-        document.querySelectorAll('.rule-input').forEach(inp => { if (inp.value.trim()) anyRuleEntered = true; });
-        if (anyRuleEntered && activeSets.length === 0) { globalStatus.innerText = "❌ Правила заданы, но ни один набор не прошёл подсчёт."; globalStatus.style.color = "#e74c3c"; return; }
+        let f1 = isFrozen ? null : filters;
+        let f2 = filters;
+
+        document.querySelectorAll('.rule-input').forEach(i=>{if(i.value.trim()){countRule(parseInt(i.closest('.rule-row').id.replace('rule-','')));}});
+        let csv="\uFEFF"+(currentConfig.hasField2?"Поле 1;Поле 2\n":"Поле 1\n");
+        let rep=[], useAlgo=false;
+        let active=Object.entries(ruleSetsData).filter(([,d])=>d.combos1.length>0||d.combos2.length>0);
+        let anyR=false; document.querySelectorAll('.rule-input').forEach(i=>{if(i.value.trim())anyR=true;});
+        if(!isFrozen&&anyR&&!active.length){gs.innerText="❌ Правила не прошёл подсчёт.";gs.style.color="#e74c3c";return;}
 
         try {
-            if (activeSets.length === 0) {
-                let pureTickets = generatePureRandom(N1, N2, totalTickets, excF1, incSettingsF1, excF2, incSettingsF2);
-                if (pureTickets.length < totalTickets) { globalStatus.innerText = "Невозможно сгенерировать уникальные билеты!"; globalStatus.style.color = "#e74c3c"; return; }
-                let selected = pickTickets(pureTickets, totalTickets); for (let t of selected) csv += formatCsvRow(t.f1, t.f2);
-                reportDetails.push(`Обычный рандом: ${selected.length} шт.`);
+            if (isFrozen) {
+                let f2Tk = [];
+                for(let i=0;i<frozenArr.length;i++){let f2v=generateFilteredField(N2,e2,is2,currentConfig.maxNumF2,f2);f2Tk.push({f1:frozenArr[i],f2:f2v});csv+=formatCsvRow(frozenArr[i],f2v);}
+                rep.push(`П1: заморожено ${frozenArr.length}`);
+                if(f2.chainN>0){let r=applyChainFilter(f2Tk,f2.chainN,'f2');if(r.fail)rep.push(`Связь П2: ${r.fail} не выполн.`);}
+            } else if (!active.length) {
+                let tk=generatePureRandom(N1,N2,tt,e1,is1,e2,is2,f1,f2);
+                if(tk.length<tt){gs.innerText="Невозможно генерировать уникальные!";gs.style.color="#e74c3c";return;}
+                let sel=pickTickets(tk,tt);
+                if(f1.chainN>0){let r=applyChainFilter(sel,f1.chainN,'f1');sel=r.tickets;if(r.fail)rep.push(`Связь П1: ${r.fail} не выполн.`);}
+                for(let t of sel)csv+=formatCsvRow(t.f1,t.f2);
+                rep.push(`Рандом: ${sel.length}`);
+                if(useFreeze){frozenField1=sel.map(t=>t.f1);rep.push("П1 заморожено!");}
             } else {
-                useAlgo = true;
-                let setsToProcess = activeSets.length;
-                let baseQuota = Math.floor(totalTickets / setsToProcess);
-                let extraTickets = totalTickets % setsToProcess;
-                for (let i = 0; i < setsToProcess; i++) {
-                    let [id, data] = activeSets[i];
-                    let currentQuota = baseQuota + (i < extraTickets ? 1 : 0);
-                    let maxByF1 = (data.target1 && data.combos1.length > 0) ? data.combos1.length : Infinity;
-                    let maxByF2 = (data.target2 && data.combos2.length > 0) ? data.combos2.length : Infinity;
-                    currentQuota = Math.min(currentQuota, maxByF1, maxByF2);
-                    if (currentQuota <= 0) { reportDetails.push(`Набор ${i + 1}: 0 шт.`); continue; }
-                    reportDetails.push(`Набор ${i + 1}: ${currentQuota} шт.`);
-                    let selected1 = (data.target1 && data.combos1.length > 0) ? pickTickets(data.combos1, currentQuota) : [];
-                    let selected2 = (data.target2 && data.combos2.length > 0) ? pickTickets(data.combos2, currentQuota) : [];
-                    for (let j = 0; j < currentQuota; j++) {
-                        let f1 = selected1.length > 0 ? selected1[j] : generateRandomField(N1, excF1, incSettingsF1, currentConfig.maxNum);
-                        let f2 = [];
-                        if (currentConfig.hasField2) { f2 = selected2.length > 0 ? selected2[j] : generateRandomField(N2, excF2, incSettingsF2, currentConfig.maxNumF2); }
-                        csv += formatCsvRow(f1, f2);
-                    }
+                useAlgo=true; let sp=active.length, bq=Math.floor(tt/sp), ex=tt%sp, allF1=[];
+                for(let i=0;i<sp;i++){
+                    let[,d]=active[i]; let cq=bq+(i<ex?1:0);
+                    let m1=(d.target1&&d.combos1.length>0)?d.combos1.length:Infinity, m2=(d.target2&&d.combos2.length>0)?d.combos2.length:Infinity;
+                    cq=Math.min(cq,m1,m2); if(cq<=0){rep.push(`Набор ${i+1}: 0`);continue;}
+                    rep.push(`Набор ${i+1}: ${cq}`);
+                    let s1=(d.target1&&d.combos1.length>0)?pickTickets(d.combos1,cq):[], s2=(d.target2&&d.combos2.length>0)?pickTickets(d.combos2,cq):[];
+                    for(let j=0;j<cq;j++){let fv1=s1.length>0?s1[j]:generateFilteredField(N1,e1,is1,currentConfig.maxNum,f1);let fv2=[];if(currentConfig.hasField2){fv2=s2.length>0?s2[j]:generateFilteredField(N2,e2,is2,currentConfig.maxNumF2,f2);}csv+=formatCsvRow(fv1,fv2);allF1.push(fv1);}
                 }
+                if(f1.chainN>0){let r=applyChainFilter(allF1.map((f,i)=>({f1:f,f2:null})),f1.chainN,'f1');if(r.fail)rep.push(`Связь П1: ${r.fail} не выполн.`);}
+                if(useFreeze){frozenField1=allF1;rep.push("П1 заморожено!");}
             }
-            let blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' }); let link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = "lottery_export.csv"; link.click();
-            let algoName = getSelectedAlgo() === 'classic' ? 'Классический' : document.querySelector('.algo-checkbox:checked').parentNode.innerText.trim();
-            globalStatus.style.color = "#27ae60"; globalStatus.innerText = `✅ Выгружено: ${totalTickets} шт.${useAlgo ? ' (Алгоритм: ' + algoName + ')' : ''}\n${reportDetails.join(' | ')}`;
-        } catch (e) { globalStatus.innerText = "❌ " + e; globalStatus.style.color = "#e74c3c"; }
+
+            let covWarn = '';
+            let csvLines = csv.split('\n').filter(l => l.trim());
+            let dataLines = csvLines.slice(1);
+            if (!isFrozen) {
+                let allTkF1 = dataLines.map(l => ({ f1: l.split(';')[0].split(' ').map(Number), f2: null }));
+                covWarn = analyzeCoverage(allTkF1, f1.coverageMin, 'f1', currentConfig.maxNum);
+            }
+            if (currentConfig.hasField2) {
+                let allTkF2 = dataLines.map(l => ({ f1: null, f2: l.split(';')[1] ? l.split(';')[1].split(' ').map(Number) : [] }));
+                covWarn += (covWarn ? ' | ' : '') + analyzeCoverage(allTkF2, f2.coverageMin, 'f2', currentConfig.maxNumF2);
+            }
+
+            let blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});let link=document.createElement("a");link.href=URL.createObjectURL(blob);link.download="lottery_export.csv";link.click();
+            let an=getSelectedAlgo()==='classic'?'Классический':document.querySelector('.algo-checkbox:checked').parentNode.innerText.trim();
+            let fn=isFrozen?' [П1 ЗАМОРОЖЕНО]':(useFreeze&&frozenField1)?' [П1 СОХРАНЕНО]':'';
+            gs.style.color="#27ae60"; gs.innerText=`✅ Выгружено: ${tt} шт.${useAlgo?' ('+an+')':''}${fn}\n${rep.join(' | ')}${covWarn ? '\n' + covWarn : ''}`;
+        } catch(e) { gs.innerText="❌ "+e; gs.style.color="#e74c3c"; }
     });
 </script>
-
 </body>
 </html>
