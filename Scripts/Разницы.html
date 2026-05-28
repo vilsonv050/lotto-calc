@@ -121,7 +121,7 @@
         #field2Block { display: flex; gap: 6px; align-items: flex-end; }
         .hidden { display: none !important; }
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 100000; justify-content: center; align-items: center; }
-        .modal-box { background: white; padding: 15px; border-radius: 8px; width: 90%; max-width: 500px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); position: relative; max-height: 90vh; overflow-y: auto; }
+        .modal-box { background: white; padding: 15px; border-radius: 8px; width: 90%; max-width: 480px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); position: relative; max-height: 90vh; overflow-y: auto; }
         .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 14px; font-weight: bold; color: #2c3e50; }
         .modal-close { background: none; border: none; font-size: 18px; color: #7f8c8d; cursor: pointer; }
         .modal-text { font-size: 12px; color: #333; line-height: 1.5; }
@@ -129,7 +129,7 @@
         .modal-text b:first-child { margin-top: 0; }
         .modal-text ul { margin-left: 16px; margin-top: 4px; }
         .modal-text li { margin-bottom: 3px; }
-        .modal-text em { color: #7f8c8d; font-size: 11px; }
+        .modal-text em { color: #7f8c8d; font-size: 11px; display: block; margin-bottom: 4px; }
         .modal-text .ex { color: #2980b9; font-size: 11px; font-style: italic; }
         .version-box { background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 4px; padding: 8px 10px; margin-bottom: 10px; font-size: 11px; color: #495057; }
         .version-box b { color: #3498db; margin: 0; }
@@ -152,6 +152,7 @@
             <option value="vosmerki">Восьмерки (8 из 20, Поле 2: 1-4)</option>
             <option value="premier">Премьер (4 из 20, Поле 2: 1-20)</option>
             <option value="top12">ТОП-12 (12 из 24, 1 поле)</option>
+            <option value="coloredBalls">Цветные Шары (6 из 48, 1 поле)</option>
         </select>
 
         <div class="pool-box">
@@ -167,6 +168,7 @@
             <details>
                 <summary class="algo-summary">▾ Развернуть алгоритмы</summary>
                 <div class="algo-body">
+                    <div class="algo-row"><label class="custom-check"><input type="checkbox" class="algo-checkbox" data-algo="unique"><span class="checkmark"></span>Уникальный П1</label><span class="tip">?<span class="tiptext"><b>Уникальный П1</b><br>Работает как Классический, но гарантирует, что в пачке билетов Поле 1 не будет повторяться.</span></span></div>
                     <div class="algo-row"><label class="custom-check"><input type="checkbox" class="algo-checkbox" data-algo="even"><span class="checkmark"></span>Равномерное</label><span class="tip">?<span class="tiptext"><b>Равномерное</b><br>Делит базу на ровные куски. Из каждого — 1 случайный.</span></span></div>
                     <div class="algo-row"><label class="custom-check"><input type="checkbox" class="algo-checkbox" data-algo="anti"><span class="checkmark"></span>Анти-пересечение</label><span class="tip">?<span class="tiptext"><b>Анти-пересечение</b><br>Минимум общих чисел со всеми выбранными.</span></span></div>
                     <div class="algo-row"><label class="custom-check"><input type="checkbox" class="algo-checkbox" data-algo="weight"><span class="checkmark"></span>Взвешенный</label><span class="tip">?<span class="tiptext"><b>По сумме</b><br>Сортирует по близости к «золотой середине».</span></span></div>
@@ -255,9 +257,9 @@
             <div class="version-box">
                 <b>Версия: 2.9</b>
                 <ul class="changelog">
-                    <li>Добавлен фильтр "Условное включение" (Если -> То).</li>
-                    <li>Добавлены фильтры "Десятки" и "Хвосты".</li>
-                    <li>100% уникальность при генерации с правилами разниц.</li>
+                    <li>Добавлена лотерея "Цветные Шары" (6 из 48).</li>
+                    <li>Добавлен алгоритм "Уникальный П1" для генерации без дублей.</li>
+                    <li>Добавлен фильтр "Условное включение" (Если -> То) для жесткой связки чисел.</li>
                 </ul>
             </div>
 
@@ -266,13 +268,15 @@
                 <li><b>Восьмерки:</b> П1 (1–20), П2 (1–4). Макс чисел: 24.</li>
                 <li><b>Премьер:</b> П1 (1–20), П2 (1–20). Макс: 12 в поле, 18 суммарно.</li>
                 <li><b>ТОП-12:</b> П1 (1–24). П2 нет.</li>
+                <li><b>Цветные Шары:</b> П1 (1–48). П2 нет. 8 цветовых групп.</li>
                 <li><b>Пул:</b> Показывает число подходящих комбинаций. Если точное — зелёный. Если примерное — серый.</li>
             </ul>
 
             <b>2. Алгоритмы выборки</b>
-            Определяют, как именно выбирать билеты из пула.
+            <em>Определяют, как именно выбирать билеты из пула.</em>
             <ul>
-                <li><b>Классический:</b> Полный рандом. Каждый запуск — новый результат.</li>
+                <li><b>Классический (по умолчанию):</b> Полный рандом. Каждый запуск — новый результат. Возможны повторы П1 в пачке.</li>
+                <li><b>Уникальный П1:</b> Работает как Классический, но гарантирует отсутствие дубликатов Полей 1 в пачке билетов.</li>
                 <li><b>Равномерное:</b> Делит пул на равные части, из каждой берёт 1 билет. Даёт максимальный охват.</li>
                 <li><b>Анти-пересечение:</b> Ищет билеты с минимумом общих чисел. Идеально для сетки ставок.</li>
                 <li><b>Взвешенный:</b> Берёт билеты, чья сумма ближе к "золотой середине" (среднее арифметическое).</li>
@@ -281,39 +285,38 @@
             </ul>
 
             <b>3. Фильтры комбинаций (Поле 1)</b>
-            Работают совместно. Отбрасывают билеты, не подходящие под условия.
+            <em>Работают совместно. Отбрасывают билеты, не подходящие под условия.</em>
             <ul>
                 <li><b>Сумма:</b> Сумма всех чисел. <span class="ex">Пример: 75 или 75-85</span></li>
                 <li><b>Разброс:</b> Разница между макс. и мин. числом. <span class="ex">Пример: 12 (узкий) или 12-16 (широкий)</span></li>
-                <li><b>Чётные:</b> Количество чётных. Галочка <b>∑</b> — умный расчёт (П1+П2). <span class="ex">Пример: 3-5</span></li>
+                <li><b>Чётные:</b> Количество чётных. <span class="ex">Пример: 3-5</span></li>
                 <li><b>Без соседей:</b> Запрещает пары вида (5, 6) или (19, 20).</li>
-                <li><b>Секторы:</b> Квоты по диапазонам. <span class="ex">Пример: 1-10:3, 11-20:5 (ровно 3 из первой десятки и 5 из второй)</span></li>
-                <li><b>Десятки:</b> Распределение по группам: 1-9 / 10-19 / 20+. Сумма должна равняться размеру П1! <span class="ex">Пример для 8 из 20: 3-4-1 (3 маленьких, 4 средних, 1 двадцатка)</span></li>
-                <li><b>Хвосты:</b> Количество уникальных последних цифр. <span class="ex">В [2, 12, 5, 15] только 2 хвоста (2 и 5). Фильтр 6-8 отсечёт "слипшиеся" билеты.</span></li>
-                <li><b>Условие (Если -> То):</b> Жёсткая связка чисел. <span class="ex">Если: 4, То: 5. Билеты с 4, но без 5 — отбрасываются. Если: 4,7, То: 5,9. Если есть хоть одно из левого поля, в билете ОБЯЗАНЫ быть ВСЕ числа из правого.</span></li>
+                <li><b>Секторы:</b> Квоты по диапазонам. <span class="ex">Пример: 1-10:3, 11-20:5</span></li>
+                <li><b>Десятки:</b> Распределение по группам: 1-9 / 10-19 / 20+. Сумма должна равняться размеру П1!</li>
+                <li><b>Хвосты:</b> Количество уникальных последних цифр. <span class="ex">В [2, 12, 5, 15] только 2 хвоста (2 и 5).</span></li>
+                <li><b>Условие (Если -> То):</b> Жёсткая связка чисел. <span class="ex">Если: 4, То: 5. Билеты с 4, но без 5 — отбрасываются.</span></li>
             </ul>
 
             <b>4. Пакетные фильтры</b>
-            Анализируют всю сгенерированную пачку билетов целиком.
+            <em>Анализируют всю сгенерированную пачку билетов целиком.</em>
             <ul>
-                <li><b>Связь N:</b> Каждая пара соседних билетов должна иметь ровно N общих чисел. <span class="ex">При N=2, 1-й и 2-й билет пересекаются ровно в 2 числах.</span></li>
-                <li><b>Покрытие ≥:</b> Каждое число из пула должно встретиться в пачке не менее N раз. <span class="ex">При N=3, числа 1, 2, 3 и т.д. будут встречаться минимум по 3 раза на всю пачку.</span></li>
+                <li><b>Связь N:</b> Каждая пара соседних билетов должна иметь ровно N общих чисел.</li>
+                <li><b>Покрытие ≥:</b> Каждое число из пула должно встретиться в пачке не менее N раз.</li>
             </ul>
 
             <b>5. Исключения и Включения</b>
             <ul>
                 <li><b>Исключения:</b> Числа, которые никогда не появятся. <span class="ex">Пр: 5, 12</span></li>
-                <li><b>Включения:</b> Числа, которые будут в каждом билете. Галочка "Случайных N" берёт из списка лишь N чисел. <span class="ex">Список: 3, 10, 15. Галочка стоит, N=2. Скрипт возьмёт любые 2 из этих трёх.</span></li>
+                <li><b>Включения:</b> Числа, которые будут в каждом билете. Галочка "Случайных N" берёт из списка лишь N чисел.</li>
                 <li><b>Заморозить П1:</b> Сохраняет П1 при генерации. Повторное нажатие "Сформировать" сгенерирует новые П2 к старым П1.</li>
             </ul>
 
             <b>6. Правила разниц</b>
-            Задают структуру шагов между числами в билете. Формат: <b>шаг-количество</b>. Комбинируются через запятую.
+            <em>Задают структуру шагов между числами в билете. Формат: <b>шаг-количество</b>. Комбинируются через запятую.</em>
             <ul>
-                <li><b>1-3</b> — ровно 3 пары соседей. <span class="ex">Пр: [..., 5, 6, ..., 12, 13, ..., 19, 20]</span></li>
-                <li><b>2-2</b> — ровно 2 пары через одно число. <span class="ex">Пр: [..., 4, 6, ..., 15, 17]</span></li>
-                <li><b>1-2, 3-1</b> — 2 пары соседей И 1 пара с шагом 3. <span class="ex">Пр: [..., 7, 8, ..., 14, 17]</span></li>
-                <li><em>Кнопка ✎</em> считает точное число комбинаций в пуле, подходящих под это правило.</li>
+                <li><b>1-3</b> — ровно 3 пары соседей.</li>
+                <li><b>2-2</b> — ровно 2 пары через одно число.</li>
+                <li>Кнопка <b>✎</b> считает точное число комбинаций в пуле, подходящих под это правило.</li>
             </ul>
         </div>
     </div>
@@ -322,12 +325,13 @@
 <script>
     document.querySelectorAll('.algo-checkbox').forEach(cb => { cb.addEventListener('change', function() { if (this.checked) { document.querySelectorAll('.algo-checkbox').forEach(other => { if (other !== this) other.checked = false; }); } }); });
     function getSelectedAlgo() { const c = document.querySelector('.algo-checkbox:checked'); return c ? c.dataset.algo : 'classic'; }
-    function getAlgoName() { const map = {even: 'Равномерное', anti: 'Анти-пересечение', weight: 'Взвешенный', reservoir: 'Поток', hist: 'Историческая'}; return map[getSelectedAlgo()] || 'Классический'; }
+    function getAlgoName() { const map = {unique: 'Уникальный П1', even: 'Равномерное', anti: 'Анти-пересечение', weight: 'Взвешенный', reservoir: 'Поток', hist: 'Историческая'}; return map[getSelectedAlgo()] || 'Классический'; }
 
     const configs = {
         vosmerki: { maxNum: 20, maxNumF2: 4, defN1: 8, defN2: 1, maxN1: 20, maxN2: 4, hasField2: true, maxTotal: 24 },
         premier: { maxNum: 20, maxNumF2: 20, defN1: 4, defN2: 4, maxN1: 12, maxN2: 12, hasField2: true, maxTotal: 18 },
-        top12: { maxNum: 24, maxNumF2: 0, defN1: 12, defN2: 0, maxN1: 24, maxN2: 0, hasField2: false, maxTotal: 24 }
+        top12: { maxNum: 24, maxNumF2: 0, defN1: 12, defN2: 0, maxN1: 24, maxN2: 0, hasField2: false, maxTotal: 24 },
+        coloredBalls: { maxNum: 48, maxNumF2: 0, defN1: 6, defN2: 0, maxN1: 48, maxN2: 0, hasField2: false, maxTotal: 48 }
     };
     let currentConfig = configs.vosmerki;
     let frozenField1 = null;
@@ -411,24 +415,50 @@
         if (!f) return true;
         if (f.sumRange && f.sumRange !== 'err') { let s = combo.reduce((a, b) => a + b, 0); if (s < f.sumRange.min || s > f.sumRange.max) return false; }
         if (f.spreadRange && f.spreadRange !== 'err') { let sp = combo[combo.length - 1] - combo[0]; if (sp < f.spreadRange.min || sp > f.spreadRange.max) return false; }
-        if (f.evenRange && f.evenRange !== 'err' && !f.evenGlobal) { let ec = combo.filter(n => n % 2 === 0).length; if (ec < f.evenRange.min || ec > f.evenRange.max) return false; }
+        if (f.evenRange && f.evenRange !== 'err' && !f.evenGlobal) { 
+            let ec = 0; 
+            for(let i=0; i<combo.length; i++) if(combo[i] % 2 === 0) ec++;
+            if (ec < f.evenRange.min || ec > f.evenRange.max) return false; 
+        }
         if (f.noNeighbors) { for (let i = 1; i < combo.length; i++) { if (combo[i] - combo[i - 1] === 1) return false; } }
-        if (f.sectors && f.sectors !== 'err' && f.sectors.length > 0) { for (let sec of f.sectors) { if (combo.filter(n => n >= sec.from && n <= sec.to).length < sec.count) return false; } }
+        if (f.sectors && f.sectors !== 'err' && f.sectors.length > 0) { 
+            for (let sec of f.sectors) { 
+                let cnt = 0; 
+                for(let i=0; i<combo.length; i++) { if(combo[i] >= sec.from && combo[i] <= sec.to) cnt++; }
+                if (cnt < sec.count) return false; 
+            } 
+        }
         if (f.decadesReq && f.decadesReq !== 'err') { 
-            let c1 = combo.filter(n => n >= 1 && n <= 9).length;
-            let c2 = combo.filter(n => n >= 10 && n <= 19).length;
-            let c3 = combo.filter(n => n >= 20).length;
+            let c1 = 0, c2 = 0, c3 = 0;
+            for(let i=0; i<combo.length; i++) {
+                let n = combo[i];
+                if (n <= 9) c1++;
+                else if (n <= 19) c2++;
+                else c3++;
+            }
             if (c1 !== f.decadesReq.d1 || c2 !== f.decadesReq.d2 || c3 !== f.decadesReq.d3) return false;
         }
         if (f.tailsRange && f.tailsRange !== 'err') { 
-            let tails = new Set(combo.map(n => n % 10)).size; 
-            if (tails < f.tailsRange.min || tails > f.tailsRange.max) return false; 
+            let tailsArr = [false,false,false,false,false,false,false,false,false,false];
+            let tailsCount = 0;
+            for(let i=0; i<combo.length; i++) {
+                let t = combo[i] % 10;
+                if (!tailsArr[t]) { tailsArr[t] = true; tailsCount++; }
+            }
+            if (tailsCount < f.tailsRange.min || tailsCount > f.tailsRange.max) return false; 
         }
         if (f.condTriggers && f.condTriggers.length > 0 && f.condDeps && f.condDeps.length > 0) {
-            let hasTrigger = combo.some(n => f.condTriggers.includes(n));
+            let hasTrigger = false;
+            for(let i=0; i<combo.length; i++) { 
+                for(let j=0; j<f.condTriggers.length; j++) { if(combo[i] === f.condTriggers[j]) { hasTrigger = true; break; } }
+                if(hasTrigger) break;
+            }
             if (hasTrigger) {
-                let hasAllDeps = f.condDeps.every(n => combo.includes(n));
-                if (!hasAllDeps) return false;
+                for(let i=0; i<f.condDeps.length; i++) {
+                    let found = false;
+                    for(let j=0; j<combo.length; j++) { if(combo[j] === f.condDeps[i]) { found = true; break; } }
+                    if (!found) return false;
+                }
             }
         }
         return true;
@@ -710,7 +740,7 @@
 
     function isRuleActive(d) { return d.raw.trim() !== '' && (d.target1 || (d.target2 && currentConfig.hasField2)); }
 
-    function pickTickets(a, c) { if (a.length <= c) return [...a]; switch(getSelectedAlgo()) { case 'even': return pickEven(a,c); case 'anti': return pickAnti(a,c); case 'weight': return pickWeight(a,c); case 'reservoir': return pickReservoir(a,c); case 'hist': return pickHist(a,c); default: return pickClassic(a,c); } }
+    function pickTickets(a, c) { if (a.length <= c) return [...a]; switch(getSelectedAlgo()) { case 'unique': case 'hist': case 'classic': return pickClassic(a,c); case 'even': return pickEven(a,c); case 'anti': return pickAnti(a,c); case 'weight': return pickWeight(a,c); case 'reservoir': return pickReservoir(a,c); default: return pickClassic(a,c); } }
     function pickClassic(a,c) { return a.sort(() => Math.random() - 0.5).slice(0,c); }
     function pickEven(a,c) { let cs = Math.floor(a.length/c); if(cs<1) return pickClassic(a,c); let r=[]; for(let i=0;i<c;i++){let s=i*cs,e=i===c-1?a.length:s+cs;r.push(a.slice(s,e)[Math.floor(Math.random()*(e-s))]);} return r; }
     function pickAnti(a,c) { let p=[...a].sort(()=>Math.random()-0.5),r=[p.shift()],u=new Set(r[0]); while(r.length<c&&p.length>0){let bi=0,mi=Infinity,l=Math.min(p.length,100); for(let i=0;i<l;i++){let n=p[i].filter(x=>u.has(x)).length;if(n<mi){mi=n;bi=i;if(n===0)break;}} let pk=p.splice(bi,1)[0];r.push(pk);pk.forEach(n=>u.add(n));} return r; }
@@ -727,6 +757,60 @@
     function analyzeCoverage(tickets, minCov, field, maxNum) { if (minCov <= 0) return ''; let freq = {}; for (let i = 1; i <= maxNum; i++) freq[i] =0; for (let t of tickets) for (let n of t[field]) freq[n]++; let bad = []; for (let i = 1; i <= maxNum; i++) if (freq[i] < minCov) bad.push(i+'('+freq[i]+')'); return bad.length > 0 ? '⚠️ Покрытие: '+bad.join(', ')+' < '+minCov : ''; }
 
     function formatCsvRow(f1, f2) { let s = f1.join(' '); return currentConfig.hasField2 ? s+';'+f2.join(' ')+'\n' : s+'\n'; }
+
+    function generateValidF2(f1Combo, preGeneratedF2, diffRaw, filters) {
+        if (!currentConfig.hasField2) return { f2: [], warning: null };
+        
+        let N2 = parseInt(document.getElementById('inputN2').value);
+        let e2 = parseNumList(document.getElementById('excN2').value);
+        let is2 = getIncSettings(2);
+        let useGlobalEven = currentConfig.hasField2 && filters.evenGlobal && filters.evenRange && filters.evenRange !== 'err';
+        
+        if (!useGlobalEven) {
+            if (preGeneratedF2 && preGeneratedF2.length > 0) return { f2: preGeneratedF2, warning: null };
+            let f2v;
+            try { f2v = diffRaw ? generateWithDiffs(N2, e2, is2, currentConfig.maxNumF2, null, diffRaw) : generateRandomField(N2, e2, is2, currentConfig.maxNumF2); } 
+            catch(e) { f2v = generateRandomField(N2, e2, is2, currentConfig.maxNumF2); }
+            return { f2: f2v, warning: null };
+        }
+        
+        let f1Evens = 0;
+        for(let i=0; i<f1Combo.length; i++) if(f1Combo[i] % 2 === 0) f1Evens++;
+        let needMinF2 = Math.max(0, filters.evenRange.min - f1Evens);
+        let needMaxF2 = filters.evenRange.max - f1Evens;
+        
+        if (preGeneratedF2 && preGeneratedF2.length > 0) {
+            let f2Evens = 0;
+            for(let i=0; i<preGeneratedF2.length; i++) if(preGeneratedF2[i] % 2 === 0) f2Evens++;
+            if (f2Evens >= needMinF2 && f2Evens <= needMaxF2) return { f2: preGeneratedF2, warning: null };
+        }
+        
+        let att = 0; let match = false;
+        let f2v = [];
+        
+        while(att < 500) {
+            try {
+                if (diffRaw) {
+                    f2v = generateWithDiffs(N2, e2, is2, currentConfig.maxNumF2, null, diffRaw);
+                } else {
+                    f2v = generateRandomField(N2, e2, is2, currentConfig.maxNumF2);
+                }
+            } catch(e) { att++; continue; }
+            
+            let f2Evens = 0;
+            for(let i=0; i<f2v.length; i++) if(f2v[i] % 2 === 0) f2Evens++;
+            if (f2Evens >= needMinF2 && f2Evens <= needMaxF2) { match = true; break; }
+            att++;
+        }
+        
+        if (!match) {
+            f2v = generateRandomField(N2, e2, is2, currentConfig.maxNumF2);
+            let warning = diffRaw ? '⚠️ Глоб. чётность/Разницы П2 конфликтуют' : '⚠️ Глоб. чётность П2 не набрана';
+            return { f2: f2v, warning: warning };
+        }
+        
+        return { f2: f2v, warning: null };
+    }
 
     function getF2EvenBounds(N2, e2, is2, maxNumF2) {
         let pool = [];
@@ -772,14 +856,13 @@
         let csv = '\uFEFF' + (currentConfig.hasField2 ? 'Поле 1;Поле 2\n' : 'Поле 1\n');
         let rep = [], useAlgo = false;
         let selectedAlgo = getSelectedAlgo();
-        let needPoolForAlgo = (selectedAlgo !== 'classic' && selectedAlgo !== 'hist');
+        let needPoolForAlgo = (selectedAlgo !== 'classic' && selectedAlgo !== 'hist' && selectedAlgo !== 'unique');
         let useGlobalEven = currentConfig.hasField2 && filters.evenGlobal && filters.evenRange && filters.evenRange !== 'err';
         
         let f1Filters = filters;
-        let f2EvenBounds = { min: 0, max: N2 }; 
         
         if (useGlobalEven) {
-            f2EvenBounds = getF2EvenBounds(N2, e2, is2, currentConfig.maxNumF2);
+            let f2EvenBounds = getF2EvenBounds(N2, e2, is2, currentConfig.maxNumF2);
             if (f2EvenBounds.min === -1) { gs.innerText='❌ П2: конфликт включений/исключений!'; gs.style.color='#e74c3c'; return; }
             
             let reqMinF1 = Math.max(0, filters.evenRange.min - f2EvenBounds.max);
@@ -799,24 +882,10 @@
             if (isFrozen) {
                 for (let i = 0; i < frozenArr.length; i++) { 
                     let f1v = frozenArr[i];
-                    let f2v = [];
-                    if (currentConfig.hasField2) {
-                        if (useGlobalEven) {
-                            let f1Evens = f1v.filter(n => n % 2 === 0).length;
-                            let needMinF2 = Math.max(0, filters.evenRange.min - f1Evens);
-                            let needMaxF2 = filters.evenRange.max - f1Evens;
-                            let att = 0; let match = false;
-                            while(att < 500) {
-                                f2v = generateRandomField(N2, e2, is2, currentConfig.maxNumF2);
-                                let f2Evens = f2v.filter(n => n % 2 === 0).length;
-                                if (f2Evens >= needMinF2 && f2Evens <= needMaxF2) { match = true; break; }
-                                att++;
-                            }
-                            if (!match) rep.push('⚠️ Глоб. чётность П2 не набрана (заморозка)');
-                        } else {
-                            f2v = generateRandomField(N2, e2, is2, currentConfig.maxNumF2);
-                        }
-                    }
+                    let resF2 = generateValidF2(f1v, [], null, filters);
+                    let f2v = resF2.f2;
+                    if(resF2.warning) rep.push(resF2.warning + ' (заморозка)');
+                    
                     ticketsData.push({f1: f1v, f2: f2v}); 
                 }
                 rep.push('П1: заморожено '+frozenArr.length);
@@ -830,32 +899,37 @@
                     rep.push('Из пула: '+tempF1.length+' ('+getAlgoName()+')');
                 } else {
                     if (needPoolForAlgo && exactCountF1 > MAX_ALGO_POOL) rep.push('⚠️ Пул велик для алгоритма. Классика.');
-                    for(let i=0; i<tt; i++) {
-                        tempF1.push(generateFilteredField(N1, e1, is1, currentConfig.maxNum, f1Filters));
+                    
+                    if (selectedAlgo === 'unique') {
+                        let genSet = new Set();
+                        let safetyCounter = 0;
+                        while (tempF1.length < tt && safetyCounter < tt * 10) {
+                            try {
+                                let fld = generateFilteredField(N1, e1, is1, currentConfig.maxNum, f1Filters);
+                                let key = fld.join(',');
+                                if (!genSet.has(key)) {
+                                    genSet.add(key);
+                                    tempF1.push(fld);
+                                }
+                            } catch(e) {}
+                            safetyCounter++;
+                        }
+                        if (tempF1.length < tt) rep.push('⚠️ Уникальность: удалось сгенерировать только ' + tempF1.length + ' уникальных П1');
+                        rep.push('Рандом на лету (Уникальный): '+tempF1.length);
+                    } else {
+                        for(let i=0; i<tt; i++) {
+                            tempF1.push(generateFilteredField(N1, e1, is1, currentConfig.maxNum, f1Filters));
+                        }
+                        rep.push('Рандом на лету: '+tempF1.length);
                     }
-                    rep.push('Рандом на лету: '+tempF1.length);
                 }
 
                 for (let i = 0; i < tempF1.length; i++) {
                     let f1v = tempF1[i];
-                    let f2v = [];
-                    if (currentConfig.hasField2) {
-                        if (useGlobalEven) {
-                            let f1Evens = f1v.filter(n => n % 2 === 0).length;
-                            let needMinF2 = Math.max(0, filters.evenRange.min - f1Evens);
-                            let needMaxF2 = filters.evenRange.max - f1Evens;
-                            let att = 0; let match = false;
-                            while(att < 500) {
-                                f2v = generateRandomField(N2, e2, is2, currentConfig.maxNumF2);
-                                let f2Evens = f2v.filter(n => n % 2 === 0).length;
-                                if (f2Evens >= needMinF2 && f2Evens <= needMaxF2) { match = true; break; }
-                                att++;
-                            }
-                            if (!match) rep.push('⚠️ Глоб. чётность П2 не набрана');
-                        } else {
-                            f2v = generateRandomField(N2, e2, is2, currentConfig.maxNumF2);
-                        }
-                    }
+                    let resF2 = generateValidF2(f1v, [], null, filters);
+                    let f2v = resF2.f2;
+                    if(resF2.warning) rep.push(resF2.warning);
+                    
                     ticketsData.push({f1: f1v, f2: f2v});
                 }
 
@@ -930,26 +1004,12 @@
                     
                     for (let j=0; j<cq; j++) {
                         let f1v = s1[j] || [];
-                        let f2v = currentConfig.hasField2 ? (s2[j] || generateRandomField(N2, e2, is2, currentConfig.maxNumF2)) : [];
+                        let preGenF2 = currentConfig.hasField2 ? (s2[j] || []) : [];
+                        let diffRawF2 = (d.target2) ? d.raw : null;
+                        let resF2 = generateValidF2(f1v, preGenF2, diffRawF2, filters);
+                        let f2v = resF2.f2;
+                        if(resF2.warning) rep.push(resF2.warning);
                         
-                        if (useGlobalEven && currentConfig.hasField2) {
-                            let f1Evens = f1v.filter(n => n % 2 === 0).length;
-                            let needMinF2 = Math.max(0, filters.evenRange.min - f1Evens);
-                            let needMaxF2 = filters.evenRange.max - f1Evens;
-                            
-                            let f2Evens = f2v.filter(n => n % 2 === 0).length;
-                            if (f2Evens < needMinF2 || f2Evens > needMaxF2) {
-                                let att = 0; let match = false;
-                                while(att < 500) {
-                                    f2v = generateRandomField(N2, e2, is2, currentConfig.maxNumF2);
-                                    if (d.target2 && !checkDiffs(f2v, d.raw)) continue; 
-                                    f2Evens = f2v.filter(n => n % 2 === 0).length;
-                                    if (f2Evens >= needMinF2 && f2Evens <= needMaxF2) { match = true; break; }
-                                    att++;
-                                }
-                                if (!match) rep.push('⚠️ Глоб. чётность/Разницы П2 конфликтуют');
-                            }
-                        }
                         ticketsData.push({f1: f1v, f2: f2v});
                     }
                 }
