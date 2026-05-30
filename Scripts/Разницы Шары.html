@@ -204,8 +204,8 @@
                 <div class="color-ball" data-color="black" style="background:#34495e" title="Черная (8,16,24,32,40,48)"></div>
             </div>
             <div class="color-input-row">
-                <input type="text" id="filterColorQuota" class="color-quota-input" placeholder="Жёстко чисел: Кр:1, Син:2" style="flex: 1;">
-                <span class="tip">?<span class="tiptext"><b>Жёсткие квоты</b><br>Точное количество чисел определенного цвета.<br>Допустимые сокращения: Кр, Зл, Син, Фл, Кор, Жл, Ор, Чр</span></span>
+                <input type="text" id="filterColorQuota" class="color-quota-input" placeholder="Жёстко чисел: Кр:2, Син:1" style="flex: 1;">
+                <span class="tip">?<span class="tiptext"><b>Жёсткие квоты</b><br>Точное количество чисел указанного цвета.<br>Сокращения: Кр, Зл, Син, Фл, Кор, Жл, Ор, Чр.<br><b>Неполная квота:</b> Если сумма меньше П1, остаток добирается из ДРУГИХ цветов (указанные цвета исключаются).<br>Пример для П1=6: Кр:2, Син:1 (2 красных, 1 синий, 3 любых кроме красных и синих).</span></span>
             </div>
             <div class="color-input-row">
                 <input type="text" id="filterColorPattern" class="color-quota-input" placeholder="Паттерн: 2-2-1-1" style="flex: 1;">
@@ -310,7 +310,7 @@
             <em>Доступны только для лотереи "Цветные Шары".</em>
             <ul>
                 <li><b>Клик по шарику:</b> Включает фильтр "Обязательное присутствие". В билете должно быть хотя бы 1 число из выбранного цвета.</li>
-                <li><b>Жёсткие квоты:</b> Задает точное количество чисел определённого цвета. Формат: <b>Кр:2, Син:1</b>. Допустимые сокращения: Кр, Зл, Син, Фл, Кор, Жл, Ор, Чр. Это строгий фильтр.</li>
+                <li><b>Жёсткие квоты:</b> Задает точное количество чисел определённого цвета. Формат: <b>Кр:2, Син:1</b>. Допустимые сокращения: Кр, Зл, Син, Фл, Кор, Жл, Ор, Чр. <br><b>Неполная квота:</b> Если сумма квот меньше размера П1, оставшиеся числа будут взяты из ДРУГИХ цветов (указанные цвета исключаются).</li>
                 <li><b>Паттерн групп:</b> Задает структуру распределения чисел по цветам, не привязываясь к конкретным цветам. Формат: <b>2-2-1-1</b> (означает: две группы дадут по 2 числа, еще две — по 1 числу). Сумма цифр паттерна должна равняться размеру П1! Через запятую можно задать несколько допустимых паттернов: <b>2-2-1-1, 1-1-1-1-1-1</b>.</li>
             </ul>
 
@@ -399,7 +399,7 @@
             let alias = sp[0].toLowerCase().trim(), count = parseInt(sp[1]);
             if (isNaN(count) || count < 0) throw "Кол-во >= 0!";
             let colorKey = colorAlias[alias]; if (!colorKey) throw "Неизвестный цвет: " + sp[0];
-            res[colorKey] = count;
+            res[colorKey] = (res[colorKey] || 0) + count;
         }
         return res;
     }
@@ -430,6 +430,15 @@
         try { decadesR = parseDecades(document.getElementById('filterDecades').value, parseInt(document.getElementById('inputN1').value)); } catch(e) { decadesR = 'err'; }
         try { tailsR = parseRange(document.getElementById('filterTails').value); } catch(e) { tailsR = 'err'; }
         try { colorQuota = parseColorQuota(document.getElementById('filterColorQuota').value); } catch(e) { colorQuota = 'err'; }
+        
+        // Валидация суммы жестких квот (теперь не строго равно, а не больше)
+        if (colorQuota !== 'err' && colorQuota !== null) {
+            let quotaSum = 0;
+            for (let c in colorQuota) quotaSum += colorQuota[c];
+            let N1 = parseInt(document.getElementById('inputN1').value);
+            if (quotaSum > N1) throw 'Сумма квот (' + quotaSum + ') не может превышать размер П1 (' + N1 + ')!';
+        }
+
         try { colorPattern = parseColorPattern(document.getElementById('filterColorPattern').value, parseInt(document.getElementById('inputN1').value)); } catch(e) { colorPattern = 'err'; }
         
         let condIf = parseNumList(document.getElementById('filterCondIf').value);
@@ -525,11 +534,134 @@
         pool.filter(n => !used.has(n)).sort(() => Math.random() - 0.5).slice(0, need).forEach(n => result.push(n));
         return result.sort((a, b) => a - b);
     }
+
     function generateFilteredField(N, exc, inc, maxNum, filters) {
         let hasSectors = filters && filters.sectors && filters.sectors !== 'err' && filters.sectors.length > 0;
-        for (let att = 0; att < 500; att++) { let fld = hasSectors ? buildFieldWithSectors(N, exc, inc, maxNum, filters.sectors) : generateRandomField(N, exc, inc, maxNum); if (checkTicketFilters(fld, filters)) return fld; }
-        throw 'Не удалось сгенерировать билет за 500 попыток';
+        let hasColorQuota = filters && filters.colorQuota && filters.colorQuota !== 'err';
+        
+        // Если заданы жёсткие квоты цветов, используем специализированный генератор
+        if (hasColorQuota) {
+            return generateFieldWithColorQuota(N, exc, inc, maxNum, filters);
+        }
+
+        for (let att = 0; att < 500; att++) { 
+            let fld = hasSectors ? buildFieldWithSectors(N, exc, inc, maxNum, filters.sectors) : generateRandomField(N, exc, inc, maxNum); 
+            if (checkTicketFilters(fld, filters)) return fld; 
+        }
+        throw 'Не удалось сгенерировать билет за 500 попыток'; 
     }
+
+    // ОБНОВЛЕННАЯ ФУНКЦИЯ: Целенаправленная сборка билета по квотам цветов с неполным заполнением
+    function generateFieldWithColorQuota(N, exc, inc, maxNum, filters) {
+        let quota = filters.colorQuota;
+        let quotaSum = 0;
+        for (let c in quota) quotaSum += quota[c];
+        
+        if (quotaSum > N) {
+            throw 'Сумма квот (' + quotaSum + ') не может превышать размер П1 (' + N + ')!';
+        }
+
+        let attempts = 0;
+        while(attempts < 200) {
+            attempts++;
+            let result = [];
+            let used = new Set();
+            let forcedCounts = {};
+            for (let c in quota) forcedCounts[c] = 0;
+
+            // 1. Обработка включений (строгих и случайных)
+            let forcedNums = [];
+            if (inc.incList.length > 0) {
+                let validIncs = inc.incList.filter(n => !exc.includes(n));
+                if (inc.isRandomMode && inc.randCount > 0) {
+                    let shuffled = [...validIncs].sort(() => Math.random() - 0.5);
+                    forcedNums = shuffled.slice(0, inc.randCount);
+                } else if (!inc.isRandomMode) {
+                    forcedNums = [...validIncs];
+                }
+            }
+
+            let validForce = true;
+            for (let n of forcedNums) {
+                let colorFound = null;
+                for (let c in colorMap) {
+                    if (colorMap[c].includes(n)) { colorFound = c; break; }
+                }
+                
+                if (colorFound && quota[colorFound] !== undefined) {
+                    forcedCounts[colorFound]++;
+                    if (forcedCounts[colorFound] > quota[colorFound]) validForce = false; // Включено слишком много чисел этого цвета
+                } else if (colorFound && quota[colorFound] === undefined) {
+                    // Включено число, цвет которого не в квоте. 
+                    // Это нормально, если есть место для рандома (quotaSum < N).
+                    // Но если quotaSum == N, то никаких других цветов быть не должно!
+                    if (quotaSum === N) validForce = false; 
+                }
+            }
+
+            if (!validForce) {
+                if (attempts >= 200) throw 'Включения конфликтуют с квотами цветов!';
+                continue; 
+            }
+
+            result = [...forcedNums];
+            forcedNums.forEach(n => used.add(n));
+
+            // 2. Заполняем квоты указанных цветов
+            let quotaSuccess = true;
+            for (let c in quota) {
+                let needMore = quota[c] - (forcedCounts[c] || 0);
+                if (needMore > 0) {
+                    let pool = colorMap[c].filter(n => !exc.includes(n) && !used.has(n));
+                    if (pool.length < needMore) { quotaSuccess = false; break; }
+                    pool.sort(() => Math.random() - 0.5);
+                    pool.slice(0, needMore).forEach(n => { result.push(n); used.add(n); });
+                } else if (needMore < 0) {
+                    quotaSuccess = false; break;
+                }
+            }
+
+            if (!quotaSuccess) {
+                if (attempts >= 200) throw 'Не хватает чисел для соблюдения квот (мешают исключения)!';
+                continue;
+            }
+
+            // 3. Заполняем остатки рандомом ИЗ ДРУГИХ ЦВЕТОВ
+            let needRandom = N - result.length;
+            if (needRandom > 0) {
+                let otherColorsPool = [];
+                for (let c in colorMap) {
+                    // Если цвет был в квоте, мы НЕ берем из него дополнительные числа
+                    if (quota[c] !== undefined) continue;
+                    
+                    for (let n of colorMap[c]) {
+                        if (!exc.includes(n) && !used.has(n)) {
+                            otherColorsPool.push(n);
+                        }
+                    }
+                }
+                
+                if (otherColorsPool.length < needRandom) {
+                    if (attempts >= 200) throw 'Не хватает чисел других цветов для заполнения билета!';
+                    continue;
+                }
+                
+                otherColorsPool.sort(() => Math.random() - 0.5);
+                otherColorsPool.slice(0, needRandom).forEach(n => { result.push(n); used.add(n); });
+            }
+
+            result.sort((a, b) => a - b);
+            
+            // 4. Проверяем остальные фильтры (Сумма, Чётность и т.д.)
+            // Цветовые фильтры временно отключаем, так как мы их уже гарантированно выполнили
+            let tempFilters = {...filters, colorQuota: null, colorRequired: null, colorPattern: null};
+            if (checkTicketFilters(result, tempFilters)) {
+                return result;
+            }
+        }
+        throw 'Не удалось подобрать билет: квоты цветов конфликтуют с другими фильтрами (Сумма, Чётность и т.д.)';
+    }
+
     function generateRandomField(N, exc, inc, maxNum) {
         let pool = []; for (let i = 1; i <= maxNum; i++) { if (!exc.includes(i)) pool.push(i); }
         let t = [];
