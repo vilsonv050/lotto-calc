@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Генератор Разниц [ 86 ] v3.1</title>
+    <title>Генератор Разниц [ 86 ] v3.2</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: Arial, sans-serif; background: #f0f2f5; overflow: hidden; }
@@ -160,7 +160,7 @@
 
 <div id="widget">
     <div id="header">
-        <span>Генератор Разниц [ 86 ] v3.1</span>
+        <span>Генератор Разниц [ 86 ] v3.2</span>
         <div class="header-btns">
             <button id="helpBtn" title="Справка">?</button>
             <button id="closeBtn" title="Закрыть">✕</button>
@@ -308,12 +308,13 @@
 
 <div id="helpModal" class="modal-overlay">
     <div class="modal-box">
-        <div class="modal-header">Справка v3.1 <button class="modal-close" id="closeHelp">✕</button></div>
+        <div class="modal-header">Справка v3.2 <button class="modal-close" id="closeHelp">✕</button></div>
         <div class="modal-text">
             <div class="version-box">
-                <b>Версия: 3.1</b>
+                <b>Версия: 3.2</b>
                 <ul class="changelog">
                     <li>Алгоритм "Равномерное" расширен: добавлены режимы охвата (Сумма, Разброс, Микс) и множитель выборки из сегмента.</li>
+                    <li>В CSV добавлена первая строка с форматом генерации (Лотерея, Алгоритм, Поля).</li>
                     <li>Добавлена лотерея "5 из 36" (1 поле, макс. 12 чисел).</li>
                     <li>Добавлена лотерея "Цветные Шары" (6 из 48).</li>
                     <li>Добавлен алгоритм "Уникальный П1" для генерации без дублей.</li>
@@ -388,7 +389,6 @@
             if (this.checked) { 
                 document.querySelectorAll('.algo-checkbox').forEach(other => { if (other !== this) other.checked = false; }); 
             }
-            // Управление интерфейсом Равномерного алгоритма
             if (document.querySelector('.algo-checkbox[data-algo="even"]').checked) {
                 document.getElementById('evenSettings').classList.remove('hidden');
                 document.getElementById('labelAmount').innerText = 'Сегментов:';
@@ -402,9 +402,7 @@
     function getSelectedAlgo() { const c = document.querySelector('.algo-checkbox:checked'); return c ? c.dataset.algo : 'classic'; }
     function getAlgoName() { const map = {unique: 'Уникальный П1', even: 'Равномерное', anti: 'Анти-пересечение', weight: 'Взвешенный', reservoir: 'Поток', hist: 'Историческая'}; return map[getSelectedAlgo()] || 'Классический'; }
 
-    /* НОВАЯ ЛОТЕРЕЯ: Добавляйте новые конфиги по этому шаблону. 
-       Параметры: maxNum (макс. число П1), maxNumF2 (макс. число П2 или 0), 
-       defN1/N2 (по умолчанию), maxN1/N2 (макс. выбор), hasField2 (есть ли П2), maxTotal (макс. сумма чисел) */
+    /* НОВАЯ ЛОТЕРЕЯ: Добавляйте новые конфиги по этому шаблону */
     const configs = {
         vosmerki: { maxNum: 20, maxNumF2: 4, defN1: 8, defN2: 1, maxN1: 20, maxN2: 4, hasField2: true, maxTotal: 24 },
         premier: { maxNum: 20, maxNumF2: 20, defN1: 4, defN2: 4, maxN1: 12, maxN2: 12, hasField2: true, maxTotal: 18 },
@@ -497,7 +495,6 @@
         try { tailsR = parseRange(document.getElementById('filterTails').value); } catch(e) { tailsR = 'err'; }
         try { colorQuota = parseColorQuota(document.getElementById('filterColorQuota').value); } catch(e) { colorQuota = 'err'; }
         
-        // Валидация суммы жестких квот (теперь не строго равно, а не больше)
         if (colorQuota !== 'err' && colorQuota !== null) {
             let quotaSum = 0;
             for (let c in colorQuota) quotaSum += colorQuota[c];
@@ -567,7 +564,6 @@
         if (f.colorQuota && f.colorQuota !== 'err') {
             for (let colorKey in f.colorQuota) { let needed = f.colorQuota[colorKey]; let count = 0; for(let i=0; i<combo.length; i++) { if (colorMap[colorKey].includes(combo[i])) count++; } if (count !== needed) return false; }
         }
-        // ПАТТЕРН ЦВЕТОВЫХ ГРУПП
         if (f.colorPattern && f.colorPattern !== 'err' && f.colorPattern.length > 0) {
             let groupCounts = [];
             for (let colorKey in colorMap) {
@@ -575,8 +571,7 @@
                 for(let i=0; i<combo.length; i++) { if (colorMap[colorKey].includes(combo[i])) cnt++; }
                 if (cnt > 0) groupCounts.push(cnt);
             }
-            groupCounts.sort((a, b) => b - a); // Сортируем по убыванию
-            
+            groupCounts.sort((a, b) => b - a);
             let matchAny = false;
             for (let pattern of f.colorPattern) {
                 if (groupCounts.length !== pattern.length) continue;
@@ -604,12 +599,7 @@
     function generateFilteredField(N, exc, inc, maxNum, filters) {
         let hasSectors = filters && filters.sectors && filters.sectors !== 'err' && filters.sectors.length > 0;
         let hasColorQuota = filters && filters.colorQuota && filters.colorQuota !== 'err';
-        
-        // Если заданы жёсткие квоты цветов, используем специализированный генератор
-        if (hasColorQuota) {
-            return generateFieldWithColorQuota(N, exc, inc, maxNum, filters);
-        }
-
+        if (hasColorQuota) { return generateFieldWithColorQuota(N, exc, inc, maxNum, filters); }
         for (let att = 0; att < 500; att++) { 
             let fld = hasSectors ? buildFieldWithSectors(N, exc, inc, maxNum, filters.sectors) : generateRandomField(N, exc, inc, maxNum); 
             if (checkTicketFilters(fld, filters)) return fld; 
@@ -617,115 +607,28 @@
         throw 'Не удалось сгенерировать билет за 500 попыток'; 
     }
 
-    // ОБНОВЛЕННАЯ ФУНКЦИЯ: Целенаправленная сборка билета по квотам цветов с неполным заполнением
     function generateFieldWithColorQuota(N, exc, inc, maxNum, filters) {
-        let quota = filters.colorQuota;
-        let quotaSum = 0;
-        for (let c in quota) quotaSum += quota[c];
-        
-        if (quotaSum > N) {
-            throw 'Сумма квот (' + quotaSum + ') не может превышать размер П1 (' + N + ')!';
-        }
-
+        let quota = filters.colorQuota; let quotaSum = 0; for (let c in quota) quotaSum += quota[c];
+        if (quotaSum > N) throw 'Сумма квот (' + quotaSum + ') не может превышать размер П1 (' + N + ')!';
         let attempts = 0;
         while(attempts < 200) {
-            attempts++;
-            let result = [];
-            let used = new Set();
-            let forcedCounts = {};
-            for (let c in quota) forcedCounts[c] = 0;
-
-            // 1. Обработка включений (строгих и случайных)
+            attempts++; let result = [], used = new Set(), forcedCounts = {}; for (let c in quota) forcedCounts[c] = 0;
             let forcedNums = [];
-            if (inc.incList.length > 0) {
-                let validIncs = inc.incList.filter(n => !exc.includes(n));
-                if (inc.isRandomMode && inc.randCount > 0) {
-                    let shuffled = [...validIncs].sort(() => Math.random() - 0.5);
-                    forcedNums = shuffled.slice(0, inc.randCount);
-                } else if (!inc.isRandomMode) {
-                    forcedNums = [...validIncs];
-                }
-            }
-
+            if (inc.incList.length > 0) { let validIncs = inc.incList.filter(n => !exc.includes(n)); if (inc.isRandomMode && inc.randCount > 0) { forcedNums = [...validIncs].sort(() => Math.random() - 0.5).slice(0, inc.randCount); } else if (!inc.isRandomMode) { forcedNums = [...validIncs]; } }
             let validForce = true;
-            for (let n of forcedNums) {
-                let colorFound = null;
-                for (let c in colorMap) {
-                    if (colorMap[c].includes(n)) { colorFound = c; break; }
-                }
-                
-                if (colorFound && quota[colorFound] !== undefined) {
-                    forcedCounts[colorFound]++;
-                    if (forcedCounts[colorFound] > quota[colorFound]) validForce = false; // Включено слишком много чисел этого цвета
-                } else if (colorFound && quota[colorFound] === undefined) {
-                    // Включено число, цвет которого не в квоте. 
-                    // Это нормально, если есть место для рандома (quotaSum < N).
-                    // Но если quotaSum == N, то никаких других цветов быть не должно!
-                    if (quotaSum === N) validForce = false; 
-                }
-            }
-
-            if (!validForce) {
-                if (attempts >= 200) throw 'Включения конфликтуют с квотами цветов!';
-                continue; 
-            }
-
-            result = [...forcedNums];
-            forcedNums.forEach(n => used.add(n));
-
-            // 2. Заполняем квоты указанных цветов
+            for (let n of forcedNums) { let colorFound = null; for (let c in colorMap) { if (colorMap[c].includes(n)) { colorFound = c; break; } } if (colorFound && quota[colorFound] !== undefined) { forcedCounts[colorFound]++; if (forcedCounts[colorFound] > quota[colorFound]) validForce = false; } else if (colorFound && quota[colorFound] === undefined) { if (quotaSum === N) validForce = false; } }
+            if (!validForce) { if (attempts >= 200) throw 'Включения конфликтуют с квотами цветов!'; continue; }
+            result = [...forcedNums]; forcedNums.forEach(n => used.add(n));
             let quotaSuccess = true;
-            for (let c in quota) {
-                let needMore = quota[c] - (forcedCounts[c] || 0);
-                if (needMore > 0) {
-                    let pool = colorMap[c].filter(n => !exc.includes(n) && !used.has(n));
-                    if (pool.length < needMore) { quotaSuccess = false; break; }
-                    pool.sort(() => Math.random() - 0.5);
-                    pool.slice(0, needMore).forEach(n => { result.push(n); used.add(n); });
-                } else if (needMore < 0) {
-                    quotaSuccess = false; break;
-                }
-            }
-
-            if (!quotaSuccess) {
-                if (attempts >= 200) throw 'Не хватает чисел для соблюдения квот (мешают исключения)!';
-                continue;
-            }
-
-            // 3. Заполняем остатки рандомом ИЗ ДРУГИХ ЦВЕТОВ
+            for (let c in quota) { let needMore = quota[c] - (forcedCounts[c] || 0); if (needMore > 0) { let pool = colorMap[c].filter(n => !exc.includes(n) && !used.has(n)); if (pool.length < needMore) { quotaSuccess = false; break; } pool.sort(() => Math.random() - 0.5); pool.slice(0, needMore).forEach(n => { result.push(n); used.add(n); }); } else if (needMore < 0) { quotaSuccess = false; break; } }
+            if (!quotaSuccess) { if (attempts >= 200) throw 'Не хватает чисел для соблюдения квот!'; continue; }
             let needRandom = N - result.length;
-            if (needRandom > 0) {
-                let otherColorsPool = [];
-                for (let c in colorMap) {
-                    // Если цвет был в квоте, мы НЕ берем из него дополнительные числа
-                    if (quota[c] !== undefined) continue;
-                    
-                    for (let n of colorMap[c]) {
-                        if (!exc.includes(n) && !used.has(n)) {
-                            otherColorsPool.push(n);
-                        }
-                    }
-                }
-                
-                if (otherColorsPool.length < needRandom) {
-                    if (attempts >= 200) throw 'Не хватает чисел других цветов для заполнения билета!';
-                    continue;
-                }
-                
-                otherColorsPool.sort(() => Math.random() - 0.5);
-                otherColorsPool.slice(0, needRandom).forEach(n => { result.push(n); used.add(n); });
-            }
-
+            if (needRandom > 0) { let otherColorsPool = []; for (let c in colorMap) { if (quota[c] !== undefined) continue; for (let n of colorMap[c]) { if (!exc.includes(n) && !used.has(n)) otherColorsPool.push(n); } } if (otherColorsPool.length < needRandom) { if (attempts >= 200) throw 'Не хватает чисел других цветов!'; continue; } otherColorsPool.sort(() => Math.random() - 0.5); otherColorsPool.slice(0, needRandom).forEach(n => { result.push(n); used.add(n); }); }
             result.sort((a, b) => a - b);
-            
-            // 4. Проверяем остальные фильтры (Сумма, Чётность и т.д.)
-            // Цветовые фильтры временно отключаем, так как мы их уже гарантированно выполнили
             let tempFilters = {...filters, colorQuota: null, colorRequired: null, colorPattern: null};
-            if (checkTicketFilters(result, tempFilters)) {
-                return result;
-            }
+            if (checkTicketFilters(result, tempFilters)) return result;
         }
-        throw 'Не удалось подобрать билет: квоты цветов конфликтуют с другими фильтрами (Сумма, Чётность и т.д.)';
+        throw 'Не удалось подобрать билет: квоты цветов конфликтуют с другими фильтрами';
     }
 
     function generateRandomField(N, exc, inc, maxNum) {
@@ -736,8 +639,7 @@
         return t;
     }
 
-    const COUNT_LIMIT = 500000; 
-    const MAX_ALGO_POOL = 300000; 
+    const COUNT_LIMIT = 500000; const MAX_ALGO_POOL = 300000; 
     let baseEstF1 = 0, exactCountF1 = 0, isExactF1 = false;
     let baseEstF2 = 0, exactCountF2 = 0, isExactF2 = false;
 
@@ -747,273 +649,90 @@
     function countFilteredCombinations(N, maxNum, exc, inc, filters) {
         let nums = []; for (let i = 1; i <= maxNum; i++) { if (!exc.includes(i)) nums.push(i); }
         let mustHave = []; if (inc.incList.length > 0 && !inc.isRandomMode) { mustHave = inc.incList.filter(n => nums.includes(n)); if (mustHave.length > N) return 0; }
-        let minInc = (inc.isRandomMode && inc.randCount > 0) ? inc.randCount : 0;
-        let count = 0;
-        function gen(start, chosen) {
-            if (chosen.length === N) {
-                if (mustHave.length > 0 && !mustHave.every(m => chosen.includes(m))) return;
-                if (minInc > 0 && chosen.filter(n => inc.incList.includes(n)).length < minInc) return;
-                if (filters && !checkTicketFilters(chosen, filters)) return;
-                count++; return;
-            }
-            let rem = nums.length - start, need = N - chosen.length;
-            if (rem < need) return;
-            for (let i = start; i < nums.length; i++) { chosen.push(nums[i]); gen(i + 1, chosen); chosen.pop(); }
-        }
-        gen(0, []);
-        return count;
+        let minInc = (inc.isRandomMode && inc.randCount > 0) ? inc.randCount : 0; let count = 0;
+        function gen(start, chosen) { if (chosen.length === N) { if (mustHave.length > 0 && !mustHave.every(m => chosen.includes(m))) return; if (minInc > 0 && chosen.filter(n => inc.incList.includes(n)).length < minInc) return; if (filters && !checkTicketFilters(chosen, filters)) return; count++; return; } let rem = nums.length - start, need = N - chosen.length; if (rem < need) return; for (let i = start; i < nums.length; i++) { chosen.push(nums[i]); gen(i + 1, chosen); chosen.pop(); } }
+        gen(0, []); return count;
     }
 
     function countFilteredWithDiffs(N, maxNum, exc, inc, filters, diffRaw) {
         let nums = []; for (let i = 1; i <= maxNum; i++) { if (!exc.includes(i)) nums.push(i); }
         let mustHave = []; if (inc.incList.length > 0 && !inc.isRandomMode) { mustHave = inc.incList.filter(n => nums.includes(n)); if (mustHave.length > N) return 0; }
-        let minInc = (inc.isRandomMode && inc.randCount > 0) ? inc.randCount : 0;
-        let count = 0;
-        function gen(start, chosen) {
-            if (chosen.length === N) {
-                if (mustHave.length > 0 && !mustHave.every(m => chosen.includes(m))) return;
-                if (minInc > 0 && chosen.filter(n => inc.incList.includes(n)).length < minInc) return;
-                if (filters && !checkTicketFilters(chosen, filters)) return;
-                if (!checkDiffs(chosen, diffRaw)) return;
-                count++; return;
-            }
-            let rem = nums.length - start, need = N - chosen.length;
-            if (rem < need) return;
-            for (let i = start; i < nums.length; i++) { chosen.push(nums[i]); gen(i + 1, chosen); chosen.pop(); }
-        }
-        gen(0, []);
-        return count;
+        let minInc = (inc.isRandomMode && inc.randCount > 0) ? inc.randCount : 0; let count = 0;
+        function gen(start, chosen) { if (chosen.length === N) { if (mustHave.length > 0 && !mustHave.every(m => chosen.includes(m))) return; if (minInc > 0 && chosen.filter(n => inc.incList.includes(n)).length < minInc) return; if (filters && !checkTicketFilters(chosen, filters)) return; if (!checkDiffs(chosen, diffRaw)) return; count++; return; } let rem = nums.length - start, need = N - chosen.length; if (rem < need) return; for (let i = start; i < nums.length; i++) { chosen.push(nums[i]); gen(i + 1, chosen); chosen.pop(); } }
+        gen(0, []); return count;
     }
 
     function generateFilteredPool(N, maxNum, exc, inc, filters, diffRaw = null) {
         let nums = []; for (let i = 1; i <= maxNum; i++) { if (!exc.includes(i)) nums.push(i); }
         let mustHave = []; if (inc.incList.length > 0 && !inc.isRandomMode) { mustHave = inc.incList.filter(n => nums.includes(n)); if (mustHave.length > N) return []; }
-        let minInc = (inc.isRandomMode && inc.randCount > 0) ? inc.randCount : 0;
-        let pool = [];
-        function gen(start, chosen) {
-            if (chosen.length === N) {
-                if (mustHave.length > 0 && !mustHave.every(m => chosen.includes(m))) return;
-                if (minInc > 0 && chosen.filter(n => inc.incList.includes(n)).length < minInc) return;
-                if (filters && !checkTicketFilters(chosen, filters)) return;
-                if (diffRaw && !checkDiffs(chosen, diffRaw)) return;
-                pool.push([...chosen]); return;
-            }
-            let rem = nums.length - start, need = N - chosen.length;
-            if (rem < need) return;
-            for (let i = start; i < nums.length; i++) { chosen.push(nums[i]); gen(i + 1, chosen); chosen.pop(); }
-        }
+        let minInc = (inc.isRandomMode && inc.randCount > 0) ? inc.randCount : 0; let pool = [];
+        function gen(start, chosen) { if (chosen.length === N) { if (mustHave.length > 0 && !mustHave.every(m => chosen.includes(m))) return; if (minInc > 0 && chosen.filter(n => inc.incList.includes(n)).length < minInc) return; if (filters && !checkTicketFilters(chosen, filters)) return; if (diffRaw && !checkDiffs(chosen, diffRaw)) return; pool.push([...chosen]); return; } let rem = nums.length - start, need = N - chosen.length; if (rem < need) return; for (let i = start; i < nums.length; i++) { chosen.push(nums[i]); gen(i + 1, chosen); chosen.pop(); } }
         gen(0, []); return pool;
     }
 
-    function checkDiffs(combo, reqsRaw) {
-        if (!reqsRaw.trim()) return false;
-        let reqs; try { reqs = parseReqs(reqsRaw, combo.length - 1); } catch(e) { return false; }
-        let gaps = {}; for (let i = 1; i < combo.length; i++) { let g = combo[i] - combo[i-1]; gaps[g] = (gaps[g] || 0) + 1; }
-        for (let d in reqs) { if ((gaps[parseInt(d)] || 0) < reqs[d]) return false; }
-        return true;
-    }
+    function checkDiffs(combo, reqsRaw) { if (!reqsRaw.trim()) return false; let reqs; try { reqs = parseReqs(reqsRaw, combo.length - 1); } catch(e) { return false; } let gaps = {}; for (let i = 1; i < combo.length; i++) { let g = combo[i] - combo[i-1]; gaps[g] = (gaps[g] || 0) + 1; } for (let d in reqs) { if ((gaps[parseInt(d)] || 0) < reqs[d]) return false; } return true; }
 
-    function generateWithDiffs(N, exc, inc, maxNum, filters, diffRaw) {
-        for (let att = 0; att < 10000; att++) {
-            let fld = generateFilteredField(N, exc, inc, maxNum, filters);
-            if (checkDiffs(fld, diffRaw)) return fld;
-        }
-        throw 'Не удалось подобрать разницы';
-    }
+    function generateWithDiffs(N, exc, inc, maxNum, filters, diffRaw) { for (let att = 0; att < 10000; att++) { let fld = generateFilteredField(N, exc, inc, maxNum, filters); if (checkDiffs(fld, diffRaw)) return fld; } throw 'Не удалось подобрать разницы'; }
 
     function rebuildPool() {
-        let N1 = parseInt(document.getElementById('inputN1').value);
-        let e1 = parseNumList(document.getElementById('excN1').value);
-        let is1 = getIncSettings(1);
-        let filters = getFilterSettingsSafe();
-
+        let N1 = parseInt(document.getElementById('inputN1').value); let e1 = parseNumList(document.getElementById('excN1').value); let is1 = getIncSettings(1); let filters = getFilterSettingsSafe();
         baseEstF1 = estimateBase(N1, currentConfig.maxNum, e1, is1);
-        if (hasActiveFilters(filters)) {
-            if (baseEstF1 <= COUNT_LIMIT) {
-                exactCountF1 = countFilteredCombinations(N1, currentConfig.maxNum, e1, is1, filters);
-                isExactF1 = true;
-            } else {
-                exactCountF1 = baseEstF1; 
-                isExactF1 = false;
-            }
-        } else {
-            exactCountF1 = baseEstF1;
-            isExactF1 = true;
-        }
-
+        if (hasActiveFilters(filters)) { if (baseEstF1 <= COUNT_LIMIT) { exactCountF1 = countFilteredCombinations(N1, currentConfig.maxNum, e1, is1, filters); isExactF1 = true; } else { exactCountF1 = baseEstF1; isExactF1 = false; } } else { exactCountF1 = baseEstF1; isExactF1 = true; }
         baseEstF2 = 0; exactCountF2 = 0; isExactF2 = false;
-        if (currentConfig.hasField2) {
-            let N2 = parseInt(document.getElementById('inputN2').value);
-            let e2 = parseNumList(document.getElementById('excN2').value);
-            let is2 = getIncSettings(2);
-            baseEstF2 = estimateBase(N2, currentConfig.maxNumF2, e2, is2);
-            exactCountF2 = baseEstF2;
-            isExactF2 = true;
-        }
+        if (currentConfig.hasField2) { let N2 = parseInt(document.getElementById('inputN2').value); let e2 = parseNumList(document.getElementById('excN2').value); let is2 = getIncSettings(2); baseEstF2 = estimateBase(N2, currentConfig.maxNumF2, e2, is2); exactCountF2 = baseEstF2; isExactF2 = true; }
         updatePoolDisplay(); resetDiffStatuses();
     }
 
-    let recalcTimer = null;
-    function scheduleRecalc() { clearTimeout(recalcTimer); recalcTimer = setTimeout(rebuildPool, 350); }
-    function fmtNum(n) { return n.toLocaleString('ru-RU'); }
+    let recalcTimer = null; function scheduleRecalc() { clearTimeout(recalcTimer); recalcTimer = setTimeout(rebuildPool, 350); } function fmtNum(n) { return n.toLocaleString('ru-RU'); }
 
-    function updatePoolDisplay() {
-        let el = document.getElementById('poolInfo'), txt = document.getElementById('poolText');
-        el.className = 'pool-info';
-        let p1, p2, total;
-
-        if (exactCountF1 === 0) { p1 = '0'; el.className = 'pool-info pool-empty'; }
-        else if (isExactF1 && hasActiveFilters(getFilterSettingsSafe())) { p1 = fmtNum(exactCountF1) + ' (из ~' + fmtNum(baseEstF1) + ')'; }
-        else { p1 = '~' + fmtNum(exactCountF1); el.className = 'pool-info pool-est'; }
-
-        let line2 = '';
-        if (currentConfig.hasField2) { p2 = '~' + fmtNum(exactCountF2); line2 = ' | П2: ' + p2; }
-        
-        let t1 = exactCountF1, t2 = exactCountF2;
-        total = currentConfig.hasField2 ? (t1 * t2) : t1;
-        txt.innerHTML = 'П1: ' + p1 + line2 + '<br>Итого: ' + fmtNum(total);
-        if (exactCountF1 === 0) el.className = 'pool-info pool-empty';
-    }
-
+    function updatePoolDisplay() { let el = document.getElementById('poolInfo'), txt = document.getElementById('poolText'); el.className = 'pool-info'; let p1, p2, total; if (exactCountF1 === 0) { p1 = '0'; el.className = 'pool-info pool-empty'; } else if (isExactF1 && hasActiveFilters(getFilterSettingsSafe())) { p1 = fmtNum(exactCountF1) + ' (из ~' + fmtNum(baseEstF1) + ')'; } else { p1 = '~' + fmtNum(exactCountF1); el.className = 'pool-info pool-est'; } let line2 = ''; if (currentConfig.hasField2) { p2 = '~' + fmtNum(exactCountF2); line2 = ' | П2: ' + p2; } let t1 = exactCountF1, t2 = exactCountF2; total = currentConfig.hasField2 ? (t1 * t2) : t1; txt.innerHTML = 'П1: ' + p1 + line2 + '<br>Итого: ' + fmtNum(total); if (exactCountF1 === 0) el.className = 'pool-info pool-empty'; }
     function resetDiffStatuses() { document.querySelectorAll('.rule-status').forEach(se => { if (se.style.color === 'rgb(39, 174, 96)') { se.innerText = '⚠️ Пул изменён — нажмите Посчитать'; se.style.color = '#e67e22'; } }); }
 
     const lotterySelect = document.getElementById('lotterySelect');
     lotterySelect.addEventListener('change', (e) => {
-        currentConfig = configs[e.target.value];
-        let in1 = document.getElementById('inputN1'), in2 = document.getElementById('inputN2');
-        in1.value = currentConfig.defN1; in1.max = currentConfig.maxN1;
-        if (currentConfig.hasField2) { 
-            in2.value = currentConfig.defN2; in2.max = currentConfig.maxN2; 
-            document.getElementById('field2Block').classList.remove('hidden'); 
-            document.getElementById('exc2Block').classList.remove('hidden'); 
-            document.getElementById('inc2Block').classList.remove('hidden'); 
-            document.getElementById('evenGlobalWrap').classList.remove('hidden'); 
-        } else { 
-            document.getElementById('field2Block').classList.add('hidden'); 
-            document.getElementById('exc2Block').classList.add('hidden'); 
-            document.getElementById('inc2Block').classList.add('hidden'); 
-            document.getElementById('evenGlobalWrap').classList.add('hidden'); 
-            document.getElementById('filterEvenGlobal').checked = false;
-        }
-        if (e.target.value === 'coloredBalls') { document.getElementById('colorGroupBlock').classList.remove('hidden'); }
-        else { document.getElementById('colorGroupBlock').classList.add('hidden'); document.querySelectorAll('.color-ball').forEach(b => b.classList.remove('active')); document.getElementById('filterColorQuota').value = ''; document.getElementById('filterColorPattern').value = ''; }
-
-        document.getElementById('excN1').placeholder = 'Напр: 5, 12, '+(currentConfig.maxNum - 2);
-        document.getElementById('excN2').placeholder = '1..'+currentConfig.maxNumF2;
-        ['excN1','incN1','excN2','incN2'].forEach(id => document.getElementById(id).value = '');
-        ['incRandF1','incRandF2'].forEach(id => { document.getElementById(id).checked = false; });
-        ['incRandCountF1','incRandCountF2'].forEach(id => { let el = document.getElementById(id); el.value = ''; el.disabled = true; });
+        currentConfig = configs[e.target.value]; let in1 = document.getElementById('inputN1'), in2 = document.getElementById('inputN2'); in1.value = currentConfig.defN1; in1.max = currentConfig.maxN1;
+        if (currentConfig.hasField2) { in2.value = currentConfig.defN2; in2.max = currentConfig.maxN2; document.getElementById('field2Block').classList.remove('hidden'); document.getElementById('exc2Block').classList.remove('hidden'); document.getElementById('inc2Block').classList.remove('hidden'); document.getElementById('evenGlobalWrap').classList.remove('hidden'); } else { document.getElementById('field2Block').classList.add('hidden'); document.getElementById('exc2Block').classList.add('hidden'); document.getElementById('inc2Block').classList.add('hidden'); document.getElementById('evenGlobalWrap').classList.add('hidden'); document.getElementById('filterEvenGlobal').checked = false; }
+        if (e.target.value === 'coloredBalls') { document.getElementById('colorGroupBlock').classList.remove('hidden'); } else { document.getElementById('colorGroupBlock').classList.add('hidden'); document.querySelectorAll('.color-ball').forEach(b => b.classList.remove('active')); document.getElementById('filterColorQuota').value = ''; document.getElementById('filterColorPattern').value = ''; }
+        document.getElementById('excN1').placeholder = 'Напр: 5, 12, '+(currentConfig.maxNum - 2); document.getElementById('excN2').placeholder = '1..'+currentConfig.maxNumF2;
+        ['excN1','incN1','excN2','incN2'].forEach(id => document.getElementById(id).value = ''); ['incRandF1','incRandF2'].forEach(id => { document.getElementById(id).checked = false; }); ['incRandCountF1','incRandCountF2'].forEach(id => { let el = document.getElementById(id); el.value = ''; el.disabled = true; });
         freezeCb.disabled = !currentConfig.hasField2; if (!currentConfig.hasField2) { freezeCb.checked = false; frozenField1 = null; }
         document.querySelectorAll('.rule-cb-f2-wrap').forEach(el => { if (currentConfig.hasField2) el.classList.remove('hidden'); else { el.classList.add('hidden'); el.querySelector('input').checked = false; } });
-        
-        // Сброс интерфейса алгоритмов при смене лотереи
-        document.querySelectorAll('.algo-checkbox').forEach(cb => cb.checked = false);
-        document.getElementById('evenSettings').classList.add('hidden');
-        document.getElementById('labelAmount').innerText = 'Билетов:';
-        
+        document.querySelectorAll('.algo-checkbox').forEach(cb => cb.checked = false); document.getElementById('evenSettings').classList.add('hidden'); document.getElementById('labelAmount').innerText = 'Билетов:';
         ruleSetsData = {}; ruleIdCounter = 0; document.getElementById('rulesContainer').innerHTML = ''; addRuleRow();
-        document.getElementById('globalStatus').innerText = '';
-        clearTimeout(recalcTimer); rebuildPool();
+        document.getElementById('globalStatus').innerText = ''; clearTimeout(recalcTimer); rebuildPool();
     });
 
     document.getElementById('btnClear').addEventListener('click', () => {
-        localStorage.removeItem('lottery_history');
-        document.getElementById('inputAmount').value = 15;
-        document.querySelectorAll('.algo-checkbox').forEach(cb => cb.checked = false);
-        document.getElementById('evenSettings').classList.add('hidden');
-        document.getElementById('labelAmount').innerText = 'Билетов:';
+        localStorage.removeItem('lottery_history'); document.getElementById('inputAmount').value = 15; document.querySelectorAll('.algo-checkbox').forEach(cb => cb.checked = false); document.getElementById('evenSettings').classList.add('hidden'); document.getElementById('labelAmount').innerText = 'Билетов:';
         ['filterSum','filterSpread','filterEven','filterSectors','filterDecades','filterTails','filterCondIf','filterCondThen','filterChain','filterCoverage','filterColorQuota','filterColorPattern'].forEach(id => document.getElementById(id).value = '');
-        document.getElementById('filterNoNeighbors').checked = false;
-        document.getElementById('filterEvenGlobal').checked = false;
-        document.querySelectorAll('.color-ball').forEach(b => b.classList.remove('active'));
-        frozenField1 = null; freezeCb.checked = false;
+        document.getElementById('filterNoNeighbors').checked = false; document.getElementById('filterEvenGlobal').checked = false; document.querySelectorAll('.color-ball').forEach(b => b.classList.remove('active')); frozenField1 = null; freezeCb.checked = false;
         ruleSetsData = {}; ruleIdCounter = 0; document.getElementById('rulesContainer').innerHTML = ''; addRuleRow();
-        document.getElementById('globalStatus').innerText = '✅ Сброшено.';
-        lotterySelect.value = 'vosmerki'; lotterySelect.dispatchEvent(new Event('change'));
+        document.getElementById('globalStatus').innerText = '✅ Сброшено.'; lotterySelect.value = 'vosmerki'; lotterySelect.dispatchEvent(new Event('change'));
     });
 
-    const helpModal = document.getElementById('helpModal');
-    document.getElementById('helpBtn').addEventListener('click', () => helpModal.style.display = 'flex');
-    document.getElementById('closeHelp').addEventListener('click', () => helpModal.style.display = 'none');
-    helpModal.addEventListener('click', (e) => { if (e.target === helpModal) helpModal.style.display = 'none'; });
+    const helpModal = document.getElementById('helpModal'); document.getElementById('helpBtn').addEventListener('click', () => helpModal.style.display = 'flex'); document.getElementById('closeHelp').addEventListener('click', () => helpModal.style.display = 'none'); helpModal.addEventListener('click', (e) => { if (e.target === helpModal) helpModal.style.display = 'none'; });
     document.getElementById('btnRecalc').addEventListener('click', () => { clearTimeout(recalcTimer); rebuildPool(); });
 
     ['inputN1','inputN2','excN1','excN2','incN1','incN2','incRandCountF1','incRandCountF2','filterSum','filterSpread','filterEven','filterSectors','filterDecades','filterTails','filterCondIf','filterCondThen','filterColorQuota','filterColorPattern'].forEach(id => { document.getElementById(id).addEventListener('input', scheduleRecalc); });
-    document.getElementById('filterNoNeighbors').addEventListener('change', scheduleRecalc);
-    document.getElementById('filterEvenGlobal').addEventListener('change', scheduleRecalc);
+    document.getElementById('filterNoNeighbors').addEventListener('change', scheduleRecalc); document.getElementById('filterEvenGlobal').addEventListener('change', scheduleRecalc);
 
-    const widget = document.getElementById('widget'), header = document.getElementById('header');
-    let isDragging = false, startX, startY, initialX, initialY;
-    header.addEventListener('mousedown', (e) => { if (e.target.id !== 'closeBtn' && e.target.id !== 'helpBtn') { isDragging = true; startX = e.clientX; startY = e.clientY; initialX = widget.offsetLeft; initialY = widget.offsetTop; }});
-    document.addEventListener('mousemove', (e) => { if (!isDragging) return; widget.style.left = (initialX + e.clientX - startX) + 'px'; widget.style.top = (initialY + e.clientY - startY) + 'px'; });
-    document.addEventListener('mouseup', () => isDragging = false);
-    document.getElementById('closeBtn').addEventListener('click', () => widget.style.display = 'none');
+    const widget = document.getElementById('widget'), header = document.getElementById('header'); let isDragging = false, startX, startY, initialX, initialY;
+    header.addEventListener('mousedown', (e) => { if (e.target.id !== 'closeBtn' && e.target.id !== 'helpBtn') { isDragging = true; startX = e.clientX; startY = e.clientY; initialX = widget.offsetLeft; initialY = widget.offsetTop; }}); document.addEventListener('mousemove', (e) => { if (!isDragging) return; widget.style.left = (initialX + e.clientX - startX) + 'px'; widget.style.top = (initialY + e.clientY - startY) + 'px'; }); document.addEventListener('mouseup', () => isDragging = false); document.getElementById('closeBtn').addEventListener('click', () => widget.style.display = 'none');
 
     let ruleSetsData = {}, ruleIdCounter = 0;
-    function addRuleRow() {
-        ruleIdCounter++; let id = ruleIdCounter; ruleSetsData[id] = { target1: true, target2: false, raw: '', count1: null, count2: null };
-        let d = document.createElement('div'); d.className = 'rule-row'; d.id = 'rule-'+id;
-        d.innerHTML = '<div class="rule-checks"><label class="custom-check"><input type="checkbox" class="rule-cb-f1" checked><span class="checkmark"></span>П1</label><label class="custom-check rule-cb-f2-wrap"><input type="checkbox" class="rule-cb-f2"><span class="checkmark"></span>П2</label></div><div class="rule-top"><input type="text" class="rule-input" placeholder="Разницы: 1-3, 5-1" value=""><button class="btn-count" onclick="countRule('+id+')">✎</button><button class="btn-add" onclick="addRuleRow()" title="+">+</button><button class="btn-del" onclick="removeRuleRow('+id+')" title="x">x</button></div><div class="rule-status" id="status-'+id+'">Ожидание...</div>';
-        document.getElementById('rulesContainer').appendChild(d);
-        document.getElementById('rulesContainer').scrollTop = document.getElementById('rulesContainer').scrollHeight;
-        if (!currentConfig.hasField2) d.querySelector('.rule-cb-f2-wrap').classList.add('hidden');
-    }
+    function addRuleRow() { ruleIdCounter++; let id = ruleIdCounter; ruleSetsData[id] = { target1: true, target2: false, raw: '', count1: null, count2: null }; let d = document.createElement('div'); d.className = 'rule-row'; d.id = 'rule-'+id; d.innerHTML = '<div class="rule-checks"><label class="custom-check"><input type="checkbox" class="rule-cb-f1" checked><span class="checkmark"></span>П1</label><label class="custom-check rule-cb-f2-wrap"><input type="checkbox" class="rule-cb-f2"><span class="checkmark"></span>П2</label></div><div class="rule-top"><input type="text" class="rule-input" placeholder="Разницы: 1-3, 5-1" value=""><button class="btn-count" onclick="countRule('+id+')">✎</button><button class="btn-add" onclick="addRuleRow()" title="+">+</button><button class="btn-del" onclick="removeRuleRow('+id+')" title="x">x</button></div><div class="rule-status" id="status-'+id+'">Ожидание...</div>'; document.getElementById('rulesContainer').appendChild(d); document.getElementById('rulesContainer').scrollTop = document.getElementById('rulesContainer').scrollHeight; if (!currentConfig.hasField2) d.querySelector('.rule-cb-f2-wrap').classList.add('hidden'); }
     function removeRuleRow(id) { if (Object.keys(ruleSetsData).length <= 1) { alert('Нельзя удалить единственный!'); return; } delete ruleSetsData[id]; document.getElementById('rule-'+id).remove(); }
-
-    function countRule(id) {
-        let se = document.getElementById('status-'+id), row = document.getElementById('rule-'+id), inp = row.querySelector('.rule-input');
-        let t1 = row.querySelector('.rule-cb-f1').checked, t2 = row.querySelector('.rule-cb-f2').checked && currentConfig.hasField2;
-        try {
-            if (!t1 && !t2) throw 'Выберите поле!';
-            if (!inp.value.trim()) throw 'Введите разницы!';
-            let raw = inp.value, p = [], c1 = null, c2 = null;
-            if (t1) {
-                if (baseEstF1 <= COUNT_LIMIT) { let e1 = parseNumList(document.getElementById('excN1').value); let is1 = getIncSettings(1); let filters = getFilterSettingsSafe(); c1 = countFilteredWithDiffs(parseInt(document.getElementById('inputN1').value), currentConfig.maxNum, e1, is1, filters, raw); p.push('П1: '+c1+' (из ~'+fmtNum(baseEstF1)+')'); } else { c1 = null; p.push('П1: ⚡ отбор на лету'); }
-            }
-            if (t2) {
-                if (baseEstF2 <= COUNT_LIMIT) { let e2 = parseNumList(document.getElementById('excN2').value); let is2 = getIncSettings(2); c2 = countFilteredWithDiffs(parseInt(document.getElementById('inputN2').value), currentConfig.maxNumF2, e2, is2, null, raw); p.push('П2: '+c2+' (из ~'+fmtNum(baseEstF2)+')'); } else { c2 = null; p.push('П2: ⚡ отбор на лету'); }
-            }
-            ruleSetsData[id] = { target1: t1, target2: t2, raw: raw, count1: c1, count2: c2 };
-            se.innerText = '✅ '+p.join(' | '); se.style.color = '#27ae60';
-        } catch (e) { ruleSetsData[id] = { target1: false, target2: false, raw: '', count1: null, count2: null }; se.innerText = '❌ '+e; se.style.color = '#e74c3c'; }
-    }
-
+    function countRule(id) { let se = document.getElementById('status-'+id), row = document.getElementById('rule-'+id), inp = row.querySelector('.rule-input'); let t1 = row.querySelector('.rule-cb-f1').checked, t2 = row.querySelector('.rule-cb-f2').checked && currentConfig.hasField2; try { if (!t1 && !t2) throw 'Выберите поле!'; if (!inp.value.trim()) throw 'Введите разницы!'; let raw = inp.value, p = [], c1 = null, c2 = null; if (t1) { if (baseEstF1 <= COUNT_LIMIT) { let e1 = parseNumList(document.getElementById('excN1').value); let is1 = getIncSettings(1); let filters = getFilterSettingsSafe(); c1 = countFilteredWithDiffs(parseInt(document.getElementById('inputN1').value), currentConfig.maxNum, e1, is1, filters, raw); p.push('П1: '+c1+' (из ~'+fmtNum(baseEstF1)+')'); } else { c1 = null; p.push('П1: ⚡ отбор на лету'); } } if (t2) { if (baseEstF2 <= COUNT_LIMIT) { let e2 = parseNumList(document.getElementById('excN2').value); let is2 = getIncSettings(2); c2 = countFilteredWithDiffs(parseInt(document.getElementById('inputN2').value), currentConfig.maxNumF2, e2, is2, null, raw); p.push('П2: '+c2+' (из ~'+fmtNum(baseEstF2)+')'); } else { c2 = null; p.push('П2: ⚡ отбор на лету'); } } ruleSetsData[id] = { target1: t1, target2: t2, raw: raw, count1: c1, count2: c2 }; se.innerText = '✅ '+p.join(' | '); se.style.color = '#27ae60'; } catch (e) { ruleSetsData[id] = { target1: false, target2: false, raw: '', count1: null, count2: null }; se.innerText = '❌ '+e; se.style.color = '#e74c3c'; } }
     function isRuleActive(d) { return d.raw.trim() !== '' && (d.target1 || (d.target2 && currentConfig.hasField2)); }
 
-    // ОБНОВЛЕННАЯ ФУНКЦИЯ: Равномерное с сортировкой и множителем сегментов
     function pickEven(pool, segments) {
-        if (segments <= 0) return [];
-        let mode = document.getElementById('evenMode').value;
-        let perSeg = parseInt(document.getElementById('evenPerSegment').value) || 1;
-        
+        if (segments <= 0) return []; let mode = document.getElementById('evenMode').value; let perSeg = parseInt(document.getElementById('evenPerSegment').value) || 1;
         let sortedPool = [...pool];
-        if (mode === 'sum') {
-            sortedPool.sort((a, b) => a.reduce((s,v)=>s+v,0) - b.reduce((s,v)=>s+v,0));
-        } else if (mode === 'spread') {
-            sortedPool.sort((a, b) => (a[a.length-1]-a[0]) - (b[b.length-1]-b[0]));
-        } else if (mode === 'mix') {
-            sortedPool.sort(() => Math.random() - 0.5);
-        }
-        
-        let cs = Math.floor(sortedPool.length / segments);
-        if (cs < 1) {
-            // Если запрошенных сегментов больше, чем комбинаций в пуле — fallback на классику
-            return pickClassic(pool, segments * perSeg);
-        }
-        
-        let result = [];
-        for (let i = 0; i < segments; i++) {
-            let start = i * cs;
-            let end = (i === segments - 1) ? sortedPool.length : start + cs;
-            let segmentSlice = sortedPool.slice(start, end);
-            
-            // Рандомизируем внутри сегмента, чтобы брать случайные, а не подряд
-            segmentSlice.sort(() => Math.random() - 0.5);
-            
-            let pick = segmentSlice.slice(0, perSeg);
-            result.push(...pick);
-        }
-        return result;
+        if (mode === 'sum') sortedPool.sort((a, b) => a.reduce((s,v)=>s+v,0) - b.reduce((s,v)=>s+v,0));
+        else if (mode === 'spread') sortedPool.sort((a, b) => (a[a.length-1]-a[0]) - (b[b.length-1]-b[0]));
+        else if (mode === 'mix') sortedPool.sort(() => Math.random() - 0.5);
+        let cs = Math.floor(sortedPool.length / segments); if (cs < 1) return pickClassic(pool, segments * perSeg);
+        let result = []; for (let i = 0; i < segments; i++) { let start = i * cs; let end = (i === segments - 1) ? sortedPool.length : start + cs; let segmentSlice = sortedPool.slice(start, end); segmentSlice.sort(() => Math.random() - 0.5); let pick = segmentSlice.slice(0, perSeg); result.push(...pick); } return result;
     }
 
     function pickTickets(a, c) { if (a.length <= c) return [...a]; switch(getSelectedAlgo()) { case 'unique': case 'hist': case 'classic': return pickClassic(a,c); case 'even': return pickEven(a,c); case 'anti': return pickAnti(a,c); case 'weight': return pickWeight(a,c); case 'reservoir': return pickReservoir(a,c); default: return pickClassic(a,c); } }
@@ -1023,30 +742,16 @@
     function pickReservoir(a,c) { let r=a.slice(0,c); for(let i=c;i<a.length;i++){let j=Math.floor(Math.random()*(i+1));if(j<c)r[j]=a[i];} return r; }
     function pickHist(a,c) { let h=JSON.parse(localStorage.getItem('lottery_history')||'[]'),hs=new Set(h.map(x=>x.join(','))),f=a.filter(c=>!hs.has(c.join(','))); if(f.length<c){if(!f.length)return pickClassic(a,c);f=a;} let p=pickClassic(f,c); localStorage.setItem('lottery_history',JSON.stringify([...h,...p])); return p; }
 
-    function applyChainFilter(tickets, chainN, field) {
-        if (chainN <= 0 || tickets.length < 2) return { tickets, fail: 0 };
-        let res = [tickets[0]], used = new Set([0]), fail = 0;
-        for (let i = 1; i < tickets.length; i++) { let prev = res[res.length - 1][field], found = false; for (let j = 0; j < tickets.length; j++) { if (used.has(j)) continue; if (tickets[j][field].filter(x => prev.includes(x)).length === chainN) { res.push(tickets[j]); used.add(j); found = true; break; } } if (!found) { fail++; for (let j = 0; j < tickets.length; j++) { if (!used.has(j)) { res.push(tickets[j]); used.add(j); break; } } } }
-        return { tickets: res, fail };
-    }
+    function applyChainFilter(tickets, chainN, field) { if (chainN <= 0 || tickets.length < 2) return { tickets, fail: 0 }; let res = [tickets[0]], used = new Set([0]), fail = 0; for (let i = 1; i < tickets.length; i++) { let prev = res[res.length - 1][field], found = false; for (let j = 0; j < tickets.length; j++) { if (used.has(j)) continue; if (tickets[j][field].filter(x => prev.includes(x)).length === chainN) { res.push(tickets[j]); used.add(j); found = true; break; } } if (!found) { fail++; for (let j = 0; j < tickets.length; j++) { if (!used.has(j)) { res.push(tickets[j]); used.add(j); break; } } } } return { tickets: res, fail }; }
     function analyzeCoverage(tickets, minCov, field, maxNum) { if (minCov <= 0) return ''; let freq = {}; for (let i = 1; i <= maxNum; i++) freq[i] =0; for (let t of tickets) for (let n of t[field]) freq[n]++; let bad = []; for (let i = 1; i <= maxNum; i++) if (freq[i] < minCov) bad.push(i+'('+freq[i]+')'); return bad.length > 0 ? '⚠️ Покрытие: '+bad.join(', ')+' < '+minCov : ''; }
 
     function formatCsvRow(f1, f2) { let s = f1.join(' '); return currentConfig.hasField2 ? s+';'+f2.join(' ')+'\n' : s+'\n'; }
 
     function generateValidF2(f1Combo, preGeneratedF2, diffRaw, filters) {
-        if (!currentConfig.hasField2) return { f2: [], warning: null };
-        let N2 = parseInt(document.getElementById('inputN2').value);
-        let e2 = parseNumList(document.getElementById('excN2').value);
-        let is2 = getIncSettings(2);
+        if (!currentConfig.hasField2) return { f2: [], warning: null }; let N2 = parseInt(document.getElementById('inputN2').value); let e2 = parseNumList(document.getElementById('excN2').value); let is2 = getIncSettings(2);
         let useGlobalEven = currentConfig.hasField2 && filters.evenGlobal && filters.evenRange && filters.evenRange !== 'err';
-        if (!useGlobalEven) {
-            if (preGeneratedF2 && preGeneratedF2.length > 0) return { f2: preGeneratedF2, warning: null };
-            let f2v;
-            try { f2v = diffRaw ? generateWithDiffs(N2, e2, is2, currentConfig.maxNumF2, null, diffRaw) : generateRandomField(N2, e2, is2, currentConfig.maxNumF2); } catch(e) { f2v = generateRandomField(N2, e2, is2, currentConfig.maxNumF2); }
-            return { f2: f2v, warning: null };
-        }
-        let f1Evens = 0; for(let i=0; i<f1Combo.length; i++) if(f1Combo[i] % 2 === 0) f1Evens++;
-        let needMinF2 = Math.max(0, filters.evenRange.min - f1Evens); let needMaxF2 = filters.evenRange.max - f1Evens;
+        if (!useGlobalEven) { if (preGeneratedF2 && preGeneratedF2.length > 0) return { f2: preGeneratedF2, warning: null }; let f2v; try { f2v = diffRaw ? generateWithDiffs(N2, e2, is2, currentConfig.maxNumF2, null, diffRaw) : generateRandomField(N2, e2, is2, currentConfig.maxNumF2); } catch(e) { f2v = generateRandomField(N2, e2, is2, currentConfig.maxNumF2); } return { f2: f2v, warning: null }; }
+        let f1Evens = 0; for(let i=0; i<f1Combo.length; i++) if(f1Combo[i] % 2 === 0) f1Evens++; let needMinF2 = Math.max(0, filters.evenRange.min - f1Evens); let needMaxF2 = filters.evenRange.max - f1Evens;
         if (preGeneratedF2 && preGeneratedF2.length > 0) { let f2Evens = 0; for(let i=0; i<preGeneratedF2.length; i++) if(preGeneratedF2[i] % 2 === 0) f2Evens++; if (f2Evens >= needMinF2 && f2Evens <= needMaxF2) return { f2: preGeneratedF2, warning: null }; }
         let att = 0; let match = false; let f2v = [];
         while(att < 500) { try { if (diffRaw) { f2v = generateWithDiffs(N2, e2, is2, currentConfig.maxNumF2, null, diffRaw); } else { f2v = generateRandomField(N2, e2, is2, currentConfig.maxNumF2); } } catch(e) { att++; continue; } let f2Evens = 0; for(let i=0; i<f2v.length; i++) if(f2v[i] % 2 === 0) f2Evens++; if (f2Evens >= needMinF2 && f2Evens <= needMaxF2) { match = true; break; } att++; }
@@ -1054,13 +759,7 @@
         return { f2: f2v, warning: null };
     }
 
-    function getF2EvenBounds(N2, e2, is2, maxNumF2) {
-        let pool = []; for(let i=1; i<=maxNumF2; i++) if(!e2.includes(i)) pool.push(i);
-        let mustHave = is2.incList.filter(n => pool.includes(n)); let forcedEvens = mustHave.filter(n => n % 2 === 0).length;
-        let rem = N2 - mustHave.length; if (rem < 0) return { min: -1, max: -1 }; 
-        let availEvens = pool.filter(n => n % 2 === 0 && !mustHave.includes(n)).length; let availOdds = pool.filter(n => n % 2 !== 0 && !mustHave.includes(n)).length;
-        return { min: forcedEvens + Math.max(0, rem - availOdds), max: forcedEvens + Math.min(rem, availEvens) };
-    }
+    function getF2EvenBounds(N2, e2, is2, maxNumF2) { let pool = []; for(let i=1; i<=maxNumF2; i++) if(!e2.includes(i)) pool.push(i); let mustHave = is2.incList.filter(n => pool.includes(n)); let forcedEvens = mustHave.filter(n => n % 2 === 0).length; let rem = N2 - mustHave.length; if (rem < 0) return { min: -1, max: -1 }; let availEvens = pool.filter(n => n % 2 === 0 && !mustHave.includes(n)).length; let availOdds = pool.filter(n => n % 2 !== 0 && !mustHave.includes(n)).length; return { min: forcedEvens + Math.max(0, rem - availOdds), max: forcedEvens + Math.min(rem, availEvens) }; }
 
     document.getElementById('btnGenerate').addEventListener('click', () => {
         let gs = document.getElementById('globalStatus');
@@ -1071,72 +770,50 @@
         let filters; try { filters = getFilterSettings(); validateFilters(filters); } catch(err) { gs.innerText = '❌ Фильтры: ' + err; gs.style.color = '#e74c3c'; return; }
         let e1=parseNumList(document.getElementById('excN1').value), e2=currentConfig.hasField2?parseNumList(document.getElementById('excN2').value):[];
         let is1=getIncSettings(1), is2=currentConfig.hasField2?getIncSettings(2):{incList:[],isRandomMode:false,randCount:0};
-        let isFrozen = freezeCb.checked && currentConfig.hasField2 && frozenField1 !== null;
-        let useFreeze = freezeCb.checked && currentConfig.hasField2;
+        let isFrozen = freezeCb.checked && currentConfig.hasField2 && frozenField1 !== null; let useFreeze = freezeCb.checked && currentConfig.hasField2;
         let frozenArr = [];
         if (isFrozen) { frozenArr = frozenField1.slice(0, tt); tt = frozenArr.length; if(!tt){gs.innerText='❌ Заморожено 0!';gs.style.color='#e74c3c';return;} }
+        let active = Object.entries(ruleSetsData).filter(([,d]) => isRuleActive(d)); let anyR = false; document.querySelectorAll('.rule-input').forEach(i => { if (i.value.trim()) anyR = true; }); if (!isFrozen && anyR && !active.length) { gs.innerText = '❌ Разницы не прошёл подсчёт.'; gs.style.color = '#e74c3c'; return; }
         
-        let active = Object.entries(ruleSetsData).filter(([,d]) => isRuleActive(d));
-        let anyR = false; document.querySelectorAll('.rule-input').forEach(i => { if (i.value.trim()) anyR = true; });
-        if (!isFrozen && anyR && !active.length) { gs.innerText = '❌ Разницы не прошёл подсчёт.'; gs.style.color = '#e74c3c'; return; }
-        
-        let csv = '\uFEFF' + (currentConfig.hasField2 ? 'Поле 1;Поле 2\n' : 'Поле 1\n');
-        let rep = [], useAlgo = false;
         let selectedAlgo = getSelectedAlgo();
-        let needPoolForAlgo = (selectedAlgo !== 'classic' && selectedAlgo !== 'hist' && selectedAlgo !== 'unique');
-        let useGlobalEven = currentConfig.hasField2 && filters.evenGlobal && filters.evenRange && filters.evenRange !== 'err';
-        let f1Filters = filters;
         
-        if (useGlobalEven) {
-            let f2EvenBounds = getF2EvenBounds(N2, e2, is2, currentConfig.maxNumF2);
-            if (f2EvenBounds.min === -1) { gs.innerText='❌ П2: конфликт включений/исключений!'; gs.style.color='#e74c3c'; return; }
-            let reqMinF1 = Math.max(0, filters.evenRange.min - f2EvenBounds.max); let reqMaxF1 = Math.min(N1, filters.evenRange.max - f2EvenBounds.min);
-            if (reqMinF1 > reqMaxF1) { gs.innerText = '❌ Глобальная чётность недостижима!'; gs.style.color='#e74c3c'; return; }
-            f1Filters = {...filters, evenRange: { min: reqMinF1, max: reqMaxF1 }, evenGlobal: false };
+        // Формируем детальную строку алгоритма для CSV и Статуса
+        let algoDetails = '';
+        if (selectedAlgo === 'even') {
+            let modeMap = {order: 'Порядку', sum: 'Сумме', spread: 'Разбросу', mix: 'Миксу'};
+            let mode = modeMap[document.getElementById('evenMode').value];
+            let segs = document.getElementById('inputAmount').value;
+            let perSeg = document.getElementById('evenPerSegment').value;
+            algoDetails = ` (Охват: ${mode}, ${segs} сегм. × ${perSeg} шт.)`;
         }
+        let algoNameStr = selectedAlgo === 'classic' ? 'Классический' : (getAlgoName() + algoDetails);
+        
+        // Формируем первую строку CSV
+        let lotName = document.getElementById('lotterySelect').selectedOptions[0].text;
+        let formatStr = `Формат: ${lotName} | Алгоритм: ${algoNameStr} | П1: ${N1}${currentConfig.hasField2 ? ' | П2: '+N2 : ''}\n`;
+        let csv = '\uFEFF' + formatStr + (currentConfig.hasField2 ? 'Поле 1;Поле 2\n' : 'Поле 1\n');
+        
+        let rep = [], useAlgo = false;
+        let needPoolForAlgo = (selectedAlgo !== 'classic' && selectedAlgo !== 'hist' && selectedAlgo !== 'unique');
+        let useGlobalEven = currentConfig.hasField2 && filters.evenGlobal && filters.evenRange && filters.evenRange !== 'err'; let f1Filters = filters;
+        
+        if (useGlobalEven) { let f2EvenBounds = getF2EvenBounds(N2, e2, is2, currentConfig.maxNumF2); if (f2EvenBounds.min === -1) { gs.innerText='❌ П2: конфликт включений/исключений!'; gs.style.color='#e74c3c'; return; } let reqMinF1 = Math.max(0, filters.evenRange.min - f2EvenBounds.max); let reqMaxF1 = Math.min(N1, filters.evenRange.max - f2EvenBounds.min); if (reqMinF1 > reqMaxF1) { gs.innerText = '❌ Глобальная чётность недостижима!'; gs.style.color='#e74c3c'; return; } f1Filters = {...filters, evenRange: { min: reqMinF1, max: reqMaxF1 }, evenGlobal: false }; }
         
         try {
             let ticketsData = []; 
-            if (isFrozen) {
-                for (let i = 0; i < frozenArr.length; i++) { let f1v = frozenArr[i]; let resF2 = generateValidF2(f1v, [], null, filters); if(resF2.warning) rep.push(resF2.warning); ticketsData.push({f1: f1v, f2: resF2.f2}); }
-                rep.push('П1: заморожено '+frozenArr.length);
-            } else if (!active.length) {
+            if (isFrozen) { for (let i = 0; i < frozenArr.length; i++) { let f1v = frozenArr[i]; let resF2 = generateValidF2(f1v, [], null, filters); if(resF2.warning) rep.push(resF2.warning); ticketsData.push({f1: f1v, f2: resF2.f2}); } rep.push('П1: заморожено '+frozenArr.length); }
+            else if (!active.length) {
                 let tempF1 = [];
-                if (needPoolForAlgo && exactCountF1 <= MAX_ALGO_POOL && exactCountF1 > 0) {
-                    let tempPool = generateFilteredPool(N1, currentConfig.maxNum, e1, is1, f1Filters); tempF1 = pickTickets(tempPool, tt); rep.push('Из пула: '+tempF1.length+' ('+getAlgoName()+')');
-                } else {
-                    if (needPoolForAlgo && exactCountF1 > MAX_ALGO_POOL) rep.push('⚠️ Пул велик для алгоритма. Классика.');
-                    if (selectedAlgo === 'unique') {
-                        let genSet = new Set(); let safetyCounter = 0;
-                        while (tempF1.length < tt && safetyCounter < tt * 10) { try { let fld = generateFilteredField(N1, e1, is1, currentConfig.maxNum, f1Filters); let key = fld.join(','); if (!genSet.has(key)) { genSet.add(key); tempF1.push(fld); } } catch(e) {} safetyCounter++; }
-                        if (tempF1.length < tt) rep.push('⚠️ Уникальность: только ' + tempF1.length + ' уникальных П1');
-                        rep.push('Рандом на лету (Уникальный): '+tempF1.length);
-                    } else if (selectedAlgo === 'even') {
-                        // Для равномерного без пула (на лету) мы не можем сортировать, поэтому fallback на классику с множителем
-                        let perSeg = parseInt(document.getElementById('evenPerSegment').value) || 1;
-                        let totalNeed = tt * perSeg;
-                        for(let i=0; i<totalNeed; i++) tempF1.push(generateFilteredField(N1, e1, is1, currentConfig.maxNum, f1Filters));
-                        rep.push('Рандом на лету (Равномерный fallback): '+tempF1.length);
-                    } else { 
-                        for(let i=0; i<tt; i++) tempF1.push(generateFilteredField(N1, e1, is1, currentConfig.maxNum, f1Filters)); 
-                        rep.push('Рандом на лету: '+tempF1.length); 
-                    }
-                }
+                if (needPoolForAlgo && exactCountF1 <= MAX_ALGO_POOL && exactCountF1 > 0) { let tempPool = generateFilteredPool(N1, currentConfig.maxNum, e1, is1, f1Filters); tempF1 = pickTickets(tempPool, tt); rep.push('Из пула: '+tempF1.length+' ('+algoNameStr+')'); }
+                else { if (needPoolForAlgo && exactCountF1 > MAX_ALGO_POOL) rep.push('⚠️ Пул велик для алгоритма. Классика.'); if (selectedAlgo === 'unique') { let genSet = new Set(); let safetyCounter = 0; while (tempF1.length < tt && safetyCounter < tt * 10) { try { let fld = generateFilteredField(N1, e1, is1, currentConfig.maxNum, f1Filters); let key = fld.join(','); if (!genSet.has(key)) { genSet.add(key); tempF1.push(fld); } } catch(e) {} safetyCounter++; } if (tempF1.length < tt) rep.push('⚠️ Уникальность: только ' + tempF1.length + ' уникальных П1'); rep.push('Рандом на лету (Уникальный): '+tempF1.length); } else if (selectedAlgo === 'even') { let perSeg = parseInt(document.getElementById('evenPerSegment').value) || 1; let totalNeed = tt * perSeg; for(let i=0; i<totalNeed; i++) tempF1.push(generateFilteredField(N1, e1, is1, currentConfig.maxNum, f1Filters)); rep.push('Рандом на лету (Равномерный fallback): '+tempF1.length); } else { for(let i=0; i<tt; i++) tempF1.push(generateFilteredField(N1, e1, is1, currentConfig.maxNum, f1Filters)); rep.push('Рандом на лету: '+tempF1.length); } }
                 for (let i = 0; i < tempF1.length; i++) { let f1v = tempF1[i]; let resF2 = generateValidF2(f1v, [], null, filters); if(resF2.warning) rep.push(resF2.warning); ticketsData.push({f1: f1v, f2: resF2.f2}); }
                 if (filters.chainN > 0) { let r = applyChainFilter(ticketsData, filters.chainN, 'f1'); ticketsData = r.tickets; if(r.fail) rep.push('Связь П1: '+r.fail+' не выполн.'); }
                 if (useFreeze) { frozenField1 = ticketsData.map(t=>[...t.f1]); rep.push('П1 заморожено!'); }
             } else {
                 useAlgo = true; let sp = active.length, bq = Math.floor(tt/sp), ex = tt%sp;
-                for (let i = 0; i < sp; i++) {
-                    let [, d] = active[i], cq = bq + (i < ex ? 1 : 0); let s1 = [], s2 = [];
-                    if (d.target1) {
-                        if (d.count1 !== null && d.count1 <= MAX_ALGO_POOL) { let tempPool = generateFilteredPool(N1, currentConfig.maxNum, e1, is1, f1Filters, d.raw); s1 = pickTickets(tempPool, cq); rep.push('П1: из пула разниц (' + getAlgoName() + ')'); }
-                        else { let genSet = new Set(); let safetyCounter = 0; while (s1.length < cq && safetyCounter < cq * 500) { try { let fld = generateWithDiffs(N1, e1, is1, currentConfig.maxNum, f1Filters, d.raw); let key = fld.join(','); if (!genSet.has(key)) { genSet.add(key); s1.push(fld); } } catch(e) {} safetyCounter++; } if (s1.length < cq) rep.push('⚠️ П1: только ' + s1.length + ' с разницами'); }
-                    } else { for(let j=0; j<cq; j++) s1.push(generateFilteredField(N1, e1, is1, currentConfig.maxNum, f1Filters)); }
-                    if (currentConfig.hasField2) {
-                        if (d.target2) { if (d.count2 !== null && d.count2 <= MAX_ALGO_POOL) { let tempPool = generateFilteredPool(N2, currentConfig.maxNumF2, e2, is2, null, d.raw); s2 = pickTickets(tempPool, cq); rep.push('П2: из пула разниц'); } else { let genSet = new Set(); let safetyCounter = 0; while (s2.length < cq && safetyCounter < cq * 500) { try { let fld = generateWithDiffs(N2, e2, is2, currentConfig.maxNumF2, null, d.raw); let key = fld.join(','); if (!genSet.has(key)) { genSet.add(key); s2.push(fld); } } catch(e) {} safetyCounter++; } if (s2.length < cq) rep.push('⚠️ П2: только ' + s2.length + ' с разницами'); } }
-                        else { for(let j=0; j<cq; j++) s2.push(generateRandomField(N2, e2, is2, currentConfig.maxNumF2)); }
-                    }
+                for (let i = 0; i < sp; i++) { let [, d] = active[i], cq = bq + (i < ex ? 1 : 0); let s1 = [], s2 = [];
+                    if (d.target1) { if (d.count1 !== null && d.count1 <= MAX_ALGO_POOL) { let tempPool = generateFilteredPool(N1, currentConfig.maxNum, e1, is1, f1Filters, d.raw); s1 = pickTickets(tempPool, cq); rep.push('П1: из пула разниц (' + algoNameStr + ')'); } else { let genSet = new Set(); let safetyCounter = 0; while (s1.length < cq && safetyCounter < cq * 500) { try { let fld = generateWithDiffs(N1, e1, is1, currentConfig.maxNum, f1Filters, d.raw); let key = fld.join(','); if (!genSet.has(key)) { genSet.add(key); s1.push(fld); } } catch(e) {} safetyCounter++; } if (s1.length < cq) rep.push('⚠️ П1: только ' + s1.length + ' с разницами'); } } else { for(let j=0; j<cq; j++) s1.push(generateFilteredField(N1, e1, is1, currentConfig.maxNum, f1Filters)); }
+                    if (currentConfig.hasField2) { if (d.target2) { if (d.count2 !== null && d.count2 <= MAX_ALGO_POOL) { let tempPool = generateFilteredPool(N2, currentConfig.maxNumF2, e2, is2, null, d.raw); s2 = pickTickets(tempPool, cq); rep.push('П2: из пула разниц'); } else { let genSet = new Set(); let safetyCounter = 0; while (s2.length < cq && safetyCounter < cq * 500) { try { let fld = generateWithDiffs(N2, e2, is2, currentConfig.maxNumF2, null, d.raw); let key = fld.join(','); if (!genSet.has(key)) { genSet.add(key); s2.push(fld); } } catch(e) {} safetyCounter++; } if (s2.length < cq) rep.push('⚠️ П2: только ' + s2.length + ' с разницами'); } } else { for(let j=0; j<cq; j++) s2.push(generateRandomField(N2, e2, is2, currentConfig.maxNumF2)); } }
                     rep.push('Набор '+(i+1)+': '+cq+' шт.');
                     for (let j=0; j<cq; j++) { let f1v = s1[j] || []; let preGenF2 = currentConfig.hasField2 ? (s2[j] || []) : []; let diffRawF2 = (d.target2) ? d.raw : null; let resF2 = generateValidF2(f1v, preGenF2, diffRawF2, filters); if(resF2.warning) rep.push(resF2.warning); ticketsData.push({f1: f1v, f2: resF2.f2}); }
                 }
@@ -1147,17 +824,14 @@
             let covWarn = '';
             if(!isFrozen && ticketsData.length > 0) { covWarn = analyzeCoverage(ticketsData, filters.coverageMin, 'f1', currentConfig.maxNum); if(currentConfig.hasField2) covWarn += (covWarn ? ' | ' : '') + analyzeCoverage(ticketsData, filters.coverageMin, 'f2', currentConfig.maxNumF2); }
             let blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});let link=document.createElement('a');link.href=URL.createObjectURL(blob);link.download='lottery_export.csv';link.click();
-            let an=getSelectedAlgo()==='classic'?'Классический':getAlgoName();
+            
+            let showAlgoName = useAlgo || selectedAlgo !== 'classic';
             let fn=isFrozen?' [П1 ЗАМОРОЖЕНО]':(useFreeze&&frozenField1)?' [П1 СОХРАНЕНО]':'';
-            // Используем ticketsData.length для точного отображения сгенерированных билетов
-            gs.style.color='#27ae60'; gs.innerText='✅ Выгружено: '+ticketsData.length+' шт.'+(useAlgo?' ('+an+')':'')+fn+'\n'+rep.join('\n')+(covWarn?'\n'+covWarn:'');
+            gs.style.color='#27ae60'; gs.innerText='✅ Выгружено: '+ticketsData.length+' шт.'+(showAlgoName?' ('+algoNameStr+')':'')+fn+'\n'+rep.join('\n')+(covWarn?'\n'+covWarn:'');
         } catch(e) { gs.innerText='❌ '+e; gs.style.color='#e74c3c'; }
     });
 
-    window.addEventListener('load', () => {
-        setTimeout(() => { let w = document.getElementById('widget'); w.style.left = (window.innerWidth/2-w.offsetWidth/2)+'px'; w.style.top = (window.innerHeight/2-w.offsetHeight/2)+'px'; }, 50);
-        addRuleRow(); rebuildPool();
-    });
+    window.addEventListener('load', () => { setTimeout(() => { let w = document.getElementById('widget'); w.style.left = (window.innerWidth/2-w.offsetWidth/2)+'px'; w.style.top = (window.innerHeight/2-w.offsetHeight/2)+'px'; }, 50); addRuleRow(); rebuildPool(); });
 </script>
 </body>
 </html>
