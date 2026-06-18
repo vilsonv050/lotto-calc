@@ -25,9 +25,10 @@
             font-family: -apple-system, system-ui, sans-serif;
             background: #f0f2f5; margin: 0; padding: 20px; color: var(--color-text);
             display: flex; justify-content: center; min-height: 100vh;
+            padding-left: 360px; /* Отступ для левой панели */
+            padding-right: 360px; /* Отступ для правой панели */
         }
 
-        /* === ОСНОВНОЙ КОНТЕЙНЕР === */
         .container {
             max-width: 900px; width: 100%; background: white;
             border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); overflow: hidden;
@@ -38,7 +39,6 @@
         .header h1 { font-size: 22px; margin-bottom: 5px; }
         .header p { color: #aaa; font-size: 13px; }
 
-        /* === ВКЛАДКИ === */
         .tabs { display: flex; background: #f8f9fa; border-bottom: 1px solid var(--color-border); flex-wrap: wrap; }
         .tab {
             flex: 1; padding: 16px 10px; text-align: center; cursor: pointer;
@@ -55,7 +55,6 @@
         .tab.active-536 { border-bottom-color: var(--color-536); color: var(--color-536); background: white; }
         .tab.active-12dd { border-bottom-color: var(--color-12dd); color: var(--color-12dd); background: white; }
 
-        /* === КОНТЕНТ === */
         .content { padding: 30px; display: none; }
         .content.active { display: block; animation: fadeIn 0.3s; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -86,28 +85,35 @@
         .breakdown-table td { padding: 12px; border-bottom: 1px solid #f1f3f4; font-size: 14px; }
         .breakdown-table tr:last-child td { border-bottom: none; }
 
-        /* === ПРАВЫЙ САЙДБАР === */
-        #calcSidebar {
+        /* === САЙДБАРЫ === */
+        #leftSidebar, #calcSidebar {
             position: fixed;
-            left: calc(50% + 470px);
-            top: 80px;
+            top: 0;
             width: 340px;
-            max-height: calc(100vh - 100px);
+            height: 100vh;
             background: white;
-            border: 1px solid var(--color-border);
-            border-radius: 12px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
             z-index: 1000;
-            overflow-y: auto;
             font-size: 14px;
             display: flex;
             flex-direction: column;
         }
+        #leftSidebar {
+            left: 0;
+            border-right: 1px solid var(--color-border);
+            box-shadow: 5px 0 15px rgba(0,0,0,0.05);
+            overflow: hidden;
+        }
+        #calcSidebar {
+            right: 0;
+            border-left: 1px solid var(--color-border);
+            box-shadow: -5px 0 15px rgba(0,0,0,0.05);
+            overflow-y: auto;
+        }
+
         .calc-sidebar-header {
             background: #1a1a1a; color: white; padding: 14px 15px;
             font-weight: 700; display: flex; justify-content: space-between; align-items: center;
-            position: sticky; top: 0; z-index: 1; border-radius: 12px 12px 0 0;
-            font-size: 13px;
+            font-size: 13px; flex-shrink: 0;
         }
         .calc-sidebar-actions { display: flex; gap: 8px; }
         .btn-calc-sidebar {
@@ -117,6 +123,51 @@
         .btn-calc-sidebar:hover { background: rgba(255,255,255,0.2); }
         .btn-calc-sidebar.active { background: var(--color-secondary); border-color: var(--color-secondary); }
 
+        /* Левый: Калькулятор */
+        .ls-calc { padding: 15px; border-bottom: 1px solid var(--color-border); flex-shrink: 0; }
+        .calc-display {
+            background: #f8f9fa; border: 1px solid var(--color-border); border-radius: 8px;
+            padding: 10px; margin-bottom: 10px; text-align: right; font-size: 20px; font-weight: 700;
+            min-height: 50px; overflow: hidden; word-break: break-all; color: #333;
+            display: flex; align-items: flex-end; justify-content: flex-end;
+        }
+        .calc-history {
+            background: #f1f3f4; border-radius: 6px; padding: 8px; margin-bottom: 10px;
+            height: 50px; overflow-y: auto; font-size: 11px; color: #666; line-height: 1.4;
+        }
+        .calc-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; }
+        .calc-btn {
+            background: #f8f9fa; border: 1px solid var(--color-border); border-radius: 6px;
+            padding: 12px 0; font-size: 16px; font-weight: 600; cursor: pointer; transition: 0.2s; color: #333;
+        }
+        .calc-btn:hover { background: #eef0f3; }
+        .calc-btn.op { background: #e8eaf6; color: var(--color-primary); }
+        .calc-btn.op:hover { background: #d2d6f5; }
+        .calc-btn.eq { background: var(--color-primary); color: white; }
+        .calc-btn.eq:hover { background: #1550e0; }
+        .calc-btn.clear { background: #ffebee; color: var(--color-loss); }
+        .calc-btn.clear:hover { background: #ffcdd2; }
+
+        /* Левый: Ввод выигрышей */
+        .ls-win-block { padding: 0; flex: 1; display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+        .ls-win-header { background: #1a1a1a; color: white; padding: 14px 15px; font-weight: 700; font-size: 13px; flex-shrink: 0; }
+        .ls-win-content { padding: 15px; flex: 1; overflow-y: auto; min-height: 0; }
+        .win-input-title { font-size: 12px; font-weight: 700; margin-bottom: 10px; color: #777; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 15px; }
+        .win-input-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .win-input-row label { font-size: 13px; font-weight: 600; color: #444; margin-bottom: 0; }
+        .win-input-row input {
+            width: 80px; padding: 6px 8px; border: 2px solid var(--color-border); border-radius: 6px;
+            text-align: right; font-weight: 700; font-size: 14px; color: var(--color-primary); background: #f0f4ff;
+        }
+        .win-input-row input:focus { border-color: var(--color-primary); outline: none; }
+        .win-input-row.main-input input { border-color: var(--color-accent); color: var(--color-accent); background: #fff8e1; font-size: 16px; }
+
+        .ls-win-results { background: #f8f9fa; border-top: 1px solid var(--color-border); padding: 15px; flex-shrink: 0; }
+        .ls-res-row { display: flex; justify-content: space-between; padding: 8px 0; font-size: 13px; }
+        .ls-res-row b { font-variant-numeric: tabular-nums; }
+        .ls-res-row.total { border-top: 2px solid var(--color-border); margin-top: 5px; padding-top: 12px; font-size: 16px; font-weight: 800; }
+
+        /* Правый: Таблица */
         .calc-sidebar-table {
             width: 100%; border-collapse: collapse; margin-bottom: 0; background: white; font-size: 13px;
         }
@@ -127,21 +178,70 @@
         .calc-sidebar-table th:last-child { text-align: right; }
         .calc-sidebar-table td { padding: 8px; border-bottom: 1px solid #f1f1f1; }
         .calc-sidebar-table tr:last-child td { border-bottom: none; }
-        .calc-sidebar-table .sum-col {
-            text-align: right; font-weight: 700; color: var(--color-secondary); font-variant-numeric: tabular-nums;
-        }
+        .calc-sidebar-table .sum-col { text-align: right; font-weight: 700; color: var(--color-secondary); font-variant-numeric: tabular-nums; }
         .edit-input {
             width: 100%; padding: 4px; border: 1px solid var(--color-primary); border-radius: 4px;
             text-align: right; font-weight: 700; font-size: 14px; color: var(--color-primary); background: #f0f4ff;
         }
 
-        @media (max-width: 1300px) {
-            #calcSidebar { display: none; }
-            body { padding: 10px; }
+        @media (max-width: 1400px) {
+            body { padding: 20px; }
+            #calcSidebar, #leftSidebar { display: none; }
         }
     </style>
 </head>
 <body>
+
+<!-- ===== ЛЕВЫЙ САЙДБАР ===== -->
+<div id="leftSidebar">
+    <div class="calc-sidebar-header"><span>&#128290; Калькулятор</span></div>
+    <div class="ls-calc">
+        <div class="calc-display" id="calcDisplay">0</div>
+        
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+            <span style="font-size: 10px; color: #999; font-weight: 600;">История</span>
+            <button onclick="clearCalcHistory()" style="background: transparent; border: 1px solid var(--color-border); color: var(--color-loss); font-size: 10px; padding: 2px 6px; border-radius: 4px; cursor: pointer; font-weight: 700;">Очистить историю</button>
+        </div>
+        <div class="calc-history" id="calcHistory"></div>
+        
+        <div class="calc-grid">
+            <button class="calc-btn clear" onclick="simpleCalcInput('C')">C</button>
+            <button class="calc-btn clear" onclick="simpleCalcInput('⌫')">⌫</button>
+            <button class="calc-btn op" onclick="simpleCalcInput('%')">%</button>
+            <button class="calc-btn op" onclick="simpleCalcInput('÷')">÷</button>
+            <button class="calc-btn" onclick="simpleCalcInput('7')">7</button>
+            <button class="calc-btn" onclick="simpleCalcInput('8')">8</button>
+            <button class="calc-btn" onclick="simpleCalcInput('9')">9</button>
+            <button class="calc-btn op" onclick="simpleCalcInput('×')">×</button>
+            <button class="calc-btn" onclick="simpleCalcInput('4')">4</button>
+            <button class="calc-btn" onclick="simpleCalcInput('5')">5</button>
+            <button class="calc-btn" onclick="simpleCalcInput('6')">6</button>
+            <button class="calc-btn op" onclick="simpleCalcInput('-')">-</button>
+            <button class="calc-btn" onclick="simpleCalcInput('1')">1</button>
+            <button class="calc-btn" onclick="simpleCalcInput('2')">2</button>
+            <button class="calc-btn" onclick="simpleCalcInput('3')">3</button>
+            <button class="calc-btn op" onclick="simpleCalcInput('+')">+</button>
+            <button class="calc-btn" onclick="simpleCalcInput('00')">00</button>
+            <button class="calc-btn" onclick="simpleCalcInput('0')">0</button>
+            <button class="calc-btn" onclick="simpleCalcInput('.')">.</button>
+            <button class="calc-btn eq" onclick="simpleCalcInput('=')">=</button>
+        </div>
+    </div>
+
+    <div class="ls-win-block">
+        <div class="ls-win-header" style="display: flex; justify-content: space-between; align-items: center;">
+            <span>&#127942; Ввод выигрышей</span>
+            <button onclick="clearWinInputs()" class="btn-calc-sidebar" style="padding: 4px 10px; font-size: 11px;">Очистить</button>
+        </div>
+        <div class="ls-win-content" id="winInputContent"></div>
+        <div class="ls-win-results">
+            <div class="ls-res-row"><span>Куплено билетов:</span> <b id="wi_tickets">0</b></div>
+            <div class="ls-res-row"><span>Потрачено:</span> <b id="wi_spent">0 ₽</b></div>
+            <div class="ls-res-row"><span>Выиграно:</span> <b id="wi_won" style="color: var(--color-win)">0 ₽</b></div>
+            <div class="ls-res-row total"><span>Итого:</span> <b id="wi_profit">0 ₽</b></div>
+        </div>
+    </div>
+</div>
 
 <!-- ===== ПРАВЫЙ САЙДБАР ===== -->
 <div id="calcSidebar">
@@ -367,7 +467,7 @@ function setDetails(prefix, win, rows) {
 }
 
 // =============================================
-// ДАННЫЕ ВЫИГРЫШЕЙ (редактируемые)
+// ДАННЫЕ ВЫИГРЫШЕЙ
 // =============================================
 var prizesMag8 = [[8,1,531835],[8,0,12500],[7,1,500],[7,0,400],[6,1,125],[6,0,60],[5,1,30],[5,0,15],[4,1,10]];
 var prizes820 = [[8,1,5000000],[8,0,500000],[7,1,25000],[7,0,5000],[6,1,2000],[6,0,1250],[5,1,800],[5,0,750],[4,1,750]];
@@ -381,35 +481,41 @@ var prizes12dd = {12:10000000, 0:10000000, 11:50000, 1:50000, 10:5000, 2:5000, 9
 // =============================================
 // КАЛЬКУЛЯТОРЫ
 // =============================================
+function runMag8() { calcGeneric8('m8', prizesMag8); }
+function run820() { calcGeneric8('v', prizes820); }
+function runSuper8() { calcGeneric8('s8', prizesSuper8); }
 
-function runMag8() {
-    var n1 = parseInt(document.getElementById('m8_n1').value) || 8;
-    var n2 = parseInt(document.getElementById('m8_n2').value) || 1;
-    var k1 = parseInt(document.getElementById('m8_k1').value) || 0;
-    var k2 = parseInt(document.getElementById('m8_k2').value) || 0;
-    var price = parseInt(document.getElementById('m8_price').value) || 80;
+function calcGeneric8(prefix, arr) {
+    var n1 = Math.max(8, Math.min(12, parseInt(document.getElementById(prefix + '_n1').value) || 8));
+    var n2 = Math.max(1, Math.min(4, parseInt(document.getElementById(prefix + '_n2').value) || 1));
+    var k1 = Math.max(0, Math.min(8, parseInt(document.getElementById(prefix + '_k1').value) || 0));
+    var k2 = Math.max(0, Math.min(1, parseInt(document.getElementById(prefix + '_k2').value) || 0));
+    var price = Math.max(1, parseInt(document.getElementById(prefix + '_price').value) || 80);
+    
     var totalC = C(n1, 8) * n2;
     var cost = totalC * price;
     var win = 0, rows = "";
-    for (var i = 0; i < prizesMag8.length; i++) {
-        var m1 = prizesMag8[i][0], m2 = prizesMag8[i][1], cash = prizesMag8[i][2];
+    for (var i = 0; i < arr.length; i++) {
+        var m1 = arr[i][0], m2 = arr[i][1], cash = arr[i][2];
         if (k1 >= m1 && k2 >= m2) {
             var cnt = C(k1, m1) * C(n1 - k1, 8 - m1) * C(k2, m2) * C(n2 - k2, 1 - m2);
             if (cnt > 0) { win += cnt * cash; rows += '<tr><td>' + m1 + ' + ' + m2 + '</td><td>' + fmt(cash) + ' \u20BD</td><td>' + fmt(cnt) + ' шт.</td><td><b>' + fmt(cnt * cash) + ' \u20BD</b></td></tr>'; }
         }
     }
-    setResult('m8', totalC, cost, win);
-    setDetails('m8', win, rows);
+    setResult(prefix, totalC, cost, win);
+    setDetails(prefix, win, rows);
+    calcLeftSidebarTotals();
 }
 
 function runTrilogy() {
-    var n1 = parseInt(document.getElementById('tr_n1').value) || 4;
-    var n2 = parseInt(document.getElementById('tr_n2').value) || 2;
-    var n3 = parseInt(document.getElementById('tr_n3').value) || 1;
-    var k1 = parseInt(document.getElementById('tr_k1').value) || 0;
-    var k2 = parseInt(document.getElementById('tr_k2').value) || 0;
-    var k3 = parseInt(document.getElementById('tr_k3').value) || 0;
-    var price = parseInt(document.getElementById('tr_price').value) || 100;
+    var n1 = Math.max(4, Math.min(15, parseInt(document.getElementById('tr_n1').value) || 4));
+    var n2 = Math.max(2, Math.min(8, parseInt(document.getElementById('tr_n2').value) || 2));
+    var n3 = Math.max(1, Math.min(3, parseInt(document.getElementById('tr_n3').value) || 1));
+    var k1 = Math.max(0, Math.min(4, parseInt(document.getElementById('tr_k1').value) || 0));
+    var k2 = Math.max(0, Math.min(2, parseInt(document.getElementById('tr_k2').value) || 0));
+    var k3 = Math.max(0, Math.min(1, parseInt(document.getElementById('tr_k3').value) || 0));
+    var price = Math.max(1, parseInt(document.getElementById('tr_price').value) || 100);
+    
     document.getElementById('tr_alert').style.display = (n1 + n2 + n3 > 18) ? 'block' : 'none';
     var totalC = C(n1, 4) * C(n2, 2) * C(n3, 1);
     var cost = totalC * price;
@@ -433,79 +539,16 @@ function runTrilogy() {
     }
     setResult('tr', totalC, cost, win);
     setDetails('tr', win, rows);
-}
-
-function run820() {
-    var n1 = parseInt(document.getElementById('v_n1').value) || 8;
-    var n2 = parseInt(document.getElementById('v_n2').value) || 1;
-    var k1 = parseInt(document.getElementById('v_k1').value) || 0;
-    var k2 = parseInt(document.getElementById('v_k2').value) || 0;
-    var price = parseInt(document.getElementById('v_price').value) || 250;
-    var totalC = C(n1, 8) * n2;
-    var cost = totalC * price;
-    var win = 0, rows = "";
-    for (var i = 0; i < prizes820.length; i++) {
-        var m1 = prizes820[i][0], m2 = prizes820[i][1], cash = prizes820[i][2];
-        if (k1 >= m1 && k2 >= m2) {
-            var cnt = C(k1, m1) * C(n1 - k1, 8 - m1) * C(k2, m2) * C(n2 - k2, 1 - m2);
-            if (cnt > 0) { win += cnt * cash; rows += '<tr><td>' + m1 + ' + ' + m2 + '</td><td>' + fmt(cash) + ' \u20BD</td><td>' + fmt(cnt) + ' шт.</td><td><b>' + fmt(cnt * cash) + ' \u20BD</b></td></tr>'; }
-        }
-    }
-    setResult('v', totalC, cost, win);
-    setDetails('v', win, rows);
-}
-
-function runSuper8() {
-    var n1 = parseInt(document.getElementById('s8_n1').value) || 8;
-    var n2 = parseInt(document.getElementById('s8_n2').value) || 1;
-    var k1 = parseInt(document.getElementById('s8_k1').value) || 0;
-    var k2 = parseInt(document.getElementById('s8_k2').value) || 0;
-    var price = parseInt(document.getElementById('s8_price').value) || 700;
-    var totalC = C(n1, 8) * n2;
-    var cost = totalC * price;
-    var win = 0, rows = "";
-    for (var i = 0; i < prizesSuper8.length; i++) {
-        var m1 = prizesSuper8[i][0], m2 = prizesSuper8[i][1], cash = prizesSuper8[i][2];
-        if (k1 >= m1 && k2 >= m2) {
-            var cnt = C(k1, m1) * C(n1 - k1, 8 - m1) * C(k2, m2) * C(n2 - k2, 1 - m2);
-            if (cnt > 0) { win += cnt * cash; rows += '<tr><td>' + m1 + ' + ' + m2 + '</td><td>' + fmt(cash) + ' \u20BD</td><td>' + fmt(cnt) + ' шт.</td><td><b>' + fmt(cnt * cash) + ' \u20BD</b></td></tr>'; }
-        }
-    }
-    setResult('s8', totalC, cost, win);
-    setDetails('s8', win, rows);
-}
-
-function runAN() {
-    var n = parseInt(document.getElementById('an_n').value) || 12;
-    var k = parseInt(document.getElementById('an_k').value) || 0;
-    var price = parseInt(document.getElementById('an_price').value) || 150;
-    var totalC = C(n, 12);
-    var cost = totalC * price;
-    var win = 0, rows = "";
-    var s12 = C(k, 12) * C(n - k, 0);
-    var s0 = C(k, 0) * C(n - k, 12);
-    if (s12 > 0 || s0 > 0) {
-        if (s12 > 0) { var w = prizesAN[12] * s12; win += w; rows += '<tr><td>Угадано 12 &#127942;</td><td>' + fmt(prizesAN[12]) + ' \u20BD</td><td>' + fmt(s12) + ' шт.</td><td><b>' + fmt(w) + ' \u20BD</b></td></tr>'; }
-        if (s0 > 0) { var w = prizesAN[0] * s0; win += w; rows += '<tr><td>Угадано 0 &#127942;</td><td>' + fmt(prizesAN[0]) + ' \u20BD</td><td>' + fmt(s0) + ' шт.</td><td><b>' + fmt(w) + ' \u20BD</b></td></tr>'; }
-        rows += '<tr><td colspan="4" style="color:#d93025;text-align:center;">&#9888;&#65039; Суперприз!</td></tr>';
-    } else {
-        for (var i = 1; i <= 11; i++) {
-            if (prizesAN[i]) {
-                var cnt = C(k, i) * C(n - k, 12 - i);
-                if (cnt > 0) { var p = prizesAN[i] * cnt; win += p; rows += '<tr><td>Угадано ' + i + '</td><td>' + fmt(prizesAN[i]) + ' \u20BD</td><td>' + fmt(cnt) + ' шт.</td><td><b>' + fmt(p) + ' \u20BD</b></td></tr>'; }
-            }
-        }
-    }
-    setResult('an', totalC, cost, win);
-    setDetails('an', win, rows);
+    calcLeftSidebarTotals();
 }
 
 function runPremier() {
-    var n1 = parseInt(document.getElementById('pr_n1').value) || 4;
-    var n2 = parseInt(document.getElementById('pr_n2').value) || 4;
-    var k1 = parseInt(document.getElementById('pr_k1').value) || 0;
-    var k2 = parseInt(document.getElementById('pr_k2').value) || 0;
-    var price = parseInt(document.getElementById('pr_price').value) || 80;
+    var n1 = Math.max(4, Math.min(12, parseInt(document.getElementById('pr_n1').value) || 4));
+    var n2 = Math.max(4, Math.min(12, parseInt(document.getElementById('pr_n2').value) || 4));
+    var k1 = Math.max(0, Math.min(4, parseInt(document.getElementById('pr_k1').value) || 0));
+    var k2 = Math.max(0, Math.min(4, parseInt(document.getElementById('pr_k2').value) || 0));
+    var price = Math.max(1, parseInt(document.getElementById('pr_price').value) || 80);
+    
     var totalC = C(n1, 4) * C(n2, 4);
     var cost = totalC * price;
     var win = 0, rows = "";
@@ -518,74 +561,73 @@ function runPremier() {
     }
     setResult('pr', totalC, cost, win);
     setDetails('pr', win, rows);
+    calcLeftSidebarTotals();
 }
 
-function run536() {
-    var n = parseInt(document.getElementById('f36_n').value) || 5;
-    var k = parseInt(document.getElementById('f36_k').value) || 0;
-    var price = parseInt(document.getElementById('f36_price').value) || 500;
-    var totalC = C(n, 5);
+// УНИВЕРСАЛЬНАЯ ФУНКЦИЯ ДЛЯ ОДНОПОЛЕВЫХ ЛОТЕРЕЙ (Топ 12, 5 из 36, 12 Добрых Дел)
+function calcGeneric12(prefix, objName, req) {
+    var maxN = (prefix === 'an' || prefix === 'dd') ? 15 : 12;
+    var n = Math.max(req, Math.min(maxN, parseInt(document.getElementById(prefix + '_n').value) || req));
+    var k = Math.max(0, Math.min(n, parseInt(document.getElementById(prefix + '_k').value) || 0));
+    var price = Math.max(1, parseInt(document.getElementById(prefix + '_price').value) || 100);
+    
+    var obj = window[objName];
+    var totalC = C(n, req);
     var cost = totalC * price;
     var win = 0, rows = "";
-    for (var i = 2; i <= 5; i++) {
-        if (prizes536[i]) {
-            var cnt = C(k, i) * C(n - k, 5 - i);
-            if (cnt > 0) { var p = prizes536[i] * cnt; win += p; rows += '<tr><td>Угадано ' + i + '</td><td>' + fmt(prizes536[i]) + ' \u20BD</td><td>' + fmt(cnt) + ' шт.</td><td><b>' + fmt(p) + ' \u20BD</b></td></tr>'; }
-        }
-    }
-    setResult('f36', totalC, cost, win);
-    setDetails('f36', win, rows);
-}
-
-function run12dd() {
-    var n = parseInt(document.getElementById('dd_n').value) || 12;
-    var k = parseInt(document.getElementById('dd_k').value) || 0;
-    var price = parseInt(document.getElementById('dd_price').value) || 200;
-    var totalC = C(n, 12);
-    var cost = totalC * price;
-    var win = 0, rows = "";
-    var s12 = C(k, 12) * C(n - k, 0);
-    var s0 = C(k, 0) * C(n - k, 12);
-    if (s12 > 0 || s0 > 0) {
-        if (s12 > 0) { var w = prizes12dd[12] * s12; win += w; rows += '<tr><td>Угадано 12 &#127942;</td><td>' + fmt(prizes12dd[12]) + ' \u20BD</td><td>' + fmt(s12) + ' шт.</td><td><b>' + fmt(w) + ' \u20BD</b></td></tr>'; }
-        if (s0 > 0) { var w = prizes12dd[0] * s0; win += w; rows += '<tr><td>Угадано 0 &#127942;</td><td>' + fmt(prizes12dd[0]) + ' \u20BD</td><td>' + fmt(s0) + ' шт.</td><td><b>' + fmt(w) + ' \u20BD</b></td></tr>'; }
+    
+    var hasSuper = (obj[req] && k >= req) || (obj[0] && n - k >= req);
+    
+    if (hasSuper) {
+        if (obj[req] && k >= req) { var cnt = C(k, req); var w = obj[req] * cnt; win += w; rows += '<tr><td>Угадано ' + req + ' &#127942;</td><td>' + fmt(obj[req]) + ' \u20BD</td><td>' + fmt(cnt) + ' шт.</td><td><b>' + fmt(w) + ' \u20BD</b></td></tr>'; }
+        if (obj[0] && n - k >= req) { var cnt = C(n - k, req); var w = obj[0] * cnt; win += w; rows += '<tr><td>Угадано 0 &#127942;</td><td>' + fmt(obj[0]) + ' \u20BD</td><td>' + fmt(cnt) + ' шт.</td><td><b>' + fmt(w) + ' \u20BD</b></td></tr>'; }
         rows += '<tr><td colspan="4" style="color:#d93025;text-align:center;">&#9888;&#65039; Суперприз!</td></tr>';
     } else {
-        for (var i = 1; i <= 11; i++) {
-            if (prizes12dd[i]) {
-                var cnt = C(k, i) * C(n - k, 12 - i);
-                if (cnt > 0) { var p = prizes12dd[i] * cnt; win += p; rows += '<tr><td>Угадано ' + i + '</td><td>' + fmt(prizes12dd[i]) + ' \u20BD</td><td>' + fmt(cnt) + ' шт.</td><td><b>' + fmt(p) + ' \u20BD</b></td></tr>'; }
+        var keys = Object.keys(obj);
+        for (var i = 0; i < keys.length; i++) {
+            var m = parseInt(keys[i]);
+            if (isNaN(m) || m === req || m === 0) continue;
+            if (k >= m && n - k >= req - m) {
+                var cnt = C(k, m) * C(n - k, req - m);
+                if (cnt > 0) { var p = obj[m] * cnt; win += p; rows += '<tr><td>Угадано ' + m + '</td><td>' + fmt(obj[m]) + ' \u20BD</td><td>' + fmt(cnt) + ' шт.</td><td><b>' + fmt(p) + ' \u20BD</b></td></tr>'; }
             }
         }
     }
-    setResult('dd', totalC, cost, win);
-    setDetails('dd', win, rows);
+    setResult(prefix, totalC, cost, win);
+    setDetails(prefix, win, rows);
+    calcLeftSidebarTotals();
 }
+
+function runAN() { calcGeneric12('an', 'prizesAN', 12); }
+function run536() { calcGeneric12('f36', 'prizes536', 5); }
+function run12dd() { calcGeneric12('dd', 'prizes12dd', 12); }
+
 
 // =============================================
 // ВКЛАДКИ
 // =============================================
 var currentTab = 'Mag8';
+var priceIds = { Mag8: 'm8_price', Trilogy: 'tr_price', '820': 'v_price', Super8: 's8_price', AN: 'an_price', Premier: 'pr_price', '536': 'f36_price', '12dd': 'dd_price' };
+var runFunctions = { Mag8: runMag8, Trilogy: runTrilogy, '820': run820, Super8: runSuper8, AN: runAN, Premier: runPremier, '536': run536, '12dd': run12dd };
 
 function showTab(type) {
     currentTab = type;
     var tabs = document.querySelectorAll('.tab');
     var contents = document.querySelectorAll('.content');
-    for (var i = 0; i < tabs.length; i++) {
-        tabs[i].className = 'tab';
-    }
-    for (var j = 0; j < contents.length; j++) {
-        contents[j].className = 'content';
-    }
+    for (var i = 0; i < tabs.length; i++) tabs[i].className = 'tab';
+    for (var j = 0; j < contents.length; j++) contents[j].className = 'content';
+    
     var tabEl = document.getElementById('btn' + type);
     var contentEl = document.getElementById('tab' + type);
-    if (tabEl) { tabEl.className = 'tab active-' + type.toLowerCase(); }
-    if (contentEl) { contentEl.className = 'content active'; }
+    if (tabEl) tabEl.className = 'tab active-' + type.toLowerCase();
+    if (contentEl) contentEl.className = 'content active';
+    
     updateCalcSidebar(type);
+    updateWinInputs(type);
 }
 
 // =============================================
-// САЙДБАР — ТАБЛИЦЫ ВЫИГРЫШЕЙ
+// ПРАВЫЙ САЙДБАР — ТАБЛИЦЫ ВЫИГРЫШЕЙ
 // =============================================
 var calcEditMode = false;
 
@@ -599,48 +641,48 @@ function updateCalcSidebar(type) {
     if (type === 'Trilogy') {
         html += '<table class="calc-sidebar-table"><thead><tr><th>П1</th><th>П2</th><th>П3</th><th>Приз</th></tr></thead><tbody>';
         for (var i = 0; i < prizesTrilogy.length; i++) {
-            var r = prizesTrilogy[i];
-            var val = r[3];
+            var r = prizesTrilogy[i]; var val = r[3];
+            var spanStyle = calcEditMode ? 'display:none;' : '';
+            var inputStyle = calcEditMode ? '' : 'display:none;';
             html += '<tr><td>' + r[0] + '</td><td>' + r[1] + '</td><td>' + r[2] + '</td><td class="sum-col" data-arr="prizesTrilogy" data-idx="' + i + '">';
-            html += '<span class="pv" style="display:' + (calcEditMode ? 'none' : '') + '">' + fmt(val) + ' \u20BD</span>';
-            html += '<input class="edit-input" type="number" value="' + val + '" style="display:' + (calcEditMode ? '' : 'none') + '">';
+            html += '<span class="pv" style="' + spanStyle + '">' + fmt(val) + ' \u20BD</span>';
+            html += '<input class="edit-input" type="number" value="' + val + '" style="' + inputStyle + '">';
             html += '</td></tr>';
         }
         html += '</tbody></table>';
     } else if (type === 'Mag8' || type === '820' || type === 'Super8' || type === 'Premier') {
-        var arrName = '';
-        var arr = [];
+        var arrName = ''; var arr = [];
         if (type === 'Mag8') { arrName = 'prizesMag8'; arr = prizesMag8; }
         if (type === '820') { arrName = 'prizes820'; arr = prizes820; }
         if (type === 'Super8') { arrName = 'prizesSuper8'; arr = prizesSuper8; }
         if (type === 'Premier') { arrName = 'prizesPremier'; arr = prizesPremier; }
         html += '<table class="calc-sidebar-table"><thead><tr><th>Категория</th><th>Приз</th></tr></thead><tbody>';
         for (var i = 0; i < arr.length; i++) {
-            var r = arr[i];
-            var cat = '';
+            var r = arr[i]; var cat = '';
             for (var j = 0; j < r.length - 1; j++) { cat += (j > 0 ? ' + ' : '') + r[j]; }
             var val = r[r.length - 1];
+            var spanStyle = calcEditMode ? 'display:none;' : '';
+            var inputStyle = calcEditMode ? '' : 'display:none;';
             html += '<tr><td>' + cat + '</td><td class="sum-col" data-arr="' + arrName + '" data-idx="' + i + '">';
-            html += '<span class="pv" style="display:' + (calcEditMode ? 'none' : '') + '">' + fmt(val) + ' \u20BD</span>';
-            html += '<input class="edit-input" type="number" value="' + val + '" style="display:' + (calcEditMode ? '' : 'none') + '">';
+            html += '<span class="pv" style="' + spanStyle + '">' + fmt(val) + ' \u20BD</span>';
+            html += '<input class="edit-input" type="number" value="' + val + '" style="' + inputStyle + '">';
             html += '</td></tr>';
         }
         html += '</tbody></table>';
     } else if (type === 'AN' || type === '536' || type === '12dd') {
-        var objName = '';
-        var obj = {};
-        var labelFn = function(k) { return k + ' угадано'; };
+        var objName = ''; var obj = {};
         if (type === 'AN') { objName = 'prizesAN'; obj = prizesAN; }
-        if (type === '536') { objName = 'prizes536'; obj = prizes536; labelFn = function(k) { return k + ' угадано'; }; }
-        if (type === '12dd') { objName = 'prizes12dd'; obj = prizes12dd; labelFn = function(k) { return k + ' или ' + (12 - k); }; }
+        if (type === '536') { objName = 'prizes536'; obj = prizes536; }
+        if (type === '12dd') { objName = 'prizes12dd'; obj = prizes12dd; }
         html += '<table class="calc-sidebar-table"><thead><tr><th>Категория</th><th>Приз</th></tr></thead><tbody>';
         var keys = Object.keys(obj);
         for (var i = 0; i < keys.length; i++) {
-            var k = keys[i];
-            var val = obj[k];
-            html += '<tr><td>' + labelFn(k) + '</td><td class="sum-col" data-obj="' + objName + '" data-key="' + k + '">';
-            html += '<span class="pv" style="display:' + (calcEditMode ? 'none' : '') + '">' + fmt(val) + ' \u20BD</span>';
-            html += '<input class="edit-input" type="number" value="' + val + '" style="display:' + (calcEditMode ? '' : 'none') + '">';
+            var k = keys[i]; var val = obj[k];
+            var spanStyle = calcEditMode ? 'display:none;' : '';
+            var inputStyle = calcEditMode ? '' : 'display:none;';
+            html += '<tr><td>Угадано ' + k + '</td><td class="sum-col" data-obj="' + objName + '" data-key="' + k + '">';
+            html += '<span class="pv" style="' + spanStyle + '">' + fmt(val) + ' \u20BD</span>';
+            html += '<input class="edit-input" type="number" value="' + val + '" style="' + inputStyle + '">';
             html += '</td></tr>';
         }
         html += '</tbody></table>';
@@ -654,41 +696,236 @@ function toggleCalcEditMode() {
     document.getElementById('btnSaveCalcPrizes').style.display = '';
     var spans = document.querySelectorAll('#calcSidebarContent .pv');
     var inputs = document.querySelectorAll('#calcSidebarContent .edit-input');
-    for (var i = 0; i < spans.length; i++) { spans[i].style.display = 'none'; }
-    for (var j = 0; j < inputs.length; j++) { inputs[j].style.display = ''; }
+    for (var i = 0; i < spans.length; i++) spans[i].style.display = 'none';
+    for (var j = 0; j < inputs.length; j++) inputs[j].style.display = '';
 }
 
 function saveCalcPrizes() {
-    // Сохраняем массивы
     var cells = document.querySelectorAll('#calcSidebarContent .sum-col[data-idx]');
     for (var i = 0; i < cells.length; i++) {
-        var cell = cells[i];
-        var arrName = cell.getAttribute('data-arr');
-        var idx = parseInt(cell.getAttribute('data-idx'));
+        var cell = cells[i]; var arrName = cell.getAttribute('data-arr'); var idx = parseInt(cell.getAttribute('data-idx'));
         var input = cell.querySelector('input');
-        if (input && arrName && window[arrName]) {
-            var newVal = parseInt(input.value) || 0;
-            var arr = window[arrName];
-            arr[idx][arr[idx].length - 1] = newVal;
-        }
+        if (input && arrName && window[arrName]) { window[arrName][idx][window[arrName][idx].length - 1] = parseInt(input.value) || 0; }
     }
-    // Сохраняем объекты
     var objCells = document.querySelectorAll('#calcSidebarContent .sum-col[data-key]');
     for (var j = 0; j < objCells.length; j++) {
-        var cell = objCells[j];
-        var objName = cell.getAttribute('data-obj');
-        var key = cell.getAttribute('data-key');
+        var cell = objCells[j]; var objName = cell.getAttribute('data-obj'); var key = cell.getAttribute('data-key');
         var input = cell.querySelector('input');
-        if (input && objName && window[objName]) {
-            window[objName][key] = parseInt(input.value) || 0;
-        }
+        if (input && objName && window[objName]) { window[objName][key] = parseInt(input.value) || 0; }
     }
     calcEditMode = false;
     document.getElementById('btnEditCalcPrizes').style.display = '';
     document.getElementById('btnSaveCalcPrizes').style.display = 'none';
-    // Пересчитываем все и обновляем сайдбар
-    updateCalcSidebar(currentTab);
-    runMag8(); runTrilogy(); run820(); runSuper8(); runAN(); runPremier(); run536(); run12dd();
+    
+    updateCalcSidebar(currentTab); 
+    calcLeftSidebarTotals(); 
+    runFunctions[currentTab](); 
+}
+
+
+// =============================================
+// ЛЕВЫЙ САЙДБАР — ОБЫЧНЫЙ КАЛЬКУЛЯТОР
+// =============================================
+var calcVal = '0';
+var calcPrev = '';
+var calcOp = '';
+var calcReset = false;
+
+function simpleCalcInput(v) {
+    if (v === 'C') {
+        calcVal = '0'; calcPrev = ''; calcOp = ''; calcReset = false;
+    } else if (v === '⌫') {
+        if (calcReset) {
+            calcOp = ''; calcPrev = ''; calcReset = false;
+        } else {
+            calcVal = calcVal.length > 1 ? calcVal.slice(0, -1) : '0';
+        }
+    } else if (['+', '-', '×', '÷'].indexOf(v) !== -1) {
+        if (calcOp && !calcReset) { simpleCalcInput('='); }
+        calcPrev = calcVal; calcOp = v; calcReset = true;
+    } else if (v === '%') {
+        var a = parseFloat(calcPrev.replace(/\s/g, '')) || 0;
+        var b = parseFloat(calcVal.replace(/\s/g, '')) || 0;
+        if (calcOp === '+' || calcOp === '-') {
+            // Для сложения и вычитания: процент вычисляется из первого числа (1000 - 15% = 1000 - 150)
+            calcVal = String(a * b / 100);
+        } else {
+            // Для умножения, деления и одиночного ввода: просто делим на 100
+            calcVal = String(b / 100);
+        }
+        calcReset = false; // Отключаем сброс, чтобы пользователь мог нажать "="
+    } else if (v === '=') {
+        if (calcOp && calcPrev !== '') {
+            var a = parseFloat(calcPrev.replace(/\s/g, ''));
+            var b = parseFloat(calcVal.replace(/\s/g, ''));
+            var res = 0;
+            if (calcOp === '+') res = a + b;
+            else if (calcOp === '-') res = a - b;
+            else if (calcOp === '×') res = a * b;
+            else if (calcOp === '÷') res = b !== 0 ? a / b : 0;
+            
+            addHistory(calcPrev, calcVal, calcOp, res);
+            calcVal = String(res);
+            calcPrev = ''; calcOp = ''; calcReset = true;
+        }
+    } else {
+        if (calcReset) { calcVal = ''; calcReset = false; }
+        if (v === '.' && calcVal.indexOf('.') !== -1) return;
+        if (calcVal === '0' && v !== '.' && v !== '00') calcVal = '';
+        calcVal += v;
+    }
+    updateCalcDisplay();
+}
+
+function updateCalcDisplay() {
+    var disp = document.getElementById('calcDisplay');
+    var text = '';
+    if (calcOp && calcPrev !== '') {
+        if (calcReset) {
+            text = formatCalcNum(calcPrev) + ' ' + calcOp;
+        } else {
+            text = formatCalcNum(calcPrev) + ' ' + calcOp + ' ' + formatCalcNum(calcVal);
+        }
+    } else {
+        text = formatCalcNum(calcVal);
+    }
+    disp.innerText = text;
+}
+
+function formatCalcNum(str) {
+    if (str === '' || str === '-') return str;
+    var parts = str.split('.');
+    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+    return parts.join('.');
+}
+
+function addHistory(a, b, op, res) {
+    var hist = document.getElementById('calcHistory');
+    var aStr = formatCalcNum(String(a));
+    var bStr = formatCalcNum(String(b));
+    var rStr = formatCalcNum(String(res));
+    hist.innerHTML = '<div>' + aStr + ' ' + op + ' ' + bStr + ' = ' + rStr + '</div>' + hist.innerHTML;
+    if (hist.children.length > 10) hist.removeChild(hist.lastChild);
+}
+
+// Функция очистки истории калькулятора
+function clearCalcHistory() {
+    document.getElementById('calcHistory').innerHTML = '';
+}
+
+document.addEventListener('keydown', function(e) {
+    if (document.activeElement.tagName === 'INPUT') return;
+    var key = e.key;
+    if ('0123456789'.indexOf(key) !== -1) simpleCalcInput(key);
+    else if (key === '.') simpleCalcInput('.');
+    else if (key === '+') simpleCalcInput('+');
+    else if (key === '-') simpleCalcInput('-');
+    else if (key === '*') simpleCalcInput('×');
+    else if (key === '/') { e.preventDefault(); simpleCalcInput('÷'); }
+    else if (key === 'Enter' || key === '=') simpleCalcInput('=');
+    else if (key === 'Backspace') simpleCalcInput('⌫');
+    else if (key === 'Escape' || key === 'Delete') simpleCalcInput('C');
+});
+
+
+// =============================================
+// ЛЕВЫЙ САЙДБАР — БЛОК ВВОДА ВЫИГРЫШЕЙ
+// =============================================
+function updateWinInputs(type) {
+    var container = document.getElementById('winInputContent');
+    var html = '<div class="win-input-row main-input"><label>Количество билетов для ввода</label><input type="number" id="wi_bought" value="0" min="0" oninput="calcLeftSidebarTotals()"></div>';
+    html += '<div class="win-input-title">Выигрышные комбинации</div>';
+    
+    if (type === 'Trilogy') {
+        for (var i = 0; i < prizesTrilogy.length; i++) {
+            var r = prizesTrilogy[i];
+            html += '<div class="win-input-row"><label>' + r[0] + ' : ' + r[1] + ' : ' + r[2] + '</label><input type="number" id="wi_cat_' + i + '" value="0" min="0" oninput="calcLeftSidebarTotals()"></div>';
+        }
+    } else if (type === 'Mag8' || type === '820' || type === 'Super8' || type === 'Premier') {
+        var arr = [];
+        if (type === 'Mag8') arr = prizesMag8;
+        if (type === '820') arr = prizes820;
+        if (type === 'Super8') arr = prizesSuper8;
+        if (type === 'Premier') arr = prizesPremier;
+        for (var i = 0; i < arr.length; i++) {
+            var r = arr[i]; var cat = '';
+            for (var j = 0; j < r.length - 1; j++) { cat += (j > 0 ? ' : ' : '') + r[j]; }
+            html += '<div class="win-input-row"><label>' + cat + '</label><input type="number" id="wi_cat_' + i + '" value="0" min="0" oninput="calcLeftSidebarTotals()"></div>';
+        }
+    } else if (type === 'AN' || type === '536' || type === '12dd') {
+        var obj = {};
+        if (type === 'AN') obj = prizesAN;
+        if (type === '536') obj = prizes536;
+        if (type === '12dd') obj = prizes12dd;
+        var keys = Object.keys(obj);
+        for (var i = 0; i < keys.length; i++) {
+            var k = keys[i];
+            html += '<div class="win-input-row"><label>Угадано: ' + k + '</label><input type="number" id="wi_cat_' + k + '" value="0" min="0" oninput="calcLeftSidebarTotals()"></div>';
+        }
+    }
+    
+    container.innerHTML = html;
+    calcLeftSidebarTotals();
+}
+
+// Функция очистки введенных выигрышей
+function clearWinInputs() {
+    var container = document.getElementById('winInputContent');
+    var inputs = container.querySelectorAll('input[type="number"]');
+    for (var i = 0; i < inputs.length; i++) {
+        inputs[i].value = '0';
+    }
+    calcLeftSidebarTotals();
+}
+
+function calcLeftSidebarTotals() {
+    var boughtEl = document.getElementById('wi_bought');
+    var bought = boughtEl ? (parseInt(boughtEl.value) || 0) : 0;
+    var priceEl = document.getElementById(priceIds[currentTab]);
+    var price = priceEl ? (parseInt(priceEl.value) || 0) : 0;
+    
+    var spent = bought * price;
+    var won = 0;
+    
+    if (currentTab === 'Trilogy') {
+        for (var i = 0; i < prizesTrilogy.length; i++) {
+            var cntEl = document.getElementById('wi_cat_' + i);
+            var cnt = cntEl ? (parseInt(cntEl.value) || 0) : 0;
+            won += cnt * prizesTrilogy[i][3];
+        }
+    } else if (currentTab === 'Mag8' || currentTab === '820' || currentTab === 'Super8' || currentTab === 'Premier') {
+        var arr = [];
+        if (currentTab === 'Mag8') arr = prizesMag8;
+        if (currentTab === '820') arr = prizes820;
+        if (currentTab === 'Super8') arr = prizesSuper8;
+        if (currentTab === 'Premier') arr = prizesPremier;
+        for (var i = 0; i < arr.length; i++) {
+            var cntEl = document.getElementById('wi_cat_' + i);
+            var cnt = cntEl ? (parseInt(cntEl.value) || 0) : 0;
+            won += cnt * arr[i][arr[i].length - 1];
+        }
+    } else if (currentTab === 'AN' || currentTab === '536' || currentTab === '12dd') {
+        var obj = {};
+        if (currentTab === 'AN') obj = prizesAN;
+        if (currentTab === '536') obj = prizes536;
+        if (currentTab === '12dd') obj = prizes12dd;
+        var keys = Object.keys(obj);
+        for (var i = 0; i < keys.length; i++) {
+            var k = keys[i];
+            var cntEl = document.getElementById('wi_cat_' + k);
+            var cnt = cntEl ? (parseInt(cntEl.value) || 0) : 0;
+            won += cnt * obj[k];
+        }
+    }
+    
+    document.getElementById('wi_tickets').innerText = fmt(bought);
+    document.getElementById('wi_spent').innerText = fmt(spent) + ' \u20BD';
+    document.getElementById('wi_won').innerText = fmt(won) + ' \u20BD';
+    
+    var profit = won - spent;
+    var profitEl = document.getElementById('wi_profit');
+    profitEl.innerText = fmt(profit) + ' \u20BD';
+    profitEl.style.color = profit >= 0 ? 'var(--color-win)' : 'var(--color-loss)';
 }
 
 // =============================================
@@ -697,6 +934,7 @@ function saveCalcPrizes() {
 window.onload = function() {
     runMag8(); runTrilogy(); run820(); runSuper8(); runAN(); runPremier(); run536(); run12dd();
     updateCalcSidebar('Mag8');
+    updateWinInputs('Mag8');
 };
 </script>
 
