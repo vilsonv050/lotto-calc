@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Супер Анализатор Тиражей</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f7f6;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 600px;
+        }
+        h2 { margin-top: 0; color: #333; text-align: center; }
+        fieldset {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            padding: 15px;
+        }
+        legend { font-weight: bold; color: #0056b3; padding: 0 10px; font-size: 1.1em;}
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; color: #555; font-size: 14px; }
+        input[type="file"], input[type="text"], input[type="number"], select {
+            width: 100%; padding: 10px; border: 1px solid #ccc;
+            border-radius: 5px; box-sizing: border-box; font-size: 16px;
+            background-color: #fff;
+        }
+        .row { display: flex; gap: 10px; }
+        .row > div { flex: 1; }
+        button {
+            width: 100%; padding: 12px; background-color: #007bff; color: white;
+            border: none; border-radius: 5px; font-size: 16px; cursor: pointer;
+            transition: background-color 0.3s; font-weight: bold;
+            margin-bottom: 5px;
+        }
+        button:hover { background-color: #0056b3; }
+        button:disabled { background-color: #aaa; cursor: not-allowed; }
+        .result-box {
+            margin-top: 15px; padding: 15px; background-color: #e9ecef;
+            border-radius: 5px; display: none; font-size: 15px;
+            max-height: 300px; overflow-y: auto;
+        }
+        .result-box p { margin: 5px 0; }
+        .combo-item {
+            background: white; margin-top: 10px; padding: 10px;
+            border-left: 5px solid #28a745; border-radius: 3px;
+        }
+        .highlight { color: #d9534f; font-weight: bold; }
+        .success { color: #28a745; font-weight: bold; font-size: 1.1em; }
+        .note { font-size: 12px; color: #888; margin-top: 5px; }
+        .interval-list { margin-left: 15px; color: #555; font-size: 14px; }
+        .freq-list { 
+            background: white; padding: 10px; border-radius: 5px; 
+            font-family: monospace; font-size: 14px; line-height: 1.5;
+            white-space: pre-wrap; word-break: break-all;
+        }
+        
+        .dup-container {
+            display: flex;
+            margin-top: 10px;
+            background: white;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        .dup-col-nums {
+            flex: 1;
+            padding: 10px;
+            border-right: 1px solid #ccc;
+            background: #fff;
+            font-family: monospace;
+            font-size: 14px;
+            white-space: pre; 
+            cursor: text;
+            user-select: text;
+        }
+        .dup-col-counts {
+            width: 130px;
+            padding: 10px;
+            color: #555;
+            font-size: 13px;
+            background: #fafafa;
+            white-space: pre;
+        }
+        .warning-box {
+            background-color: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 5px;
+            padding: 10px;
+            margin-bottom: 15px;
+            color: #856404;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Анализатор Лотерейных Архивов</h2>
+    
+    <div class="form-group">
+        <label for="fileInput">Загрузите общий файл с тиражами (.txt):</label>
+        <input type="file" id="fileInput" accept=".txt">
+        <div class="note">Числа через запятую. Лишние символы, даты и ID тиражей (числа >80) будут проигнорированы.</div>
+    </div>
+
+    <fieldset>
+        <legend>1. Сканер Сумм</legend>
+        <div class="form-group">
+            <label>Суммы через запятую:</label>
+            <input type="text" id="sumsInput" placeholder="Например: 710,715,720">
+        </div>
+        <button onclick="calculateSums()">Найти интервал для сумм</button>
+        <div id="resultSums" class="result-box"></div>
+    </fieldset>
+
+    <fieldset>
+        <legend>2. Сканер Чисел (Ручной)</legend>
+        <div class="form-group">
+            <label>Ищем числа в одном тираже (через запятую):</label>
+            <input type="text" id="numsInput" placeholder="Например: 1, 5, 12">
+        </div>
+        <button onclick="calculateNums()">Найти интервал для чисел</button>
+        <div id="resultNums" class="result-box"></div>
+    </fieldset>
+
+    <fieldset>
+        <legend>3. Авто-сканер Чисел (Лучшие связки)</legend>
+        <div class="form-group">
+            <label>Сколько чисел объединить в связку (от 2 до 4):</label>
+            <input type="number" id="numsComboCount" min="2" max="4" value="2">
+            <div class="note">Найдет комбинации чисел, которые ВМЕСТЕ выпадали в одном тираже с самым коротким максимальным перерывом.</div>
+        </div>
+        <button id="btnScanNums" onclick="autoScanNums()">Найти лучшие связки чисел</button>
+        <div id="resultAutoNums" class="result-box"></div>
+    </fieldset>
+    
+    <fieldset>
+        <legend>4. Авто-сканер Сумм (Лучшие комбинации)</legend>
+        <div class="form-group">
+            <label>Сколько сумм объединить (от 2 до 3):</label>
+            <input type="number" id="sumsComboCount" min="2" max="3" value="2">
+        </div>
+        <button id="btnScanSums" onclick="autoScanSums()">Найти лучшие комбинации сумм</button>
+        <div id="resultAutoSums" class="result-box"></div>
+    </fieldset>
+
+    <fieldset>
+        <legend>5. Топ частых связок (Лотерея 1-20)</legend>
+        <div class="row">
+            <div class="form-group">
+                <label>Размер связки:</label>
+                <input type="number" id="freqComboSize" min="2" max="4" value="2">
+            </div>
+            <div class="form-group">
+                <label>Минимум выпадений:</label>
+                <input type="number" id="freqMinHits" min="2" value="2">
+            </div>
+        </div>
+        <div class="note">Найдет ВСЕ комбинации из N чисел (от 1 до 20), которые выпадали вместе указанное минимальное количество раз.</div>
+        <button id="btnFreqScan" onclick="scanFrequentCombos()">Найти повторяющиеся связки</button>
+        <div id="resultFreq" class="result-box"></div>
+    </fieldset>
+
+    <fieldset>
+        <legend>6. Полные повторения + Генерация 2-го поля (1-20)</legend>
+        <div class="form-group">
+            <label>Минимальное количество полных повторов 8 чисел (раз):</label>
+            <input type="number" id="exactMinHits" min="2" value="2">
+        </div>
+        
+        <div class="form-group">
+            <label>Генерация 9-го поля (числа от 1 до 4):</label>
+            <select id="extraMode" onchange="toggleExtraInputs()">
+                <option value="none">Не добавлять</option>
+                <option value="rand1" selected>Случайно 1 число</option>
+                <option value="randN">Случайно N чисел (расширенная ставка)</option>
+                <option value="manual">Указать конкретные числа</option>
+            </select>
+        </div>
+
+        <div id="extraRandNContainer" class="form-group" style="display:none;">
+            <label>Количество чисел во 2-м поле (от 1 до 4):</label>
+            <input type="number" id="extraRandNCount" min="1" max="4" value="2">
+        </div>
+
+        <div id="extraManualContainer" class="form-group" style="display:none;">
+            <label>Введите числа через запятую (от 1 до 4):</label>
+            <input type="text" id="extraManualNums" placeholder="Например: 1, 4">
+        </div>
+
+        <div class="note">Левая колонка: выделите и скопируйте готовые ставки (8 чисел + сгенерированные через запятую).</div>
+        <button id="btnExactScan" onclick="scanExactDrawMatches()">Найти и сгенерировать ставки</button>
+        <div id="resultExact" class="result-box"></div>
+    </fieldset>
+
+    <fieldset>
+        <legend>7. Полные повторения (4 из 24) + Поля 2 и 3</legend>
+        <div class="form-group">
+            <label>Минимальное количество полных повторов 4 чисел (раз):</label>
+            <input type="number" id="exact24MinHits" min="2" value="2">
+            <div class="note">Архив должен содержать только первые 4 числа (от 1 до 24).</div>
+        </div>
+        
+        <div class="row">
+            <div class="form-group">
+                <label>Поле 2 (от 1 до 8, до 2 чисел):</label>
+                <select id="extra24F2Mode" onchange="toggleExtraInputs24()">
+                    <option value="none">Не добавлять</option>
+                    <option value="rand1" selected>Случайно 1 число</option>
+                    <option value="randN">Случайно 2 числа</option>
+                    <option value="manual">Указать конкретные</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Поле 3 (от 1 до 3, 1 число):</label>
+                <select id="extra24F3Mode" onchange="toggleExtraInputs24()">
+                    <option value="none">Не добавлять</option>
+                    <option value="rand1" selected>Случайно 1 число</option>
+                    <option value="manual">Указать конкретное</option>
+                </select>
+            </div>
+        </div>
+
+        <div id="extra24F2ManualContainer" class="form-group" style="display:none;">
+            <label>Числа для поля 2 через запятую (от 1 до 8):</label>
+            <input type="text" id="extra24F2ManualNums" placeholder="Например: 2, 5">
+        </div>
+
+        <div id="extra24F3ManualContainer" class="form-group" style="display:none;">
+            <label>Число для поля 3 (от 1 до 3):</label>
+            <input type="text" id="extra24F3ManualNums" placeholder="Например: 2">
+        </div>
+
+        <div class="note">Левая колонка: выделите и скопируйте готовые ставки (4 числа + 2-е поле + 3-е поле).</div>
+        <button id="btnExact24Scan" onclick="scanExact24Matches()">Найти и сгенерировать ставки</button>
+        <div id="resultExact24" class="result-box"></div>
+    </fieldset>
+
+    <fieldset>
+        <legend>8. Дубликаты полей (4 из 20 + 4 из 20)</legend>
+        <div class="form-group">
+            <label>Формат загружаемого архива:</label>
+            <select id="exact8Format" onchange="toggleExtraInputs8()">
+                <option value="8nums">8 чисел (1-е и 2-е поле через запятую)</option>
+                <option value="4nums">4 числа (только 1-е поле)</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Минимальное количество повторов (раз):</label>
+            <input type="number" id="exact8MinHits" min="2" value="2">
+        </div>
+        
+        <div id="extra8Container" style="display:none;">
+            <div class="form-group">
+                <label>Генерация 2-го поля (от 1 до 20, 4 числа):</label>
+                <select id="extra8Mode" onchange="toggleExtra8SubInputs()">
+                    <option value="none">Не добавлять</option>
+                    <option value="rand4" selected>Случайно 4 числа</option>
+                    <option value="randN">Случайно N чисел (расширенная ставка)</option>
+                    <option value="manual">Указать конкретные числа</option>
+                </select>
+            </div>
+
+            <div id="extra8RandNContainer" class="form-group" style="display:none;">
+                <label>Количество чисел во 2-м поле (от 1 до 4):</label>
+                <input type="number" id="extra8RandNCount" min="1" max="4" value="4">
+            </div>
+
+            <div id="extra8ManualContainer" class="form-group" style="display:none;">
+                <label>Введите числа через запятую (от 1 до 20, макс. 4):</label>
+                <input type="text" id="extra8ManualNums" placeholder="Например: 5, 12, 18, 20">
+            </div>
+        </div>
+
+        <div class="note">Левая колонка: выделите и скопируйте готовые ставки (4 числа + 4 числа через запятую).</div>
+        <button id="btnExact8Scan" onclick="scanExact8Matches()">Найти и сгенерировать ставки</button>
+        <div id="resultExact8" class="result-box"></div>
+    </fieldset>
+
+    <!-- БЛОК 9: КЕНО (35 ИЗ 48) -->
+    <fieldset>
+        <legend>9. Связки Кено (из 35 выпавших чисел)</legend>
+        
+        <div class="warning-box">
+            ⚠️ <b>Важно:</b> Чем больше чисел в связке, тем дольше будет поиск. 
+            Для 6 чисел это миллисекунды, для 10 чисел — пара секунд. 
+            Выберите нужный размер и нажмите кнопку. Не закрывайте вкладку во время расчета!
+        </div>
+
+        <div class="row">
+            <div class="form-group">
+                <label>Размер связки (сколько чисел ищем вместе, от 6 до 10):</label>
+                <input type="number" id="kenoComboSize" min="6" max="10" value="6">
+            </div>
+            <div class="form-group">
+                <label>Минимум "ходов" (совпадений в архиве, от 6 до 35):</label>
+                <input type="number" id="kenoMinHits" min="6" max="35" value="6">
+            </div>
+        </div>
+
+        <div class="note">Архив Кено обычно содержит 35 чисел от 1 до 48. Скрипт найдет комбинации, которые ВМЕСТЕ встречались в одном тираже указанное минимальное количество раз.</div>
+        <button id="btnKenoScan" onclick="scanKenoCombos()">Найти повторяющиеся связки Кено</button>
+        <div id="resultKeno" class="result-box"></div>
+    </fieldset>
+</div>
+
+<script>
+    let globalDraws = []; 
+    let globalSums = [];  
+    const MAX_BALL = 80;  
+
+    function parseFile(callback) {
+        const fileInput = document.getElementById('fileInput');
+        if (!fileInput.files.length) { alert("Сначала загрузите файл."); return false; }
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const lines = e.target.result.trim().split('\n');
+            globalDraws = [];
+            globalSums = []; // ИСПРАВЛЕНО: здесь была ошибка (было globalesums)
+
+            lines.forEach(line => {
+                line = line.replace(/{|}/g, '').trim();
+                if (!line) return;
+                
+                const parts = line.split(',');
+                let validNums = [];
+                let sum = 0;
+
+                parts.forEach(p => {
+                    const num = parseInt(p.trim());
+                    if (!isNaN(num) && num >= 1 && num <= MAX_BALL) {
+                        validNums.push(num);
+                        sum += num;
+                    }
+                });
+
+                if (validNums.length > 0) {
+                    globalDraws.push(validNums);
+                    globalSums.push(sum);
+                }
+            });
+            callback();
+        };
+        reader.readAsText(fileInput.files[0]);
+        return true;
+    }
+
+    // --- ЛОГИКА ГЕНЕРАЦИИ ДЛЯ 6 БЛОКА ---
+    function toggleExtraInputs() {
+        const mode = document.getElementById('extraMode').value;
+        document.getElementById('extraRandNContainer').style.display = mode === 'randN' ? 'block' : 'none';
+        document.getElementById('extraManualContainer').style.display = mode === 'manual' ? 'block' : 'none';
+    }
+
+    function getExtraNumbersString() {
+        const mode = document.getElementById('extraMode').value;
+        if (mode === 'none') return "";
+        let pool = [1, 2, 3, 4];
+        let result = [];
+        if (mode === 'rand1') { result.push(pool[Math.floor(Math.random() * pool.length)]); }
+        else if (mode === 'randN') {
+            let count = parseInt(document.getElementById('extraRandNCount').value) || 1;
+            count = Math.max(1, Math.min(4, count)); 
+            for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; }
+            result = pool.slice(0, count).sort((a,b) => a-b);
+        } else if (mode === 'manual') {
+            let input = document.getElementById('extraManualNums').value;
+            let nums = input.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n) && n >= 1 && n <= 4);
+            result = [...new Set(nums)].sort((a,b) => a-b);
+        }
+        return result.length > 0 ? "," + result.join(",") : "";
+    }
+
+    // --- ЛОГИКА ГЕНЕРАЦИИ ДЛЯ 7 БЛОКА ---
+    function toggleExtraInputs24() {
+        document.getElementById('extra24F2ManualContainer').style.display = document.getElementById('extra24F2Mode').value === 'manual' ? 'block' : 'none';
+        document.getElementById('extra24F3ManualContainer').style.display = document.getElementById('extra24F3Mode').value === 'manual' ? 'block' : 'none';
+    }
+
+    function getExtraNumbersString24() {
+        let finalString = "";
+        const modeF2 = document.getElementById('extra24F2Mode').value;
+        if (modeF2 !== 'none') {
+            let poolF2 = [1, 2, 3, 4, 5, 6, 7, 8]; let resF2 = [];
+            if (modeF2 === 'rand1') { resF2.push(poolF2[Math.floor(Math.random() * poolF2.length)]); }
+            else if (modeF2 === 'randN') {
+                for (let i = poolF2.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [poolF2[i], poolF2[j]] = [poolF2[j], poolF2[i]]; }
+                resF2 = poolF2.slice(0, 2).sort((a,b) => a-b);
+            } else if (modeF2 === 'manual') {
+                let input = document.getElementById('extra24F2ManualNums').value;
+                resF2 = input.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n) && n >= 1 && n <= 8);
+                resF2 = [...new Set(resF2)].sort((a,b) => a-b).slice(0, 2);
+            }
+            if (resF2.length > 0) finalString += "," + resF2.join(",");
+        }
+        const modeF3 = document.getElementById('extra24F3Mode').value;
+        if (modeF3 !== 'none') {
+            let poolF3 = [1, 2, 3]; let resF3 = [];
+            if (modeF3 === 'rand1') { resF3.push(poolF3[Math.floor(Math.random() * poolF3.length)]); }
+            else if (modeF3 === 'manual') {
+                let input = document.getElementById('extra24F3ManualNums').value;
+                let nums = input.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n) && n >= 1 && n <= 3);
+                if (nums.length > 0) resF3.push(nums[0]);
+            }
+            if (resF3.length > 0) finalString += "," + resF3.join(",");
+        }
+        return finalString;
+    }
+
+    // --- ЛОГИКА ГЕНЕРАЦИИ ДЛЯ 8 БЛОКА ---
+    function toggleExtraInputs8() {
+        const is4Nums = document.getElementById('exact8Format').value === '4nums';
+        document.getElementById('extra8Container').style.display = is4Nums ? 'block' : 'none';
+        toggleExtra8SubInputs();
+    }
+
+    function toggleExtra8SubInputs() {
+        const mode = document.getElementById('extra8Mode').value;
+        document.getElementById('extra8RandNContainer').style.display = mode === 'randN' ? 'block' : 'none';
+        document.getElementById('extra8ManualContainer').style.display = mode === 'manual' ? 'block' : 'none';
+    }
+
+    function getExtraNumbersString8() {
+        const mode = document.getElementById('extra8Mode').value;
+        if (mode === 'none') return "";
+        
+        let pool = Array.from({length: 20}, (_, i) => i + 1); 
+        let result = [];
+
+        if (mode === 'rand4') {
+            for (let i = pool.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [pool[i], pool[j]] = [pool[j], pool[i]];
+            }
+            result = pool.slice(0, 4).sort((a,b) => a-b);
+        } else if (mode === 'randN') {
+            let count = parseInt(document.getElementById('extra8RandNCount').value) || 1;
+            count = Math.max(1, Math.min(4, count));
+            for (let i = pool.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [pool[i], pool[j]] = [pool[j], pool[i]];
+            }
+            result = pool.slice(0, count).sort((a,b) => a-b);
+        } else if (mode === 'manual') {
+            let input = document.getElementById('extra8ManualNums').value;
+            let nums = input.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n) && n >= 1 && n <= 20);
+            result = [...new Set(nums)].sort((a,b) => a-b).slice(0, 4); 
+        }
+        
+        return result.length > 0 ? "," + result.join(",") : "";
+    }
+
+    // --- ОБЩИЕ ФУНКЦИИ АНАЛИЗА ---
+    function getMaxGapInfo(hits, totalLength) {
+        if (hits.length === 0) return null;
+        let maxGap = -1, intervals = [];
+
+        let gapBefore = hits[0];
+        if (gapBefore > maxGap) { maxGap = gapBefore; intervals = [{ startIdx: 0, endIdx: hits[0] - 1 }]; }
+        else if (gapBefore === maxGap && maxGap !== -1) { intervals.push({ startIdx: 0, endIdx: hits[0] - 1 }); }
+
+        for (let i = 1; i < hits.length; i++) {
+            let gap = hits[i] - hits[i-1] - 1;
+            let sIdx = hits[i-1] + 1, eIdx = hits[i] - 1;
+            if (gap > maxGap) { maxGap = gap; intervals = [{ startIdx: sIdx, endIdx: eIdx }]; }
+            else if (gap === maxGap) { intervals.push({ startIdx: sIdx, endIdx: eIdx }); }
+        }
+
+        let gapAfter = totalLength - 1 - hits[hits.length - 1];
+        let sIdxLast = hits[hits.length - 1] + 1, eIdxLast = totalLength - 1;
+        if (gapAfter > maxGap) { maxGap = gapAfter; intervals = [{ startIdx: sIdxLast, endIdx: eIdxLast }]; }
+        else if (gapAfter === maxGap) { intervals.push({ startIdx: sIdxLast, endIdx: eIdxLast }); }
+
+        if (maxGap === -1) maxGap = 0;
+        return { gap: maxGap, intervals: intervals };
+    }
+
+    function getIntervalsHtml(info) {
+        if (info.gap === 0) return '<p><i>Выпадали без перерывов (или 1 раз).</i></p>';
+        let html = `<p class="highlight">Повторений интервала: ${info.intervals.length}</p><ul class="interval-list">`;
+        info.intervals.forEach(iv => { html += `<li>между №${iv.startIdx + 1} и №${iv.endIdx + 1}</li>`; });
+        html += '</ul>';
+        return html;
+    }
+
+    function calculateSums() {
+        if(!parseFile(() => {
+            const targets = document.getElementById('sumsInput').value.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n));
+            const box = document.getElementById('resultSums');
+            if(targets.length === 0) { alert("Введите суммы"); return; }
+            const hits = []; globalSums.forEach((sum, idx) => { if(targets.includes(sum)) hits.push(idx); });
+            showResult(box, hits, globalSums.length, `Суммы: [${targets.join(', ')}]`);
+        })){}
+    }
+
+    function calculateNums() {
+        if(!parseFile(() => {
+            const targets = document.getElementById('numsInput').value.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n));
+            const box = document.getElementById('resultNums');
+            if(targets.length === 0) { alert("Введите числа"); return; }
+            const hits = []; globalDraws.forEach((draw, idx) => { if (targets.every(t => draw.includes(t))) hits.push(idx); });
+            showResult(box, hits, globalDraws.length, `Числа: [${targets.join(', ')}]`);
+        })){}
+    }
+
+    function showResult(box, hits, totalLen, title) {
+        box.style.display = 'block';
+        if (hits.length === 0) { box.innerHTML = `<p class="highlight">${title} не найдены.</p>`; }
+        else {
+            const info = getMaxGapInfo(hits, totalLen);
+            box.innerHTML = `<p>Обработано: <b>${totalLen}</b> | Ищем: <b>${title}</b> | Совпадений: <b>${hits.length}</b></p>
+                <p>Макс. интервал: <span class="success">${info.gap} тиражей</span></p>
+                <div style="margin-top:10px; padding-top:10px; border-top:1px dashed #ccc;">${getIntervalsHtml(info)}</div>`;
+        }
+    }
+
+    function autoScanNums() {
+        const k = parseInt(document.getElementById('numsComboCount').value);
+        if (k < 2 || k > 4) { alert("От 2 до 4."); return; }
+        const btn = document.getElementById('btnScanNums'); const box = document.getElementById('resultAutoNums');
+        if(!parseFile(() => {
+            btn.disabled = true; btn.innerText = "Сканирую..."; box.style.display = 'block'; box.innerHTML = `<p>Перебор, подождите...</p>`;
+            setTimeout(() => {
+                const uniqueNums = [...new Set(globalDraws.flat())].sort((a,b) => a-b);
+                const combos = getCombinations(uniqueNums, k); let bestGap = Infinity, bestResults = [];
+                for (let c = 0; c < combos.length; c++) {
+                    const combo = combos[c]; const hits = [];
+                    for (let i = 0; i < globalDraws.length; i++) { if (combo.every(num => globalDraws[i].includes(num))) hits.push(i); }
+                    if (hits.length === 0) continue;
+                    const info = getMaxGapInfo(hits, globalDraws.length);
+                    if (info.gap < bestGap) { bestGap = info.gap; bestResults = [{ combo, gap: info.gap, intervals: info.intervals }]; }
+                    else if (info.gap === bestGap) { bestResults.push({ combo, gap: info.gap, intervals: info.intervals }); if(bestResults.length > 50) break; }
+                }
+                btn.disabled = false; btn.innerText = "Найти лучшие связки чисел"; renderAutoResults(box, bestResults, 'Числа');
+            }, 50);
+        })){}
+    }
+
+    function autoScanSums() {
+        const k = parseInt(document.getElementById('sumsComboCount').value);
+        if (k < 2 || k > 3) { alert("От 2 до 3."); return; }
+        const btn = document.getElementById('btnScanSums'); const box = document.getElementById('resultAutoSums');
+        if(!parseFile(() => {
+            btn.disabled = true; btn.innerText = "Сканирую..."; box.style.display = 'block'; box.innerHTML = `<p>Математический перебор...</p>`;
+            setTimeout(() => {
+                const sumIndicesMap = new Map(); globalSums.forEach((sum, idx) => { if (!sumIndicesMap.has(sum)) sumIndicesMap.set(sum, []); sumIndicesMap.get(sum).push(idx); });
+                const uniqueSums = Array.from(sumIndicesMap.keys()).sort((a,b) => a-b);
+                const combos = getCombinations(uniqueSums, k); let bestGap = Infinity, bestResults = [];
+                for (let c = 0; c < combos.length; c++) {
+                    const combo = combos[c]; const indexArrays = combo.map(sum => sumIndicesMap.get(sum));
+                    const mergedIndices = mergeSortedArrays(indexArrays); const info = getMaxGapInfo(mergedIndices, globalSums.length);
+                    if (info.gap < bestGap) { bestGap = info.gap; bestResults = [{ combo, gap: info.gap, intervals: info.intervals }]; }
+                    else if (info.gap === bestGap) { bestResults.push({ combo, gap: info.gap, intervals: info.intervals }); if(bestResults.length > 50) break; }
+                }
+                btn.disabled = false; btn.innerText = "Найти лучшие комбинации сумм"; renderAutoResults(box, bestResults, 'Суммы');
+            }, 50);
+        })){}
+    }
+
+    function renderAutoResults(box, bestResults, typeName) {
+        if (bestResults.length === 0) { box.innerHTML = `<p class="highlight">Ни одна комбинация не найдена.</p>`; }
+        else {
+            let html = `<p>Найдено с лучшим интервалом: <b>${bestResults.length}</b></p>`;
+            const showCount = Math.min(bestResults.length, 10); 
+            for(let i=0; i<showCount; i++) {
+                const r = bestResults[i];
+                html += `<div class="combo-item"><p><b>${typeName}: [${r.combo.join(', ')}]</b></p><p>Макс. интервал: <span class="success">${r.gap} тиражей</span></p><div style="margin-top:5px;">${getIntervalsHtml(r)}</div></div>`;
+            }
+            if(bestResults.length > 10) html += `<p>...и еще ${bestResults.length - 10} комб.</p>`;
+            box.innerHTML = html;
+        }
+    }
+
+    function scanFrequentCombos() {
+        const k = parseInt(document.getElementById('freqComboSize').value);
+        const minHits = parseInt(document.getElementById('freqMinHits').value);
+        const btn = document.getElementById('btnFreqScan'); const box = document.getElementById('resultFreq');
+        if (k < 2 || k > 4) { alert("Размер связки от 2 до 4."); return; }
+        if (minHits < 2) { alert("Минимум выпадений должен быть 2 или больше."); return; }
+        if(!parseFile(() => {
+            btn.disabled = true; btn.innerText = "Анализирую частоту..."; 
+            box.style.display = 'block'; box.innerHTML = `<p>Генерация всех возможных комбинаций 1-20 и подсчет...</p>`;
+            setTimeout(() => {
+                const nums1to20 = Array.from({length: 20}, (_, i) => i + 1);
+                const combos = getCombinations(nums1to20, k); const counts = new Map();
+                combos.forEach(combo => counts.set(combo.join(','), 0));
+                globalDraws.forEach(draw => { combos.forEach(combo => { if (combo.every(num => draw.includes(num))) { const key = combo.join(','); counts.set(key, counts.get(key) + 1); } }); });
+                let results = []; counts.forEach((count, comboStr) => { if (count >= minHits) results.push({ combo: comboStr, count: count }); });
+                results.sort((a, b) => b.count - a.count); 
+                let screenHtml = "";
+                if (results.length === 0) { screenHtml = `<p class="highlight">Связок, выпадающих ${minHits} и более раз вместе, не найдено.</p>`; }
+                else {
+                    screenHtml = `<p>Найдено связок: <b>${results.length}</b></p>`;
+                    const showLimit = Math.min(results.length, 200); let screenTextParts = [];
+                    for(let i=0; i<showLimit; i++) { screenTextParts.push(results[i].combo); }
+                    screenHtml += `<div class="freq-list">${screenTextParts.join('\n')}</div>`;
+                    if(results.length > showLimit) { screenHtml += `<p style="text-align:center; margin-top:10px;">...показано первые 200 из ${results.length}.</p>`; }
+                }
+                box.innerHTML = screenHtml; btn.disabled = false; btn.innerText = "Найти повторяющиеся связки";
+            }, 50);
+        })){}
+    }
+
+    // --- БЛОК 6 ---
+    function scanExactDrawMatches() {
+        const minHits = parseInt(document.getElementById('exactMinHits').value);
+        const btn = document.getElementById('btnExactScan');
+        const box = document.getElementById('resultExact');
+        if (minHits < 2) { alert("Минимум повторов должно быть 2 или больше."); return; }
+        if(!parseFile(() => {
+            btn.disabled = true; btn.innerText = "Ищу дубликаты и генерирую...";
+            box.style.display = 'block'; box.innerHTML = `<p>Проверяю все строки на точные совпадения 8 чисел...</p>`;
+            setTimeout(() => {
+                const mapCounts = new Map();
+                globalDraws.forEach(draw => {
+                    const sortedDraw = [...draw].sort((a, b) => a - b);
+                    const key = sortedDraw.join(','); 
+                    mapCounts.set(key, (mapCounts.get(key) || 0) + 1);
+                });
+                let results = [];
+                mapCounts.forEach((count, comboStr) => { if (count >= minHits) results.push({ combo: comboStr, count: count }); });
+                results.sort((a, b) => b.count - a.count);
+                let screenHtml = "";
+                if (results.length === 0) { screenHtml = `<p class="highlight">Тиражей, выпадающих ${minHits} и более раз в точности с одинаковыми числами, не найдено.</p>`; }
+                else {
+                    screenHtml = `<p>Найдено комбинаций: <b>${results.length}</b></p>`;
+                    screenHtml += `<div class="note" style="margin-bottom:5px; font-size:13px;">Кликните 3 раза по левой колонке, чтобы выделить ставки, затем Ctrl+C:</div>`;
+                    let numsText = "", countsText = "";
+                    results.forEach(r => { numsText += r.combo + getExtraNumbersString() + "\n"; countsText += "Выпало " + r.count + " раз\n"; });
+                    screenHtml += `<div class="dup-container"><div class="dup-col-nums">${numsText.trim()}</div><div class="dup-col-counts">${countsText.trim()}</div></div>`;
+                }
+                box.innerHTML = screenHtml; btn.disabled = false; btn.innerText = "Найти и сгенерировать ставки";
+            }, 50);
+        })){}
+    }
+
+    // --- БЛОК 7 ---
+    function scanExact24Matches() {
+        const minHits = parseInt(document.getElementById("exact24MinHits").value);
+        const btn = document.getElementById("btnExact24Scan");
+        const box = document.getElementById("resultExact24");
+        if (minHits < 2) { alert("Минимум повторов должно быть 2 или больше."); return; }
+        if(!parseFile(() => {
+            btn.disabled = true; btn.innerText = "Ищу дубликаты 4 чисел и генерирую...";
+            box.style.display = 'block'; box.innerHTML = `<p>Проверяю все строки на точные совпадения 4 чисел (1-24)...</p>`;
+            setTimeout(() => {
+                const mapCounts = new Map();
+                globalDraws.forEach(draw => {
+                    const sortedDraw = [...draw].sort((a, b) => a - b);
+                    const key = sortedDraw.join(','); 
+                    mapCounts.set(key, (mapCounts.get(key) || 0) + 1);
+                });
+                let results = [];
+                mapCounts.forEach((count, comboStr) => { if (count >= minHits) results.push({ combo: comboStr, count: count }); });
+                results.sort((a, b) => b.count - a.count);
+                let screenHtml = "";
+                if (results.length === 0) { screenHtml = `<p class="highlight">Тиражей, выпадающих ${minHits} и более раз в точности с одинаковыми 4 числами, не найдено.</p>`; }
+                else {
+                    screenHtml = `<p>Найдено комбинаций: <b>${results.length}</b></p>`;
+                    screenHtml += `<div class="note" style="margin-bottom:5px; font-size:13px;">Кликните 3 раза по левой колонке, чтобы выделить ставки (4 из 24 + поля), затем Ctrl+C:</div>`;
+                    let numsText = "", countsText = "";
+                    results.forEach(r => { numsText += r.combo + getExtraNumbersString24() + "\n"; countsText += "Выпало " + r.count + " раз\n"; });
+                    screenHtml += `<div class="dup-container"><div class="dup-col-counts">${countsText.trim()}</div><div class="dup-col-nums">${numsText.trim()}</div></div>`;
+                }
+                box.innerHTML = screenHtml; btn.disabled = false; btn.innerText = "Найти и сгенерировать ставки";
+            }, 50);
+        })){}
+    }
+
+    // --- БЛОК 9: КЕНО (35 ИЗ 48) ---
+    function scanKenoCombos() {
+        const comboSize = Math.min(parseInt(document.getElementById('kenoComboSize').value) || 6, 10);
+        const minHits = parseInt(document.getElementById('kenoMinHits').value) || 6;
+        const btn = document.getElementById("btnKenoScan");
+        const box = document.getElementById("resultKeno");
+
+        if (comboSize < 6) { alert("Размер связки от 6 до 10."); return; }
+        if (minHits < 6) { alert("Минимум ходов должно быть от 6 до 35."); return; }
+
+        if(!parseFile(() => {
+            btn.disabled = true; btn.innerText = "Анализирую Кено (может занять пару секунд)...";
+            box.style.display = 'block'; 
+            box.innerHTML = `<p>Генерация комбинаций из 35 чисел и подсчет совпадений по архиву...</p>`;
+
+            setTimeout(() => {
+                const countsMap = new Map();
+                
+                globalDraws.forEach(draw => {
+                    // Берется 35 уникальных чисел из 48
+                    let unique48 = [...new Set(draw)].sort((a,b) => a - b);
+                    let keno35 = unique48.slice(0, 35);
+                    
+                    if (keno35.length < 35) return; 
+
+                    // Генерируем комбинации и считаем
+                    const combos = getCombinations(keno35, comboSize);
+                    combos.forEach(combo => {
+                        const key = combo.join(',');
+                        countsMap.set(key, (countsMap.get(key) || 0) + 1);
+                    });
+                });
+
+                let results = [];
+                countsMap.forEach((count, comboStr) => { 
+                    if (count >= minHits) results.push({ combo: comboStr, count: count }); 
+                });
+
+                // Сортируем по убыванию частоты
+                results.sort((a, b) => b.count - a.count);
+
+                let screenHtml = "";
+                if (results.length === 0) {
+                    screenHtml = `<p class="highlight">Связок, выпадающих ${minHits} и более раз вместе, не найдено.</p>`;
+                } else {
+                    screenHtml = `<p>Найдено связок: <b>${results.length}</b></p>`;
+                    screenHtml += `<div class="note" style="margin-bottom:5px; font-size:13px;">Кликните 3 раза по левой колонке, чтобы выделить комбинации, затем Ctrl+C:</div>`;
+                    let numsText = "", countsText = "";
+                    
+                    results.forEach(r => { numsText += r.combo + "\n"; countsText += "Ходов: " + r.count + "\n"; });
+                    
+                    screenHtml += `
+                        <div class="dup-container">
+                            <div class="dup-col-counts">${countsText.trim()}</div>
+                            <div class="dup-col-nums">${numsText.trim()}</div>
+                        </div>
+                    `;
+                }
+
+                box.innerHTML = screenHtml;
+                btn.disabled = false; 
+                btn.innerText = "Найти повторяющиеся связки Кено";
+
+            }, 50);
+        })){}
+    }
+
+    // --- ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ---
+    function getCombinations(arr, k) {
+        const results = [];
+        function combo(start, combo) {
+            if (combo.length === k) { results.push([...combo]); return; }
+            for (let i = start; i < arr.length; i++) { combo.push(arr[i]); combo(i + 1, combo); combo.pop(); }
+        }
+        combo(0, []);
+        return results;
+    }
+
+    function mergeSortedArrays(arrays) {
+        let result = []; let indices = new Array(arrays.length).fill(0);
+        let totalLen = arrays.reduce((acc, arr) => acc + arr.length, 0);
+        while(result.length < totalLen) {
+            let minVal = Infinity, minIdx = -1;
+            for(let i=0; i<arrays.length; i++) { if(indices[i] < arrays[i].length && arrays[i][indices[i]] < minVal) { minVal = arrays[i][indices[i]]; minIdx = i; } }
+            result.push(minVal); indices[minIdx]++;
+        }
+        return result;
+    }
+</script>
+
+</body>
+</html>
