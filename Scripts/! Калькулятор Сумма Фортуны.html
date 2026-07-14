@@ -131,11 +131,51 @@
 
         .right-panel { display: flex; flex-direction: column; height: 100%; gap: 10px; }
         
+        /* === Блок загрузки с группировкой по месяцам === */
         .days-bar {
             background: #1f0a05; border: 1px solid #3a1508; border-radius: 8px; padding: 8px 12px;
-            display: flex; align-items: center; gap: 8px; flex-wrap: wrap; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            display: flex; align-items: flex-start; gap: 8px; flex-wrap: wrap; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
         }
-        .days-tabs { display: flex; gap: 4px; flex-wrap: wrap; flex: 1; min-width: 0; }
+        .days-sidebar {
+            display: flex; flex-direction: column; gap: 6px; flex-shrink: 0;
+        }
+        .btn-load {
+            background: #2a0808; border: 1px solid #4a1a0a; color: #aaa; padding: 5px 12px;
+            border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 700; transition: 0.2s;
+            white-space: nowrap; user-select: none; text-align: center;
+        }
+        .btn-load:hover { color: #d4af37; border-color: #d4af37; }
+        .days-filename { color: #5a4a3a; font-size: 9px; font-weight: 600; text-align: center; max-width: 90px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: none; }
+        .days-filename.show { display: block; }
+        .days-filename span { color: #8a6a5a; }
+
+        .days-tabs { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 0; }
+        
+        .month-group { width: 100%; }
+        .month-header {
+            display: flex; align-items: center; gap: 8px;
+            background: #2a1008; border: 1px solid #5a2a1a; color: #c8920a;
+            padding: 6px 12px; border-radius: 5px; cursor: pointer;
+            font-size: 12px; font-weight: 800; transition: 0.2s; user-select: none; width: 100%;
+        }
+        .month-header:hover { background: #3a1a0a; border-color: #d4af37; color: #d4af37; }
+        .month-header.open {
+            background: #3a1a05; border-color: #d4af37; border-bottom-left-radius: 0; border-bottom-right-radius: 0;
+            color: #d4af37; box-shadow: 0 0 8px rgba(212, 175, 55, 0.15);
+        }
+        .mh-arrow { font-size: 9px; color: #6a4a2a; transition: 0.2s; }
+        .month-header.open .mh-arrow { color: #d4af37; }
+        .mh-count { color: #4a3a2a; font-size: 10px; font-weight: 600; margin-left: auto; }
+        .month-header.open .mh-count { color: #6a5a3a; }
+
+        .month-dates {
+            display: none; gap: 4px; flex-wrap: wrap;
+            padding: 6px 0 2px 4px;
+            border: 1px solid #5a2a1a; border-top: none;
+            border-radius: 0 0 5px 5px; background: #150a05;
+        }
+        .month-dates.show { display: flex; }
+
         .day-tab {
             background: #2a0808; border: 1px solid #4a1a0a; color: #aaa; padding: 5px 12px;
             border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 700; transition: 0.2s;
@@ -144,15 +184,6 @@
         .day-tab:hover { color: #d4af37; border-color: #d4af37; }
         .day-tab.active { background: #d4af37; color: #1a0505; border-color: #d4af37; box-shadow: 0 0 8px rgba(212, 175, 55, 0.3); }
         .day-tab .dt-count { font-size: 9px; opacity: 0.7; margin-left: 3px; }
-        .btn-load {
-            background: #2a0808; border: 1px solid #4a1a0a; color: #aaa; padding: 5px 12px;
-            border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 700; transition: 0.2s;
-            white-space: nowrap; user-select: none;
-        }
-        .btn-load:hover { color: #d4af37; border-color: #d4af37; }
-        .days-filename { color: #5a4a3a; font-size: 10px; font-weight: 600; width: 100%; padding-top: 4px; border-top: 1px dashed #3a1508; margin-top: 2px; display: none; }
-        .days-filename.show { display: block; }
-        .days-filename span { color: #8a6a5a; }
 
         .autofill-box {
             background: #1f0a05; border: 1px solid #3a1508; border-radius: 8px; padding: 10px 15px;
@@ -187,7 +218,7 @@
 
         .sf { 
             background: linear-gradient(180deg, #1f0a05, #140606); border-top: 2px solid #8a6a2a; 
-            padding: 12px 25px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; box-shadow: inset 0 2px 10px rgba(0,0,0,0.5);
+            padding: 12px 25px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; box-shadow: inset 0 2px 10px rgba(0,0,0,0.5);
         }
         .tpl { color: #8a6a5a; font-size: 10px; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 3px; font-weight: 700; }
         .tpv { font-size: 22px; font-weight: 900; font-family: 'Georgia', serif; }
@@ -195,6 +226,9 @@
         .tpw .tpv { color: #f5c518; text-shadow: 0 0 15px rgba(245, 197, 24, 0.4); }
         .tpp .tpv { color: #ffffff; text-shadow: 0 0 10px rgba(255, 255, 255, 0.3); }
         .tpp .tpv.neg { color: #ff4444; text-shadow: 0 0 10px rgba(255, 68, 68, 0.3); }
+        .tppct .tpv { color: #44ff88; text-shadow: 0 0 10px rgba(68, 255, 136, 0.3); }
+        .tppct .tpv.neg { color: #ff4444; text-shadow: 0 0 10px rgba(255, 68, 68, 0.3); }
+        .tppct .tpv.zero { color: #666; text-shadow: none; }
         
         .rb { background: #2a0808; border: 1px solid #5a1a0a; color: #8a6a5a; padding: 4px 10px; border-radius: 4px; font-size: 9px; cursor: pointer; transition: 0.2s; font-weight: 700; text-transform: uppercase; }
         .rb:hover { border-color: #ff4444; color: #ff4444; background: #3a0a0a; }
@@ -242,10 +276,12 @@
 
         <div class="right-panel">
             <div class="days-bar" id="days-bar">
-                <div class="days-tabs" id="days-tabs"></div>
-                <label class="btn-load" for="file-input">Загрузить CSV</label>
+                <div class="days-sidebar">
+                    <label class="btn-load" for="file-input">Загрузить CSV</label>
+                    <div class="days-filename" id="days-filename"><span id="days-fname"></span></div>
+                </div>
                 <input type="file" id="file-input" accept=".csv,.txt" style="display:none">
-                <div class="days-filename" id="days-filename">Файл: <span id="days-fname"></span></div>
+                <div class="days-tabs" id="days-tabs"></div>
             </div>
 
             <div class="autofill-box">
@@ -264,6 +300,7 @@
         <div class="tpc"><div class="tpl">Затраты</div><div class="tpv" id="stc">0 ₽</div></div>
         <div class="tpw"><div class="tpl">Выигрыш</div><div class="tpv" id="stw">0 ₽</div></div>
         <div class="tpp"><div class="tpl">Прибыль</div><div class="tpv" id="stp">0 ₽</div></div>
+        <div class="tppct"><div class="tpl">% Выигрыша</div><div class="tpv" id="stpct">—</div></div>
     </div>
 </div>
 
@@ -274,6 +311,11 @@
         29:30, 30:55, 31:70, 32:140, 33:250, 34:4000, 35:6000, 36:8000
     };
 
+    const MONTH_NAMES = {
+        '01':'Январь','02':'Февраль','03':'Март','04':'Апрель','05':'Май','06':'Июнь',
+        '07':'Июль','08':'Август','09':'Сентябрь','10':'Октябрь','11':'Ноябрь','12':'Декабрь'
+    };
+
     let layers = [{ id: 1, name: 'Слой 1', tickets: [] }];
     let activeLayerId = 1;
     let layerCounter = 1;
@@ -282,6 +324,7 @@
     let loadedDays = {};
     let activeDay = null;
     let loadedFileName = '';
+    let openMonthKey = null; // какой месяц сейчас раскрыт
 
     function fm(n) { return Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, " "); }
     function fc(v) { return v >= 1000 ? (v/1000)+'К' : ''+v; }
@@ -294,25 +337,20 @@
         return numCount * p * (1 - d / 100);
     }
 
-    // === ПАРСЕР ПРАВИЛА ШАГА ===
     function parseStep(stepStr) {
         let s = (stepStr || '').trim();
         if (!s) return { type: 'add', value: 1, display: '+1' };
-        // Проверяем умножение: *2, *3, *1.5 и т.д.
         if (s.charAt(0) === '*') {
             let v = parseFloat(s.substring(1));
             if (!isNaN(v) && v > 0) return { type: 'mul', value: v, display: s };
         }
-        // Проверяем сложение: +2, +5, +10 и т.д.
         if (s.charAt(0) === '+') {
             let v = parseInt(s.substring(1));
             if (!isNaN(v) && v > 0) return { type: 'add', value: v, display: s };
         }
-        // Если формат не распознан — fallback на +1
         return { type: 'add', value: 1, display: '+1' };
     }
 
-    // === АВТОРАСЧЕТ С УЧЁТОМ ПРАВИЛА ШАГА ===
     function applyAutoCalc(ticket) {
         if (!ticket.auto) return;
         let rule = parseStep(ticket.step);
@@ -321,10 +359,8 @@
             ticket.qty[i - 1] = currentQty;
             let drawnVal = parseInt(document.getElementById('sfi' + i).value);
             if (!isNaN(drawnVal) && drawnVal >= 6 && drawnVal <= 36 && ticket.nums.includes(drawnVal)) {
-                // Выигрыш — сброс до 1
                 currentQty = 1;
             } else {
-                // Проигрыш или пусто — применяем правило
                 if (rule.type === 'mul') {
                     currentQty = Math.round(currentQty * rule.value);
                 } else {
@@ -334,7 +370,6 @@
         }
     }
 
-    // === ПАРСЕР CSV ===
     function parseCSV(text) {
         text = text.replace(/^\uFEFF/, '');
         let lines = text.split(/\r?\n/).filter(l => l.trim());
@@ -353,7 +388,6 @@
         return days;
     }
 
-    // === ЗАГРУЗКА ФАЙЛА ===
     document.getElementById('file-input').addEventListener('change', function(e) {
         let file = e.target.files[0];
         if (!file) return;
@@ -368,6 +402,9 @@
             loadedDays = parsed;
             let firstDate = Object.keys(loadedDays)[0];
             activeDay = firstDate;
+            // Определяем месяц первой даты для раскрытия
+            let fp = firstDate.split('.');
+            openMonthKey = fp[1] + '.' + fp[2];
             fillDay(activeDay);
             renderDayTabs();
             document.getElementById('days-fname').textContent = loadedFileName;
@@ -389,19 +426,83 @@
         fullRecalc();
     }
 
+    // === Группировка дат по месяцам и рендер аккордеона ===
     function renderDayTabs() {
         let cont = document.getElementById('days-tabs');
         cont.innerHTML = '';
         let dates = Object.keys(loadedDays);
+        if (!dates.length) return;
+
+        // Группируем по MM.YYYY
+        let months = {};
         dates.forEach(date => {
-            let tab = document.createElement('div');
-            tab.className = 'day-tab' + (date === activeDay ? ' active' : '');
-            let count = loadedDays[date].length;
-            let parts = date.split('.');
-            let niceDate = parts[0].replace(/^0/, '') + '.' + parts[1].replace(/^0/, '') + '.' + parts[2];
-            tab.innerHTML = niceDate + '<span class="dt-count">(' + count + ')</span>';
-            tab.onclick = function() { fillDay(date); };
-            cont.appendChild(tab);
+            let p = date.split('.');
+            let mk = p[1] + '.' + p[2];
+            if (!months[mk]) months[mk] = [];
+            months[mk].push(date);
+        });
+
+        // Сортируем ключи месяцев хронологически
+        let monthKeys = Object.keys(months).sort((a, b) => {
+            let pa = a.split('.'), pb = b.split('.');
+            if (pa[1] !== pb[1]) return pa[1] - pb[1]; // год
+            return pa[0] - pb[0]; // месяц
+        });
+
+        monthKeys.forEach(mk => {
+            let mp = mk.split('.');
+            let mName = MONTH_NAMES[mp[0]] || mp[0];
+            let mYear = mp[1];
+            let label = mName + ' ' + mYear;
+            let hasActive = months[mk].includes(activeDay);
+            let isOpen = (mk === openMonthKey);
+
+            let group = document.createElement('div');
+            group.className = 'month-group';
+
+            // Заголовок месяца
+            let header = document.createElement('div');
+            header.className = 'month-header' + (isOpen ? ' open' : '');
+            header.innerHTML = '<span class="mh-arrow">' + (isOpen ? '▼' : '▶') + '</span> ' + label + ' <span class="mh-count">' + months[mk].length + ' дн.</span>';
+
+            // Контейнер дат
+            let datesCont = document.createElement('div');
+            datesCont.className = 'month-dates' + (isOpen ? ' show' : '');
+
+            months[mk].forEach(date => {
+                let tab = document.createElement('div');
+                tab.className = 'day-tab' + (date === activeDay ? ' active' : '');
+                let count = loadedDays[date].length;
+                let dp = date.split('.');
+                let niceDate = dp[0].replace(/^0/, '') + '.' + dp[1].replace(/^0/, '') + '.' + dp[2];
+                tab.innerHTML = niceDate + '<span class="dt-count">(' + count + ')</span>';
+                tab.onclick = function(e) { e.stopPropagation(); fillDay(date); };
+                datesCont.appendChild(tab);
+            });
+
+            // Клик по заголовку — аккордеон
+            header.onclick = function() {
+                if (openMonthKey === mk) return; // уже открыт
+                openMonthKey = mk;
+                // Закрываем все
+                cont.querySelectorAll('.month-header').forEach(h => {
+                    h.classList.remove('open');
+                    h.querySelector('.mh-arrow').textContent = '▶';
+                });
+                cont.querySelectorAll('.month-dates').forEach(d => { d.classList.remove('show'); });
+                // Открываем этот
+                this.classList.add('open');
+                this.querySelector('.mh-arrow').textContent = '▼';
+                datesCont.classList.add('show');
+                // Если активный день не из этого месяца — выбираем первый
+                if (!months[mk].includes(activeDay)) {
+                    fillDay(months[mk][0]);
+                }
+            };
+
+            group.appendChild(header);
+            group.appendChild(datesCont);
+            cont.appendChild(group);
         });
     }
 
@@ -411,18 +512,16 @@
         let inputs = container.querySelectorAll('.qi');
         let ticket = getActiveLayer().tickets[tIdx];
         inputs.forEach((inp, i) => {
-            if (document.activeElement !== inp) {
-                inp.value = ticket.qty[i];
-            }
+            if (document.activeElement !== inp) { inp.value = ticket.qty[i]; }
         });
     }
 
-    // === АВТОЗАПОЛНЕНИЕ ИЗ ТЕКСТА ===
     document.getElementById('af-btn').onclick = function() {
         let raw = document.getElementById('af-input').value;
         let nums = raw.split(/[,\s\n]+/).map(n => parseInt(n.trim())).filter(n => !isNaN(n) && n >= 6 && n <= 36);
         if (nums.length === 0) { alert('Нет валидных чисел от 6 до 36!'); return; }
         activeDay = null;
+        openMonthKey = null;
         renderDayTabs();
         for (let i = 1; i <= 24; i++) {
             let inp = document.getElementById('sfi' + i);
@@ -431,7 +530,6 @@
         fullRecalc();
     };
 
-    // === ВКЛАДКИ СЛОЕВ ===
     function renderTabs() {
         const cont = document.getElementById('ltabs'); cont.innerHTML = '';
         layers.forEach(l => {
@@ -456,7 +554,6 @@
         renderTabs(); renderTk(); fullRecalc();
     }
 
-    // === ИНИЦИАЛИЗАЦИЯ ===
     const cg = document.getElementById('sfcg');
     for (let i = 6; i <= 36; i++) {
         let c = document.createElement('div'); c.className = 'cc'; let v = CF[i];
@@ -487,6 +584,7 @@
                 let val = parseInt(this.value);
                 if (val >= 6 && val <= 36 && idx < 24) document.getElementById('sfi' + (idx + 1)).focus();
                 activeDay = null;
+                openMonthKey = null;
                 renderDayTabs();
                 let currentTickets = getActiveLayer().tickets;
                 currentTickets.forEach((t, tIdx) => {
@@ -497,7 +595,6 @@
         })(i);
     }
 
-    // === ДОБАВЛЕНИЕ БИЛЕТА (с полем step) ===
     document.getElementById('sfa').onclick = function() {
         if (!sn.size) return;
         let nums = Array.from(sn).sort((a, b) => a - b); let cost = getBaseCost(nums.length);
@@ -522,6 +619,7 @@
             document.getElementById('sfd' + i).classList.remove('win', 'miss');
         }
         activeDay = null;
+        openMonthKey = null;
         renderDayTabs();
         updateSumOfNums(); recalc();
     };
@@ -552,7 +650,6 @@
     });
     document.getElementById('sfm').addEventListener('input', function() { fullRecalc(); });
 
-    // === РЕНДЕР БИЛЕТОВ С ПОЛЕМ ШАГА ===
     function renderTk() {
         let sec = document.getElementById('sfts'), list = document.getElementById('sftl'); let currentTickets = getActiveLayer().tickets;
         document.getElementById('sftc').textContent = currentTickets.length;
@@ -566,7 +663,6 @@
             top.innerHTML = '<div class="tci-left"><span class="tn">' + t.nums.join(', ') + '</span><span class="tc">' + fm(t.cost) + ' \u20bd</span></div><button class="td-btn" data-i="' + i + '">\u00d7</button>';
             d.appendChild(top);
 
-            // Строка: поле шага + галочка + подсказка
             let autoRow = document.createElement('div'); autoRow.className = 'auto-row';
 
             let stepInput = document.createElement('input');
@@ -581,38 +677,31 @@
             autoLabel.htmlFor = 'auto-cb-' + i; autoLabel.textContent = 'Авто';
 
             let stepHint = document.createElement('span'); stepHint.className = 'step-hint';
-            // Показываем текущее правило
+
             function updateHint() {
                 if (!t.auto) { stepHint.textContent = ''; return; }
                 let rule = parseStep(t.step);
-                if (rule.type === 'mul') {
-                    stepHint.textContent = '(\u00d7' + rule.value + ' при мимо)';
-                } else {
-                    stepHint.textContent = '(+' + rule.value + ' при мимо)';
-                }
+                stepHint.textContent = rule.type === 'mul' ? '(\u00d7' + rule.value + ' при мимо)' : '(+' + rule.value + ' при мимо)';
             }
             updateHint();
 
-            // При изменении поля шага
             stepInput.addEventListener('input', function() {
                 t.step = this.value;
                 updateHint();
                 if (t.auto) { applyAutoCalc(t); syncAutoInputs(i); fullRecalc(); }
             });
 
-            // При клике на галочку
             autoCb.addEventListener('change', function() {
                 t.auto = this.checked;
                 let inputs = d.querySelectorAll('.qi');
                 inputs.forEach(inp => inp.disabled = this.checked);
                 stepInput.disabled = !this.checked;
-                if (!this.checked) { stepInput.style.opacity = '0.4'; } else { stepInput.style.opacity = '1'; }
+                stepInput.style.opacity = this.checked ? '1' : '0.4';
                 updateHint();
                 if (this.checked) { applyAutoCalc(t); syncAutoInputs(i); }
                 fullRecalc();
             });
 
-            // Если авто выключено — поле шага приглушено
             if (!t.auto) { stepInput.style.opacity = '0.4'; stepInput.disabled = true; }
 
             autoRow.appendChild(stepInput);
@@ -621,7 +710,6 @@
             autoRow.appendChild(stepHint);
             d.appendChild(autoRow);
 
-            // Сетка количеств T1–T24
             let qg = document.createElement('div'); qg.className = 'qg';
             for (let j = 1; j <= 24; j++) {
                 (function(idx) {
@@ -629,7 +717,6 @@
                     let label = document.createElement('div'); label.className = 'qi-label'; label.textContent = 'T' + idx;
                     let input = document.createElement('input'); input.className = 'qi'; input.type = 'number'; input.min = '0'; input.value = t.qty[idx - 1];
                     if (t.auto) input.disabled = true;
-                    
                     input.addEventListener('input', function() { 
                         if (!t.auto) { t.qty[idx - 1] = Math.max(0, parseInt(this.value) || 0); calcDraw(idx); recalc(); }
                     });
@@ -662,9 +749,20 @@
             currentTickets.forEach(t => { let q = t.qty[i - 1]; if (q > 0) { tc += t.cost * q; if (t.nums.indexOf(v) !== -1) { tw += mw * c * q; } } });
         }
         let pr = tw - tc;
-        document.getElementById('stc').textContent = fm(tc) + ' \u20bd'; document.getElementById('stw').textContent = fm(tw) + ' \u20bd';
+        document.getElementById('stc').textContent = fm(tc) + ' \u20bd'; 
+        document.getElementById('stw').textContent = fm(tw) + ' \u20bd';
         let pe = document.getElementById('stp'); pe.textContent = (pr > 0 ? '+' : '') + fm(pr) + ' \u20bd';
         if (pr >= 0) { pe.style.color = '#ffffff'; pe.classList.remove('neg'); } else { pe.style.color = '#ff4444'; pe.classList.add('neg'); }
+
+        let pctEl = document.getElementById('stpct');
+        if (tc === 0) {
+            pctEl.textContent = '\u2014';
+            pctEl.className = 'tpv zero';
+        } else {
+            let pct = ((tw / tc) * 100);
+            pctEl.textContent = (pct > 0 ? '+' : '') + pct.toFixed(1) + '%';
+            pctEl.className = pct >= 0 ? 'tpv' : 'tpv neg';
+        }
     }
 
     renderTabs();
