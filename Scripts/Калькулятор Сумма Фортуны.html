@@ -33,99 +33,48 @@
             position: relative;
         }
         .sh::after {
-            content: '';
-            position: absolute;
-            bottom: -5px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 80px;
-            height: 8px;
-            background: #d4af37;
-            border-radius: 10px;
-            box-shadow: 0 0 10px #d4af37;
+            content: ''; position: absolute; bottom: -5px; left: 50%; transform: translateX(-50%);
+            width: 80px; height: 8px; background: #d4af37; border-radius: 10px; box-shadow: 0 0 10px #d4af37;
         }
         .sh h2 {
-            color: #d4af37;
-            font-family: 'Georgia', serif;
-            font-size: 20px;
-            font-weight: 700;
-            letter-spacing: 6px;
-            margin: 0;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.8), 0 0 15px rgba(212, 175, 55, 0.3);
+            color: #d4af37; font-family: 'Georgia', serif; font-size: 20px; font-weight: 700;
+            letter-spacing: 6px; margin: 0; text-shadow: 0 2px 4px rgba(0,0,0,0.8), 0 0 15px rgba(212, 175, 55, 0.3);
         }
-        .sh-sub {
-            color: #8a6a5a;
-            font-size: 14px;
-            margin-top: 6px;
-            font-weight: 600;
-            letter-spacing: 1px;
-        }
-        .sh-sub-val {
-            color: #e0e0e0;
-            font-weight: 800;
-            font-size: 16px;
-        }
+        .sh-sub { color: #8a6a5a; font-size: 14px; margin-top: 6px; font-weight: 600; letter-spacing: 1px; }
+        .sh-sub-val { color: #e0e0e0; font-weight: 800; font-size: 16px; }
 
-        .sb {
-            display: grid;
-            grid-template-columns: 360px 1fr; 
-            gap: 20px;
-            padding: 15px 20px;
-            overflow: hidden;
-        }
+        .sb { display: grid; grid-template-columns: 360px 1fr; gap: 20px; padding: 15px 20px; overflow: hidden; }
 
-        .left-panel {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            overflow-y: auto;
-            padding-right: 10px;
-        }
+        .left-panel { display: flex; flex-direction: column; gap: 12px; overflow-y: auto; padding-right: 10px; }
         .left-panel::-webkit-scrollbar { width: 6px; }
         .left-panel::-webkit-scrollbar-track { background: #1a0808; border-radius: 3px; }
         .left-panel::-webkit-scrollbar-thumb { background: #8a6a2a; border-radius: 3px; }
 
         .ss { margin-bottom: 0; }
         .ss h3 {
-            color: #d4af37;
-            font-size: 10px;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            margin-bottom: 8px;
-            padding-bottom: 6px;
-            border-bottom: 1px solid #3a1a0a;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 10px;
+            color: #d4af37; font-size: 10px; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 8px;
+            padding-bottom: 6px; border-bottom: 1px solid #3a1a0a; font-weight: 700; display: flex; align-items: center; gap: 10px;
         }
         .sr { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; flex-wrap: wrap; }
         .sr label { color: #a09080; font-size: 12px; min-width: 140px; }
         .sr input {
-            background: #0d0404; border: 1px solid #4a1a0a; color: #f5c518; font-size: 14px; padding: 6px 10px; border-radius: 6px; width: 100%; font-weight: 700; outline: 0; box-shadow: inset 0 1px 3px rgba(0,0,0,0.5);
+            background: #0d0404; border: 1px solid #4a1a0a; color: #f5c518; font-size: 14px; padding: 6px 10px;
+            border-radius: 6px; width: 100%; font-weight: 700; outline: 0; box-shadow: inset 0 1px 3px rgba(0,0,0,0.5);
         }
         .sr input:focus { border-color: #d4af37; }
         
-        /* Вкладки слоев */
         .ltabs { display: flex; gap: 4px; flex-wrap: wrap; }
         .ltab {
-            display: flex; align-items: center; gap: 4px;
-            background: #2a0808; border: 1px solid #4a1a0a; color: #aaa; padding: 5px 8px; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 700; user-select: none; transition: 0.2s;
+            display: flex; align-items: center; gap: 4px; background: #2a0808; border: 1px solid #4a1a0a;
+            color: #aaa; padding: 5px 8px; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 700; user-select: none; transition: 0.2s;
         }
         .ltab:hover { color: #d4af37; border-color: #d4af37; }
         .ltab.active { background: #d4af37; color: #1a0505; border-color: #d4af37; }
-        
-        /* Крестик удаления слоя */
-        .ltab-close {
-            color: #555; font-size: 12px; line-height: 1; padding: 0 2px; border-radius: 2px; transition: 0.2s;
-        }
+        .ltab-close { color: #555; font-size: 12px; line-height: 1; padding: 0 2px; border-radius: 2px; transition: 0.2s; }
         .ltab-close:hover { color: #ff4444; }
         .ltab.active .ltab-close { color: #1a0505; opacity: 0.5; }
         .ltab.active .ltab-close:hover { color: #ff0000; opacity: 1; }
-        
-        /* Скрываем крестик, если слой всего один */
         .ltab-single .ltab-close { display: none; }
-
         .ltab-add { color: #666; border-style: dashed; font-weight: 800; }
         .ltab-add:hover { color: #f5c518; border-color: #f5c518; }
 
@@ -136,7 +85,8 @@
         
         .ng { display: grid; grid-template-columns: repeat(9, 1fr); gap: 5px; margin-bottom: 8px; }
         .nb {
-            background: #2a0808; border: 1px solid #4a1a0a; color: #bbb; padding: 10px 2px; border-radius: 6px; cursor: pointer; font-size: 15px; font-weight: 800; text-align: center; transition: 0.2s; user-select: none;
+            background: #2a0808; border: 1px solid #4a1a0a; color: #bbb; padding: 10px 2px; border-radius: 6px;
+            cursor: pointer; font-size: 15px; font-weight: 800; text-align: center; transition: 0.2s; user-select: none;
         }
         .nb:hover { border-color: #d4af37; color: #d4af37; }
         .nb.on { background: linear-gradient(180deg, #f5c518, #d4af37); color: #1a0505; border-color: #fff; box-shadow: 0 0 10px rgba(245, 197, 24, 0.4); }
@@ -146,7 +96,8 @@
         .clr { background: 0 0; border: 0; color: #8a6a5a; font-size: 11px; cursor: pointer; text-decoration: underline; padding: 0; }
         .clr:hover { color: #d4af37; }
         .ab {
-            background: linear-gradient(180deg, #f5c518, #b8860b); color: #1a0505; border: 0; padding: 8px 15px; border-radius: 6px; font-size: 13px; font-weight: 800; cursor: pointer; transition: 0.3s; letter-spacing: 1px; text-transform: uppercase; width: 100%;
+            background: linear-gradient(180deg, #f5c518, #b8860b); color: #1a0505; border: 0; padding: 8px 15px;
+            border-radius: 6px; font-size: 13px; font-weight: 800; cursor: pointer; transition: 0.3s; letter-spacing: 1px; text-transform: uppercase; width: 100%;
         }
         .ab:hover { box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4); }
 
@@ -158,24 +109,40 @@
         .td { background: #3a0a0a; border: 1px solid #5a1a0a; color: #ff5555; width: 24px; height: 24px; border-radius: 4px; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; transition: 0.2s; flex-shrink: 0; }
         .td:hover { background: #ff5555; color: #fff; }
 
+        .auto-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px dashed #3a1508; }
+        .auto-row input[type="checkbox"] { accent-color: #d4af37; width: 16px; height: 16px; cursor: pointer; }
+        .auto-row label { color: #d4af37; font-size: 12px; cursor: pointer; font-weight: 700; user-select: none; }
+
         .qg { display: grid; grid-template-columns: repeat(12, 1fr); gap: 4px; padding-top: 8px; border-top: 1px dashed #3a1508; }
         .qi-wrap { display: flex; flex-direction: column; align-items: center; }
         .qi-label { font-size: 8px; color: #6a4a3a; margin-bottom: 2px; font-weight: 700; }
-        .qi { background: #0d0404; border: 1px solid #3a1508; color: #f5c518; font-size: 11px; padding: 5px 2px; width: 100%; text-align: center; border-radius: 3px; outline: 0; font-weight: 700; -moz-appearance: textfield; box-shadow: inset 0 1px 2px rgba(0,0,0,0.5); }
+        .qi { background: #0d0404; border: 1px solid #3a1508; color: #f5c518; font-size: 11px; padding: 5px 2px; width: 100%; text-align: center; border-radius: 3px; outline: 0; font-weight: 700; -moz-appearance: textfield; box-shadow: inset 0 1px 2px rgba(0,0,0,0.5); transition: 0.2s; }
         .qi::-webkit-inner-spin-button, .qi::-webkit-outer-spin-button { -webkit-appearance: none; }
         .qi:focus { border-color: #d4af37; background: #1a0a05; }
+        .qi:disabled { opacity: 0.4; cursor: not-allowed; background: #0a0202; }
 
-        .right-panel {
-            display: flex;
-            flex-direction: column;
-            height: 100%;
+        .right-panel { display: flex; flex-direction: column; height: 100%; gap: 10px; }
+        
+        /* Блок автозаполнения */
+        .autofill-box {
+            background: #1f0a05; border: 1px solid #3a1508; border-radius: 8px; padding: 10px 15px;
+            display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
         }
+        .autofill-box input {
+            flex: 1; background: #0d0404; border: 1px solid #4a1a0a; color: #f5c518; font-size: 12px;
+            padding: 8px 10px; border-radius: 6px; outline: 0; box-shadow: inset 0 1px 3px rgba(0,0,0,0.5); font-weight: 600;
+        }
+        .autofill-box input::placeholder { color: #4a3a2a; font-weight: 400; }
+        .autofill-box input:focus { border-color: #d4af37; }
+        .btn-fill {
+            background: linear-gradient(180deg, #f5c518, #b8860b); color: #1a0505; border: 0; padding: 8px 15px;
+            border-radius: 6px; font-size: 11px; font-weight: 800; cursor: pointer; transition: 0.3s; letter-spacing: 0.5px; white-space: nowrap;
+        }
+        .btn-fill:hover { box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4); }
+
         .dg { 
-            display: grid; 
-            grid-template-columns: repeat(6, 1fr); 
-            grid-template-rows: repeat(4, 1fr);
-            gap: 6px; 
-            height: 100%;
+            display: grid; grid-template-columns: repeat(6, 1fr); grid-template-rows: repeat(4, 1fr);
+            gap: 6px; flex: 1;
         }
         .di { background: #1a0808; border: 1px solid #3a1508; border-radius: 8px; padding: 6px; display: flex; align-items: center; gap: 4px; transition: 0.3s; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
         .di.win { border-color: #d4af37; background: #2a1a05; box-shadow: 0 0 20px rgba(212, 175, 55, 0.2); }
@@ -185,20 +152,12 @@
         .di input::-webkit-inner-spin-button, .di input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
         .di input:focus { border-color: #d4af37; }
         .dr { font-size: 9px; flex: 1; text-align: right; line-height: 1.2; color: #666; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        
-        /* УВЕЛИЧЕННЫЙ ШРИФТ ВЫИГРЫША */
         .dr.w { color: #f5c518; font-weight: 900; text-shadow: 0 0 10px rgba(245, 197, 24, 0.7); font-size: 16px; }
-        
         .dr.m { color: #cc4444; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;}
 
         .sf { 
-            background: linear-gradient(180deg, #1f0a05, #140606); 
-            border-top: 2px solid #8a6a2a; 
-            padding: 12px 25px; 
-            display: grid; 
-            grid-template-columns: repeat(3, 1fr); 
-            gap: 20px; 
-            box-shadow: inset 0 2px 10px rgba(0,0,0,0.5);
+            background: linear-gradient(180deg, #1f0a05, #140606); border-top: 2px solid #8a6a2a; 
+            padding: 12px 25px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; box-shadow: inset 0 2px 10px rgba(0,0,0,0.5);
         }
         .tpl { color: #8a6a5a; font-size: 10px; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 3px; font-weight: 700; }
         .tpv { font-size: 22px; font-weight: 900; font-family: 'Georgia', serif; }
@@ -220,22 +179,12 @@
     </div>
     
     <div class="sb">
-        <!-- ЛЕВАЯ ПАНЕЛЬ -->
         <div class="left-panel">
             <div class="ss">
                 <h3>Настройки</h3>
-                <div class="sr">
-                    <label>Цена цифры, ₽</label>
-                    <input type="number" id="sfp" value="550" min="1">
-                </div>
-                <div class="sr">
-                    <label>Скидка, %</label>
-                    <input type="number" id="sfd" value="0" min="0" max="100">
-                </div>
-                <div class="sr">
-                    <label>Мин. выигрыш, ₽</label>
-                    <input type="number" id="sfm" value="550" min="1">
-                </div>
+                <div class="sr"><label>Цена цифры, ₽</label><input type="number" id="sfp" value="550" min="1"></div>
+                <div class="sr"><label>Скидка, %</label><input type="number" id="sfd" value="0" min="0" max="100"></div>
+                <div class="sr"><label>Мин. выигрыш, ₽</label><input type="number" id="sfm" value="550" min="1"></div>
             </div>
 
             <div class="ss">
@@ -251,11 +200,7 @@
             <div class="ss">
                 <h3>Создание билета</h3>
                 <div class="ng" id="sfng"></div>
-                <div class="ti">
-                    Выбрано: <b id="sfsc">0</b> | 
-                    <b id="sfscc">0 ₽</b> 
-                    <button class="clr" id="sfcl">Сброс</button>
-                </div>
+                <div class="ti">Выбрано: <b id="sfsc">0</b> | <b id="sfscc">0 ₽</b> <button class="clr" id="sfcl">Сброс</button></div>
                 <button class="ab" id="sfa">Добавить билет</button>
             </div>
 
@@ -265,8 +210,12 @@
             </div>
         </div>
 
-        <!-- ПРАВАЯ ПАНЕЛЬ (ТИРАЖИ) -->
         <div class="right-panel">
+            <div class="autofill-box">
+                <input type="text" id="af-input" placeholder="Вставь сюда числа (через запятую) или Ctrl+V">
+                <button class="btn-fill" id="af-btn">Заполнить</button>
+            </div>
+            
             <div class="ss" style="margin-bottom: 0; height: 100%; display: flex; flex-direction: column;">
                 <h3>Тиражи (24) <button class="rb" id="sfrd" style="margin:0 0 0 10px;vertical-align:middle">Сбросить</button></h3>
                 <div class="dg" id="sfdg"></div>
@@ -274,7 +223,6 @@
         </div>
     </div>
 
-    <!-- ПОДВАЛ (ИТОГИ) -->
     <div class="sf">
         <div class="tpc"><div class="tpl">Затраты</div><div class="tpv" id="stc">0 ₽</div></div>
         <div class="tpw"><div class="tpl">Выигрыш</div><div class="tpv" id="stw">0 ₽</div></div>
@@ -289,17 +237,14 @@
         29:30, 30:55, 31:70, 32:140, 33:250, 34:4000, 35:6000, 36:8000
     };
 
-    // СИСТЕМА СЛОЕВ
     let layers = [{ id: 1, name: 'Слой 1', tickets: [] }];
     let activeLayerId = 1;
     let layerCounter = 1;
-
-    function getActiveLayer() { return layers.find(l => l.id === activeLayerId); }
-
     let sn = new Set(); 
 
     function fm(n) { return Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, " "); }
     function fc(v) { return v >= 1000 ? (v/1000)+'К' : ''+v; }
+    function getActiveLayer() { return layers.find(l => l.id === activeLayerId); }
 
     function getBaseCost(numCount) {
         let p = parseInt(document.getElementById('sfp').value) || 0;
@@ -308,107 +253,103 @@
         return numCount * p * (1 - d / 100);
     }
 
-    // ЛОГИКА ВКЛАДОК СЛОЕВ (С КРЕСТИКАМИ)
-    function renderTabs() {
-        const cont = document.getElementById('ltabs');
-        cont.innerHTML = '';
-        layers.forEach(l => {
-            let t = document.createElement('div');
-            // Добавляем класс ltab-single если слой всего 1 (чтобы скрыть крестик CSS-ом)
-            t.className = 'ltab' + (l.id === activeLayerId ? ' active' : '') + (layers.length === 1 ? ' ltab-single' : '');
-            
-            let span = document.createElement('span');
-            span.textContent = l.name;
-            
-            let closeBtn = document.createElement('div');
-            closeBtn.className = 'ltab-close';
-            closeBtn.textContent = '×';
-            
-            // При клике на саму вкладку - переключаемся
-            t.onclick = (e) => {
-                // Если кликнули именно по крестику, не переключаем слой
-                if (e.target.classList.contains('ltab-close')) return;
-                switchLayer(l.id);
-            };
+    // ФУНКЦИЯ АВТОМАТИЧЕСКОГО РАСЧЕТА
+    function applyAutoCalc(ticket) {
+        if (!ticket.auto) return;
+        let currentQty = 1;
+        for (let i = 1; i <= 24; i++) {
+            ticket.qty[i - 1] = currentQty;
+            let drawnVal = parseInt(document.getElementById('sfi' + i).value);
+            // Если выпало число и оно есть в билете - сбрасываем счетчик
+            if (!isNaN(drawnVal) && drawnVal >= 6 && drawnVal <= 36 && ticket.nums.includes(drawnVal)) {
+                currentQty = 1;
+            } else {
+                // Если мимо - увеличиваем ставку на следующий тираж
+                currentQty += 1;
+            }
+        }
+    }
 
-            // При клике на крестик - удаляем
-            closeBtn.onclick = (e) => {
-                e.stopPropagation(); // Останавливаем всплытие, чтобы не сработал клик по вкладке
-                deleteLayer(l.id);
-            };
-
-            t.appendChild(span);
-            t.appendChild(closeBtn);
-            cont.appendChild(t);
+    // Обновление инпутов количества в DOM без потери фокуса
+    function syncAutoInputs(tIdx) {
+        let container = document.querySelector(`.tci[data-tidx="${tIdx}"]`);
+        if (!container) return;
+        let inputs = container.querySelectorAll('.qi');
+        let ticket = getActiveLayer().tickets[tIdx];
+        inputs.forEach((inp, i) => {
+            if (document.activeElement !== inp) {
+                inp.value = ticket.qty[i];
+            }
         });
+    }
+
+    // АВТОЗАПОЛНЕНИЕ
+    document.getElementById('af-btn').onclick = function() {
+        let raw = document.getElementById('af-input').value;
+        let nums = raw.split(/[,\s\n]+/).map(n => parseInt(n.trim())).filter(n => !isNaN(n) && n >= 6 && n <= 36);
         
-        let addBtn = document.createElement('div');
-        addBtn.className = 'ltab ltab-add';
-        addBtn.textContent = '+ Слой';
-        addBtn.onclick = addLayer;
-        cont.appendChild(addBtn);
-    }
-
-    function switchLayer(id) {
-        activeLayerId = id;
-        renderTabs();
-        renderTk();
-        fullRecalc();
-    }
-
-    function addLayer() {
-        layerCounter++;
-        layers.push({ id: layerCounter, name: 'Слой ' + layerCounter, tickets: [] });
-        switchLayer(layerCounter);
-    }
-
-    function deleteLayer(id) {
-        // Защита: нельзя удалить последний слой
-        if (layers.length <= 1) return; 
-        
-        const index = layers.findIndex(l => l.id === id);
-        if (index === -1) return;
-
-        // Удаляем слой из массива
-        layers.splice(index, 1);
-
-        // Если удалили активный слой, переключаемся на первый доступный
-        if (activeLayerId === id) {
-            activeLayerId = layers[0].id;
+        if(nums.length === 0) {
+            alert('Нет валидных чисел от 6 до 36!');
+            return;
         }
 
-        // Перерисовываем интерфейс
-        renderTabs();
-        renderTk();
+        for(let i=1; i<=24; i++) {
+            let inp = document.getElementById('sfi'+i);
+            if(nums[i-1] !== undefined) {
+                inp.value = nums[i-1];
+            } else {
+                inp.value = '';
+            }
+        }
+        
         fullRecalc();
+    };
+
+    // ЛОГИКА ВКЛАДОК
+    function renderTabs() {
+        const cont = document.getElementById('ltabs'); cont.innerHTML = '';
+        layers.forEach(l => {
+            let t = document.createElement('div');
+            t.className = 'ltab' + (l.id === activeLayerId ? ' active' : '') + (layers.length === 1 ? ' ltab-single' : '');
+            let span = document.createElement('span'); span.textContent = l.name;
+            let closeBtn = document.createElement('div'); closeBtn.className = 'ltab-close'; closeBtn.textContent = '×';
+            t.onclick = (e) => { if (!e.target.classList.contains('ltab-close')) switchLayer(l.id); };
+            closeBtn.onclick = (e) => { e.stopPropagation(); deleteLayer(l.id); };
+            t.appendChild(span); t.appendChild(closeBtn); cont.appendChild(t);
+        });
+        let addBtn = document.createElement('div'); addBtn.className = 'ltab ltab-add'; addBtn.textContent = '+ Слой';
+        addBtn.onclick = addLayer; cont.appendChild(addBtn);
     }
 
-    // ИНИЦИАЛИЗАЦИЯ СПРАВОЧНИКА
+    function switchLayer(id) { activeLayerId = id; renderTabs(); renderTk(); fullRecalc(); }
+    function addLayer() { layerCounter++; layers.push({ id: layerCounter, name: 'Слой ' + layerCounter, tickets: [] }); switchLayer(layerCounter); }
+    function deleteLayer(id) {
+        if (layers.length <= 1) return; 
+        layers.splice(layers.findIndex(l => l.id === id), 1);
+        if (activeLayerId === id) activeLayerId = layers[0].id;
+        renderTabs(); renderTk(); fullRecalc();
+    }
+
+    // ИНИЦИАЛИЗАЦИЯ
     const cg = document.getElementById('sfcg');
     for(let i=6; i<=36; i++) {
-        let c = document.createElement('div'); c.className='cc';
-        let v = CF[i];
+        let c = document.createElement('div'); c.className='cc'; let v = CF[i];
         let cl = v >= 4000 ? '#f5c518' : v >= 100 ? '#c8920a' : '#6a5a4a';
-        c.innerHTML = `<div class="n">${i}</div><div class="v" style="color:${cl}">×${fc(v)}</div>`;
-        cg.appendChild(c);
+        c.innerHTML = `<div class="n">${i}</div><div class="v" style="color:${cl}">×${fc(v)}</div>`; cg.appendChild(c);
     }
 
-    // ВЫБОР ЧИСЕЛ
     const ng = document.getElementById('sfng');
     for(let i=6; i<=36; i++) {
         (function(n) {
             let b = document.createElement('div'); b.className='nb'; b.textContent=n;
             b.onclick = function() {
-                if(sn.has(n)) { sn.delete(n); b.classList.remove('on'); }
-                else { sn.add(n); b.classList.add('on'); }
+                if(sn.has(n)) { sn.delete(n); b.classList.remove('on'); } else { sn.add(n); b.classList.add('on'); }
                 document.getElementById('sfsc').textContent = sn.size;
                 document.getElementById('sfscc').textContent = fm(getBaseCost(sn.size)) + ' ₽';
-            };
-            ng.appendChild(b);
+            }; ng.appendChild(b);
         })(i);
     }
 
-    // ГЕНЕРАЦИЯ ТИРАЖЕЙ
     const dg = document.getElementById('sfdg');
     for(let i=1; i<=24; i++) {
         (function(idx) {
@@ -418,26 +359,30 @@
             document.getElementById('sfi'+idx).addEventListener('input', function() {
                 let val = parseInt(this.value);
                 if(val >= 6 && val <= 36 && idx < 24) document.getElementById('sfi'+(idx+1)).focus();
-                calcDraw(idx);
+                
+                // Запускаем авторасчет для всех авто-билетов активного слоя при изменении тиража
+                let currentTickets = getActiveLayer().tickets;
+                currentTickets.forEach((t, tIdx) => {
+                    if (t.auto) {
+                        applyAutoCalc(t);
+                        syncAutoInputs(tIdx);
+                    }
+                });
+
+                calcDraw(idx); 
                 recalc();
             });
         })(i);
     }
 
-    // ДОБАВИТЬ БИЛЕТ
     document.getElementById('sfa').onclick = function() {
         if(!sn.size) return;
-        let nums = Array.from(sn).sort((a,b) => a-b);
-        let cost = getBaseCost(nums.length);
-        getActiveLayer().tickets.push({ nums: nums, cost: cost, qty: new Array(24).fill(0) });
-        
-        sn.clear();
-        ng.querySelectorAll('.nb').forEach(b => b.classList.remove('on'));
-        document.getElementById('sfsc').textContent = '0';
-        document.getElementById('sfscc').textContent = '0 ₽';
-        
-        renderTk();
-        fullRecalc();
+        let nums = Array.from(sn).sort((a,b) => a-b); let cost = getBaseCost(nums.length);
+        // Добавлено свойство auto: false
+        getActiveLayer().tickets.push({ nums: nums, cost: cost, qty: new Array(24).fill(0), auto: false });
+        sn.clear(); ng.querySelectorAll('.nb').forEach(b => b.classList.remove('on'));
+        document.getElementById('sfsc').textContent = '0'; document.getElementById('sfscc').textContent = '0 ₽';
+        renderTk(); fullRecalc();
     };
 
     document.getElementById('sfcl').onclick = function() {
@@ -445,77 +390,82 @@
         document.getElementById('sfsc').textContent = '0'; document.getElementById('sfscc').textContent = '0 ₽';
     };
 
-    document.getElementById('sftd').onclick = function() { 
-        getActiveLayer().tickets = []; 
-        renderTk(); 
-        fullRecalc(); 
-    };
+    document.getElementById('sftd').onclick = function() { getActiveLayer().tickets = []; renderTk(); fullRecalc(); };
 
     document.getElementById('sfrd').onclick = function() {
         for(let i=1; i<=24; i++) {
             document.getElementById('sfi'+i).value = ''; document.getElementById('sfr'+i).textContent = ''; document.getElementById('sfr'+i).className = 'dr';
-            let d = document.getElementById('sfd'+i); d.classList.remove('win', 'miss');
+            document.getElementById('sfd'+i).classList.remove('win', 'miss');
         }
-        updateSumOfNums(); 
-        recalc();
+        updateSumOfNums(); recalc();
     };
 
-    function updateTicketCosts() { 
-        let cost = getBaseCost(1); 
-        layers.forEach(l => { l.tickets.forEach(t => { t.cost = t.nums.length * cost; }); });
-    }
-    
+    function updateTicketCosts() { let cost = getBaseCost(1); layers.forEach(l => { l.tickets.forEach(t => { t.cost = t.nums.length * cost; }); }); }
     function updateSumOfNums() {
         let sum = 0;
-        for(let i=1; i<=24; i++) {
-            let v = parseInt(document.getElementById('sfi'+i).value);
-            if(!isNaN(v) && v >= 6 && v <= 36) sum += v;
-        }
+        for(let i=1; i<=24; i++) { let v = parseInt(document.getElementById('sfi'+i).value); if(!isNaN(v) && v >= 6 && v <= 36) sum += v; }
         document.getElementById('sum-nums').textContent = sum;
     }
 
     function fullRecalc() {
-        for(let i=1; i<=24; i++) {
-            let val = parseInt(document.getElementById('sfi'+i).value);
-            if(!isNaN(val) && val >= 6 && val <= 36) calcDraw(i);
-        }
-        updateSumOfNums();
-        recalc();
+        let currentTickets = getActiveLayer().tickets;
+        // Пересчитываем авто-билеты (нужно при смене слоя, применении скидок и т.д.)
+        currentTickets.forEach((t, tIdx) => {
+            if (t.auto) {
+                applyAutoCalc(t);
+                syncAutoInputs(tIdx);
+            }
+        });
+
+        for(let i=1; i<=24; i++) { let val = parseInt(document.getElementById('sfi'+i).value); if(!isNaN(val) && val >= 6 && val <= 36) calcDraw(i); }
+        updateSumOfNums(); recalc();
     }
 
     document.getElementById('sfp').addEventListener('input', function() {
         document.getElementById('sfscc').textContent = fm(getBaseCost(sn.size)) + ' ₽';
         updateTicketCosts(); renderTk(); fullRecalc(); 
     });
-
     document.getElementById('sfd').addEventListener('input', function() {
         document.getElementById('sfscc').textContent = fm(getBaseCost(sn.size)) + ' ₽';
         updateTicketCosts(); renderTk(); fullRecalc(); 
     });
-
     document.getElementById('sfm').addEventListener('input', function() { fullRecalc(); });
 
-    // ОТРИСОВКА БИЛЕТОВ
     function renderTk() {
-        let sec = document.getElementById('sfts'), list = document.getElementById('sftl');
-        let currentTickets = getActiveLayer().tickets;
-        
+        let sec = document.getElementById('sfts'), list = document.getElementById('sftl'); let currentTickets = getActiveLayer().tickets;
         document.getElementById('sftc').textContent = currentTickets.length;
         if(!currentTickets.length) { sec.style.display='none'; return; }
-        sec.style.display = '';
-        list.innerHTML = '';
+        sec.style.display = ''; list.innerHTML = '';
         
         currentTickets.forEach((t, i) => {
-            let d = document.createElement('div'); d.className='tci';
+            let d = document.createElement('div'); d.className='tci'; d.setAttribute('data-tidx', i);
+            
             let top = document.createElement('div'); top.className='tci-top';
-            top.innerHTML = `
-                <div class="tci-left">
-                    <span class="tn">${t.nums.join(', ')}</span>
-                    <span class="tc">${fm(t.cost)} ₽</span>
-                </div>
-                <button class="td" data-i="${i}">×</button>
-            `;
+            top.innerHTML = `<div class="tci-left"><span class="tn">${t.nums.join(', ')}</span><span class="tc">${fm(t.cost)} ₽</span></div><button class="td" data-i="${i}">×</button>`;
             d.appendChild(top);
+
+            // Добавление чекбокса "Автоматически"
+            let autoRow = document.createElement('div'); autoRow.className = 'auto-row';
+            let autoCb = document.createElement('input'); 
+            autoCb.type = 'checkbox'; autoCb.id = 'auto-cb-' + i; autoCb.checked = t.auto;
+            let autoLabel = document.createElement('label'); 
+            autoLabel.htmlFor = 'auto-cb-' + i; autoLabel.textContent = 'Автоматически';
+            
+            autoCb.addEventListener('change', function() {
+                t.auto = this.checked;
+                let inputs = d.querySelectorAll('.qi');
+                inputs.forEach(inp => inp.disabled = this.checked);
+                
+                if (this.checked) {
+                    applyAutoCalc(t);
+                    syncAutoInputs(i);
+                }
+                fullRecalc();
+            });
+
+            autoRow.appendChild(autoCb);
+            autoRow.appendChild(autoLabel);
+            d.appendChild(autoRow);
 
             let qg = document.createElement('div'); qg.className='qg';
             for(let j=1; j<=24; j++) {
@@ -523,106 +473,50 @@
                     let wrap = document.createElement('div'); wrap.className='qi-wrap';
                     let label = document.createElement('div'); label.className='qi-label'; label.textContent='T'+idx;
                     let input = document.createElement('input'); input.className='qi'; input.type='number'; input.min='0'; input.value=t.qty[idx-1];
+                    // Если авто-режим включен, блокируем инпуты при рендере
+                    if(t.auto) input.disabled = true;
                     
-                    input.addEventListener('input', function() {
-                        t.qty[idx-1] = Math.max(0, parseInt(this.value) || 0);
-                        calcDraw(idx);
-                        recalc();
+                    input.addEventListener('input', function() { 
+                        if(!t.auto) {
+                            t.qty[idx-1] = Math.max(0, parseInt(this.value) || 0); 
+                            calcDraw(idx); 
+                            recalc(); 
+                        }
                     });
-
-                    wrap.appendChild(label);
-                    wrap.appendChild(input);
-                    qg.appendChild(wrap);
+                    wrap.appendChild(label); wrap.appendChild(input); qg.appendChild(wrap);
                 })(j);
             }
-            d.appendChild(qg);
-            list.appendChild(d);
+            d.appendChild(qg); list.appendChild(d);
         });
 
         list.querySelectorAll('.td').forEach(b => {
-            b.onclick = function() { 
-                getActiveLayer().tickets.splice(parseInt(this.dataset.i), 1); 
-                renderTk(); fullRecalc(); 
-            };
+            b.onclick = function() { getActiveLayer().tickets.splice(parseInt(this.dataset.i), 1); renderTk(); fullRecalc(); };
         });
     }
 
-    // РАСЧЕТ ТИРАЖА
     function calcDraw(idx) {
-        let inp = document.getElementById('sfi'+idx);
-        let res = document.getElementById('sfr'+idx);
-        let wrap = document.getElementById('sfd'+idx);
-        let val = parseInt(inp.value);
-
-        if(isNaN(val) || val < 6 || val > 36) {
-            res.textContent = ''; res.className = 'dr';
-            wrap.classList.remove('win', 'miss');
-            return; 
-        }
-
-        let mw = parseInt(document.getElementById('sfm').value) || 550;
-        let c = CF[val];
-        let tw = 0, mc = 0; 
-        let currentTickets = getActiveLayer().tickets;
-
-        currentTickets.forEach(t => {
-            let q = t.qty[idx-1]; 
-            if(q > 0) {
-                if(t.nums.indexOf(val) !== -1) {
-                    tw += mw * c * q; 
-                    mc += q;
-                }
-            }
-        });
-
-        if(mc > 0) {
-            res.textContent = `${mc} шт → ${fm(tw)} ₽`;
-            res.className = 'dr w';
-            wrap.classList.add('win'); wrap.classList.remove('miss');
-        } else {
-            res.textContent = 'Мимо';
-            res.className = 'dr m';
-            wrap.classList.add('miss'); wrap.classList.remove('win');
-        }
-        
+        let inp = document.getElementById('sfi'+idx); let res = document.getElementById('sfr'+idx); let wrap = document.getElementById('sfd'+idx); let val = parseInt(inp.value);
+        if(isNaN(val) || val < 6 || val > 36) { res.textContent = ''; res.className = 'dr'; wrap.classList.remove('win', 'miss'); return; }
+        let mw = parseInt(document.getElementById('sfm').value) || 550; let c = CF[val]; let tw = 0, mc = 0; let currentTickets = getActiveLayer().tickets;
+        currentTickets.forEach(t => { let q = t.qty[idx-1]; if(q > 0) { if(t.nums.indexOf(val) !== -1) { tw += mw * c * q; mc += q; } } });
+        if(mc > 0) { res.textContent = `${mc} шт → ${fm(tw)} ₽`; res.className = 'dr w'; wrap.classList.add('win'); wrap.classList.remove('miss'); }
+        else { res.textContent = 'Мимо'; res.className = 'dr m'; wrap.classList.add('miss'); wrap.classList.remove('win'); }
         updateSumOfNums();
     }
 
-    // ИТОГИ
     function recalc() {
-        let tc = 0, tw = 0;
-        let currentTickets = getActiveLayer().tickets;
-
+        let tc = 0, tw = 0; let currentTickets = getActiveLayer().tickets;
         for(let i=1; i<=24; i++) {
-            let v = parseInt(document.getElementById('sfi'+i).value);
-            if(isNaN(v) || v < 6 || v > 36) continue;
-            
-            let mw = parseInt(document.getElementById('sfm').value) || 550;
-            let c = CF[v];
-            
-            currentTickets.forEach(t => {
-                let q = t.qty[i-1];
-                if(q > 0) {
-                    tc += t.cost * q; 
-                    if(t.nums.indexOf(v) !== -1) {
-                        tw += mw * c * q; 
-                    }
-                }
-            });
+            let v = parseInt(document.getElementById('sfi'+i).value); if(isNaN(v) || v < 6 || v > 36) continue;
+            let mw = parseInt(document.getElementById('sfm').value) || 550; let c = CF[v];
+            currentTickets.forEach(t => { let q = t.qty[i-1]; if(q > 0) { tc += t.cost * q; if(t.nums.indexOf(v) !== -1) { tw += mw * c * q; } } });
         }
-        
         let pr = tw - tc;
-        document.getElementById('stc').textContent = fm(tc) + ' ₽';
-        document.getElementById('stw').textContent = fm(tw) + ' ₽';
-        
-        let pe = document.getElementById('stp');
-        pe.textContent = (pr > 0 ? '+' : '') + fm(pr) + ' ₽';
-        
-        if(pr >= 0) { pe.style.color = '#ffffff'; pe.classList.remove('neg'); }
-        else { pe.style.color = '#ff4444'; pe.classList.add('neg'); }
+        document.getElementById('stc').textContent = fm(tc) + ' ₽'; document.getElementById('stw').textContent = fm(tw) + ' ₽';
+        let pe = document.getElementById('stp'); pe.textContent = (pr > 0 ? '+' : '') + fm(pr) + ' ₽';
+        if(pr >= 0) { pe.style.color = '#ffffff'; pe.classList.remove('neg'); } else { pe.style.color = '#ff4444'; pe.classList.add('neg'); }
     }
 
-    // Старт
     renderTabs();
 </script>
 
