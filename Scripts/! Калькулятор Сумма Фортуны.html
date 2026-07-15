@@ -131,7 +131,6 @@
 
         .right-panel { display: flex; flex-direction: column; height: 100%; gap: 10px; }
         
-        /* === Блок загрузки с группировкой по месяцам === */
         .days-bar {
             background: #1f0a05; border: 1px solid #3a1508; border-radius: 8px; padding: 8px 12px;
             display: flex; align-items: flex-start; gap: 8px; flex-wrap: wrap; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
@@ -277,10 +276,10 @@
         <div class="right-panel">
             <div class="days-bar" id="days-bar">
                 <div class="days-sidebar">
-                    <label class="btn-load" for="file-input">Загрузить CSV</label>
+                    <label class="btn-load" for="file-input">Загрузить файл</label>
                     <div class="days-filename" id="days-filename"><span id="days-fname"></span></div>
                 </div>
-                <input type="file" id="file-input" accept=".csv,.txt" style="display:none">
+                <input type="file" id="file-input" accept=".csv,.txt">
                 <div class="days-tabs" id="days-tabs"></div>
             </div>
 
@@ -324,7 +323,7 @@
     let loadedDays = {};
     let activeDay = null;
     let loadedFileName = '';
-    let openMonthKey = null; // какой месяц сейчас раскрыт
+    let openMonthKey = null;
 
     function fm(n) { return Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, " "); }
     function fc(v) { return v >= 1000 ? (v/1000)+'К' : ''+v; }
@@ -370,21 +369,68 @@
         }
     }
 
-    function parseCSV(text) {
+    // === УНИВЕРСАЛЬНЫЙ ПАРСЕР ===
+    function parseFile(text) {
         text = text.replace(/^\uFEFF/, '');
         let lines = text.split(/\r?\n/).filter(l => l.trim());
         if (lines.length < 2) return {};
-        lines.shift();
+
+        // Определяем формат по первому разделителю в первой строке данных
+        let firstLine = lines[0].trim();
+
+        // Проверяем заголовок: если есть ; — это CSV с суммами
+        if (firstLine.indexOf(';') !== -1) {
+            return parseCSV_Sums(lines);
+        }
+
+        // Если есть , и полей 8 — это TXT с числами для суммирования
+        if (firstLine.indexOf(',') !== -1) {
+            let testParts = firstLine.split(',');
+            if (testParts.length === 8) {
+                return parseTXT_Numbers(lines);
+            }
+        }
+
+        // Если не распознали — пробуем CSV
+        return parseCSV_Sums(lines);
+    }
+
+    // Старый формат: Дата;Час;Сумма
+    function parseCSV_Sums(lines) {
         let days = {};
-        lines.forEach(line => {
-            let parts = line.split(';').map(s => s.trim());
-            if (parts.length < 3) return;
+        for (let i = 1; i < lines.length; i++) {
+            let parts = lines[i].split(';').map(s => s.trim());
+            if (parts.length < 3) continue;
             let date = parts[0];
             let sum = parseInt(parts[2]);
-            if (isNaN(sum)) return;
+            if (isNaN(sum)) continue;
             if (!days[date]) days[date] = [];
             days[date].push(sum);
-        });
+        }
+        return days;
+    }
+
+    // Новый формат: Номер,Дата,ч1,ч2,ч3,ч4,ч5,ч6
+    function parseTXT_Numbers(lines) {
+        let days = {};
+        for (let i = 0; i < lines.length; i++) {
+            let parts = lines[i].split(',').map(s => s.trim());
+            if (parts.length < 8) continue;
+            let date = parts[1];
+            // Проверяем что дата выглядит как дата DD.MM.YYYY
+            if (!/^\d{2}\.\d{2}\.\d{4}$/.test(date)) continue;
+            // Суммируем 6 чисел (индексы 2–7)
+            let sum = 0;
+            let valid = true;
+            for (let j = 2; j <= 7; j++) {
+                let n = parseInt(parts[j]);
+                if (isNaN(n)) { valid = false; break; }
+                sum += n;
+            }
+            if (!valid) continue;
+            if (!days[date]) days[date] = [];
+            days[date].push(sum);
+        }
         return days;
     }
 
@@ -394,15 +440,14 @@
         loadedFileName = file.name;
         let reader = new FileReader();
         reader.onload = function(ev) {
-            let parsed = parseCSV(ev.target.result);
+            let parsed = parseFile(ev.target.result);
             if (Object.keys(parsed).length === 0) {
-                alert('Не удалось найти тиражи в файле. Проверьте формат: Дата;Час;Сумма');
+                alert('Не удалось найти тиражи в файле.\n\nПоддерживаемые форматы:\n1) Дата;Час;Сумма (через ;)\n2) Номер,Дата,ч1,ч2,ч3,ч4,ч5,ч6 (через ,)');
                 return;
             }
             loadedDays = parsed;
             let firstDate = Object.keys(loadedDays)[0];
             activeDay = firstDate;
-            // Определяем месяц первой даты для раскрытия
             let fp = firstDate.split('.');
             openMonthKey = fp[1] + '.' + fp[2];
             fillDay(activeDay);
@@ -426,14 +471,12 @@
         fullRecalc();
     }
 
-    // === Группировка дат по месяцам и рендер аккордеона ===
     function renderDayTabs() {
         let cont = document.getElementById('days-tabs');
         cont.innerHTML = '';
         let dates = Object.keys(loadedDays);
         if (!dates.length) return;
 
-        // Группируем по MM.YYYY
         let months = {};
         dates.forEach(date => {
             let p = date.split('.');
@@ -442,11 +485,10 @@
             months[mk].push(date);
         });
 
-        // Сортируем ключи месяцев хронологически
         let monthKeys = Object.keys(months).sort((a, b) => {
             let pa = a.split('.'), pb = b.split('.');
-            if (pa[1] !== pb[1]) return pa[1] - pb[1]; // год
-            return pa[0] - pb[0]; // месяц
+            if (pa[1] !== pb[1]) return pa[1] - pb[1];
+            return pa[0] - pb[0];
         });
 
         monthKeys.forEach(mk => {
@@ -454,18 +496,15 @@
             let mName = MONTH_NAMES[mp[0]] || mp[0];
             let mYear = mp[1];
             let label = mName + ' ' + mYear;
-            let hasActive = months[mk].includes(activeDay);
             let isOpen = (mk === openMonthKey);
 
             let group = document.createElement('div');
             group.className = 'month-group';
 
-            // Заголовок месяца
             let header = document.createElement('div');
             header.className = 'month-header' + (isOpen ? ' open' : '');
-            header.innerHTML = '<span class="mh-arrow">' + (isOpen ? '▼' : '▶') + '</span> ' + label + ' <span class="mh-count">' + months[mk].length + ' дн.</span>';
+            header.innerHTML = '<span class="mh-arrow">' + (isOpen ? '\u25bc' : '\u25b6') + '</span> ' + label + ' <span class="mh-count">' + months[mk].length + ' \u0434\u043d.</span>';
 
-            // Контейнер дат
             let datesCont = document.createElement('div');
             datesCont.className = 'month-dates' + (isOpen ? ' show' : '');
 
@@ -480,21 +519,17 @@
                 datesCont.appendChild(tab);
             });
 
-            // Клик по заголовку — аккордеон
             header.onclick = function() {
-                if (openMonthKey === mk) return; // уже открыт
+                if (openMonthKey === mk) return;
                 openMonthKey = mk;
-                // Закрываем все
                 cont.querySelectorAll('.month-header').forEach(h => {
                     h.classList.remove('open');
-                    h.querySelector('.mh-arrow').textContent = '▶';
+                    h.querySelector('.mh-arrow').textContent = '\u25b6';
                 });
                 cont.querySelectorAll('.month-dates').forEach(d => { d.classList.remove('show'); });
-                // Открываем этот
                 this.classList.add('open');
-                this.querySelector('.mh-arrow').textContent = '▼';
+                this.querySelector('.mh-arrow').textContent = '\u25bc';
                 datesCont.classList.add('show');
-                // Если активный день не из этого месяца — выбираем первый
                 if (!months[mk].includes(activeDay)) {
                     fillDay(months[mk][0]);
                 }
@@ -681,7 +716,7 @@
             function updateHint() {
                 if (!t.auto) { stepHint.textContent = ''; return; }
                 let rule = parseStep(t.step);
-                stepHint.textContent = rule.type === 'mul' ? '(\u00d7' + rule.value + ' при мимо)' : '(+' + rule.value + ' при мимо)';
+                stepHint.textContent = rule.type === 'mul' ? '(\u00d7' + rule.value + ' \u043f\u0440\u0438 \u043c\u0438\u043c\u043e)' : '(+' + rule.value + ' \u043f\u0440\u0438 \u043c\u0438\u043c\u043e)';
             }
             updateHint();
 
@@ -736,7 +771,7 @@
         if (isNaN(val) || val < 6 || val > 36) { res.textContent = ''; res.className = 'dr'; wrap.classList.remove('win', 'miss'); return; }
         let mw = parseInt(document.getElementById('sfm').value) || 550; let c = CF[val]; let tw = 0, mc = 0; let currentTickets = getActiveLayer().tickets;
         currentTickets.forEach(t => { let q = t.qty[idx - 1]; if (q > 0) { if (t.nums.indexOf(val) !== -1) { tw += mw * c * q; mc += q; } } });
-        if (mc > 0) { res.textContent = mc + ' шт \u2192 ' + fm(tw) + ' \u20bd'; res.className = 'dr w'; wrap.classList.add('win'); wrap.classList.remove('miss'); }
+        if (mc > 0) { res.textContent = mc + ' \u0448\u0442 \u2192 ' + fm(tw) + ' \u20bd'; res.className = 'dr w'; wrap.classList.add('win'); wrap.classList.remove('miss'); }
         else { res.textContent = '\u041c\u0438\u043c\u043e'; res.className = 'dr m'; wrap.classList.add('miss'); wrap.classList.remove('win'); }
         updateSumOfNums();
     }
