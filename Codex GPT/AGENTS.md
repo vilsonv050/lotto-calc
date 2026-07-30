@@ -36,6 +36,9 @@
 - Репозиторий: `vilsonv050/lotto-calc`.
 - Общая ветка: `main`.
 - GitHub — единственное общее хранилище проекта между компьютерами.
+- Для проверки состояния используй `powershell -ExecutionPolicy Bypass -File .\SYNC_GITHUB.ps1 status`.
+- Перед работой используй `powershell -ExecutionPolicy Bypass -File .\SYNC_GITHUB.ps1 pull`.
+- После проверенного коммита используй `powershell -ExecutionPolicy Bypass -File .\SYNC_GITHUB.ps1 push`.
 - Не использовать OneDrive, Dropbox или ручное копирование как второй механизм синхронизации рабочей Git-папки.
 - Перед началом работы: получить свежий `main`.
 - После завершённого и проверенного изменения: обновить контекст, создать понятный коммит и отправить его в GitHub.
