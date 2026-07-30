@@ -1,0 +1,1681 @@
+javascript:!function(){"use strict";/* обновлено 29-07-26 V3 */
+console.clear();
+console.log("NLOTO STATISTICS v7.3 — Ready");
+var LOTTERIES=[
+{alias:"mechtallion-vgl19",name:"Мечталлион",productId:"102191",slug:"mechtallion",type:"BINGO",basePrice:150},
+{alias:"mechtallion-express",name:"Мечталлион Экспресс",productId:"102042",slug:"mechtallion-express",type:"BINGO",basePrice:100},
+{alias:"turnir",name:"Турнир",productId:"105011",slug:"turnir",type:"BETTING",basePrice:100},
+{alias:"bingo-75",name:"Форсаж 75",productId:"102051",slug:"bingo-75",type:"BINGO",basePrice:50},
+{alias:"bingo-3x3",name:"Трижды три",productId:"102091",slug:"bingo-3x3",type:"BINGO",basePrice:15},
+{alias:"digital-4x20",name:"Лавина призов",productId:"101021",slug:"digital-4x20",type:"DIGITAL",basePrice:100},
+{alias:"digital-12x24-2",name:"12 Добрых дел",productId:"101121",slug:"digital-12x24-2",type:"DIGITAL",basePrice:200},
+{alias:"digital-8x20-big8-vgl3",name:"Большая 8",productId:"103151",slug:"digital-8x20-big8",type:"DIGITAL",basePrice:250},
+{alias:"digital-trilogy",name:"Трилогия",productId:"102141",slug:"digital-trilogy",type:"DIGITAL",basePrice:25},
+{alias:"digital-5x37_5x36",name:"5 из 36",productId:"101041",slug:"digital-5x37_5x36",type:"DIGITAL",basePrice:100},
+{alias:"bingo-4x4-vgl5",name:"4х4",productId:"105101",slug:"bingo-4x4-2",type:"BINGO",basePrice:200},
+{alias:"keno-colored_balls",name:"Цветные шары",productId:"104021",slug:"keno-colored_balls",type:"MULTIGAME",basePrice:100},
+{alias:"fortune",name:"Сумма Фортуны",productId:"102211",slug:"fortune",type:"COMPLEX",basePrice:550},
+{alias:"digital-12x24",name:"Топ 12",productId:"104041",slug:"digital-12x24",type:"DIGITAL",basePrice:100},
+{alias:"digital-8x20",name:"Великолепная 8",productId:"101051",slug:"digital-8x20",type:"DIGITAL",basePrice:20},
+{alias:"digital-8x20-vgl9",name:"Великолепная 8",productId:"109031",slug:"digital-8x20-vgl9",type:"DIGITAL",basePrice:80},
+{alias:"digital-8x20-super8-vgl5",name:"Супер 8",productId:"105131",slug:"digital-8x20-super8",type:"DIGITAL",basePrice:600},
+{alias:"digital-8x20-super8-vgl8",name:"Супер 8",productId:"108031",slug:"digital-8x20-super8-vgl8",type:"DIGITAL",basePrice:1000},
+{alias:"digital-4x20-premier-vgl4",name:"Премьер",productId:"104131",slug:"digital-4x20-premier",type:"DIGITAL",basePrice:80},
+{alias:"digital-4x20-premier-vgl11",name:"Премьер",productId:"111041",slug:"digital-4x20-premier-vgl11",type:"DIGITAL",basePrice:200},
+{alias:"fortune-vgl10",name:"Сумма Фортуны",productId:"110052",slug:"fortune-vgl10",type:"COMPLEX",basePrice:550},
+{alias:"digital-12x24-vgl7",name:"Топ 12",productId:"107011",slug:"digital-12x24-vgl7",type:"DIGITAL",basePrice:100},
+{alias:"mechtallion-express-vgl6",name:"Мечталлион Экспресс",productId:"106023",slug:"mechtallion-express-vgl6",type:"BINGO",basePrice:100},
+{alias:"digital-5x50-f2",name:"Пять-О-Пять",productId:"101111",slug:"digital-5x50-f2",type:"DIGITAL",basePrice:150},
+{alias:"digital-5x36",name:"Пятая скорость",productId:"101031",slug:"digital-5x36",type:"DIGITAL",basePrice:60},
+{alias:"digital-5x37",name:"5 из 37",productId:"104011",slug:"digital-5x37",type:"DIGITAL",basePrice:10},
+{alias:"digital-8x20-super8",name:"Супер 8 (до 30.06.2025)",productId:"102121",slug:"digital-8x20-super8-vgl2",type:"DIGITAL",basePrice:1000},
+{alias:"bingo-4x4",name:"Мечталлион (до 20.04.2025)",productId:"102041",slug:"mechtallion-vgl4",type:"BINGO",basePrice:100},
+{alias:"bingo-4x4-2",name:"4х4 (до 12.07.2024)",productId:"103131",slug:"bingo-4x4-2_old",type:"BINGO",basePrice:100},
+{alias:"digital-4x20-premier",name:"Премьер (до 12.07.2024)",productId:"105111",slug:"digital-4x20-premier_old",type:"DIGITAL",basePrice:200},
+{alias:"digital-8x20-big8",name:"Большая 8 (до 12.07.2024)",productId:"104101",slug:"digital-8x20-big8_old",type:"DIGITAL",basePrice:300}
+];
+var FIELD_POOLS={
+"102191":[40],"102042":[40],"102051":[75],"102091":[30],"101021":[20,20],"101121":[24],
+"103151":[20,4],"102141":[24,8,3],"101041":[36],"105101":[80],"104021":[48],"102211":[6],
+"104041":[24],"107011":[24],"101051":[20,4],"109031":[20,4],"105131":[20,4],"108031":[20,4],"104131":[20,20],"111041":[20,20],"101111":[50,12],
+"101031":[36,4],"104011":[37],"102121":[20,4],"102041":[45],"103131":[80],"105111":[20,20],"104101":[20,4]
+};
+FIELD_POOLS["106023"]=[40];
+FIELD_POOLS["110052"]=[6];
+var LOTTERY_PHASE_HINTS={
+"109031":"after","111041":"after","110052":"after","107011":"after","108031":"after","106023":"after",
+"102121":"archive","102041":"archive","103131":"archive","105111":"archive","104101":"archive"
+};
+function lotteryBaseName(name){return String(name||"").replace(/\s*\((?:до|с)\s+\d{1,2}[.\-]\d{1,2}[.\-]\d{2,4}\)\s*$/i,"").trim();
+}
+function lotteryArchiveEnd(name){var match=String(name||"").match(/\(до\s+(\d{1,2})[.\-](\d{1,2})[.\-](\d{2,4})\)/i);
+if(!match)return "";
+var year=String(match[3]);
+return pad2(match[1])+"-"+pad2(match[2])+"-"+year.slice(-2);
+}
+function applyLotteryVersionLabels(items){var groups={};
+for(var i=0;i<items.length;i++){var item=items[i];
+item.rawName=item.rawName||item.name||("ID "+item.productId);
+item.baseName=lotteryBaseName(item.rawName);
+item.archiveEnd=lotteryArchiveEnd(item.rawName);
+item.phaseHint=LOTTERY_PHASE_HINTS[String(item.productId)]||item.phaseHint||"";
+var groupKey=item.baseName.toLocaleLowerCase("ru-RU");
+if(!groups[groupKey])groups[groupKey]=[];
+groups[groupKey].push(item);
+}
+for(var key in groups){if(!Object.prototype.hasOwnProperty.call(groups,key))continue;
+var group=groups[key];
+var hasFuture=false;
+for(var g=0;g<group.length;g++){var candidate=group[g];
+var candidateArchive=candidate.phaseHint==="archive"||!!candidate.archiveEnd;
+var candidateFuture=candidate.phaseHint==="after"||(!candidateArchive&&candidate.catalogListed===true&&candidate.catalogHasDraw===false);
+if(candidateFuture)hasFuture=true;
+candidate._isArchiveVersion=candidateArchive;
+candidate._isFutureVersion=candidateFuture;
+}
+for(var j=0;j<group.length;j++){var lottery=group[j];
+lottery.isVersioned=group.length>1;
+if(!lottery.isVersioned){lottery.displayName=lottery.rawName;
+lottery.versionPhase=lottery._isArchiveVersion?"archive":"single";
+lottery.versionOrder=lottery._isArchiveVersion?0:1;
+lottery.versionLabel="";
+continue;
+}
+if(lottery._isArchiveVersion){lottery.versionPhase="archive";
+lottery.versionOrder=0;
+lottery.versionLabel="ДО обновления · СТАРАЯ, архив"+(lottery.archiveEnd?" до "+lottery.archiveEnd:"");
+}else if(lottery._isFutureVersion){lottery.versionPhase="after";
+lottery.versionOrder=2;
+lottery.versionLabel="ПОСЛЕ обновления · НОВАЯ"+(lottery.catalogHasDraw===true?"":" · ещё нет тиражей");
+}else if(hasFuture){lottery.versionPhase="before";
+lottery.versionOrder=1;
+lottery.versionLabel="ДО обновления · СТАРАЯ, пока текущая";
+}else{lottery.versionPhase="after";
+lottery.versionOrder=2;
+lottery.versionLabel="ПОСЛЕ обновления · НОВАЯ, текущая";
+}
+lottery.displayName=lottery.baseName+"\n"+lottery.versionLabel+" · ID "+lottery.productId;
+}
+}
+items.sort(function(a,b){var byName=a.baseName.localeCompare(b.baseName,"ru");
+var aOrder=a.versionOrder==null?1:a.versionOrder;
+var bOrder=b.versionOrder==null?1:b.versionOrder;
+return byName||(aOrder-bOrder)||String(a.productId).localeCompare(String(b.productId));
+});
+return items;
+}
+for(var poolLotteryIndex=0;poolLotteryIndex<LOTTERIES.length;poolLotteryIndex++){var knownPools=FIELD_POOLS[String(LOTTERIES[poolLotteryIndex].productId)];
+if(knownPools)LOTTERIES[poolLotteryIndex].fieldPools=knownPools;
+}
+LOTTERIES=applyLotteryVersionLabels(LOTTERIES);
+var state={selectedLottery:null,latestDrawNum:null,drawNumFormat:null,lotteryType:null,draws:[],basePrice:0,loading:false,abortFlag:false,currentTab:null,abortController:null,loadMode:"details",catalogLoaded:false,lastCacheKey:null,fieldSelection:{freq:"main",analysis:"main",recommend:"main"}};
+function pad6(n){var s=String(n);
+while(s.length<6)s="0"+s;
+return s;
+}
+function pad2(n){var s=String(n);
+if(s.length<2)s="0"+s;
+return s;
+}
+function sumArr(arr){var s=0;
+for(var i=0;
+i<(arr||[]).length;
+i++)s+=arr[i];
+return s;
+}
+function fmtNum(n){return null==n?"-":Number(n).toLocaleString("ru-RU");
+}
+function getDrawPrice(draw,fallback){var value=Number(draw&&draw.basePrice);
+if(isFinite(value)&&value>0)return value;
+value=Number(fallback);
+return isFinite(value)&&value>0?value:0;
+}
+function getDrawJackpot(draw){if(!draw)return null;
+var value=null!=draw.jackpotAmount?draw.jackpotAmount:draw.jackpot;
+if(null==value||value==="")return null;
+value=Number(value);
+return isFinite(value)&&value>=0?value:null;
+}
+function getDrawRevenue(draw,tickets,fallbackPrice){var price=getDrawPrice(draw,fallbackPrice);
+var count=Number(tickets);
+return isFinite(count)&&count>=0?count * price:0;
+}
+function getPriceSummary(draws,fallbackPrice){var prices={};
+for(var i=0;i<(draws||[]).length;i++){var price=getDrawPrice(draws[i],fallbackPrice);
+if(price>0)prices[String(price)]=price;
+}
+var values=[];
+for(var key in prices)if(Object.prototype.hasOwnProperty.call(prices,key))values.push(prices[key]);
+if(values.length===0){var fallback=getDrawPrice(null,fallbackPrice);
+return fallback>0?fmtNum(fallback)+" руб.":"—";
+}
+values.sort(function(a,b){return a-b;
+});
+return values.length===1?fmtNum(values[0])+" руб.":fmtNum(values[0])+"–"+fmtNum(values[values.length-1])+" руб. (по тиражам)";
+}
+function escHtml(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+function parseDrawDate(value){if(!value)return null;
+if(value instanceof Date)return value;
+var text=String(value);
+var hasTimezone=/Z$|[+-]\d{2}:\d{2}$/.test(text);
+var parsed=new Date(hasTimezone?text:text+"+03:00");
+return isNaN(parsed.getTime())?null:parsed;
+}
+function formatDrawDate(value,includeTime){if(!value)return"-";
+var text=String(value);
+var match=text.match(/^(\d{4})-(\d{2})-(\d{2})(?:[T\s](\d{2}):(\d{2}))?/);
+if(match)return match[3]+"-"+match[2]+"-"+match[1].slice(-2)+(includeTime&&match[4]?" "+match[4]+":"+match[5]:"");
+var date=value instanceof Date?value:new Date(value);
+if(isNaN(date.getTime()))return text;
+return pad2(date.getDate())+"-"+pad2(date.getMonth()+1)+"-"+String(date.getFullYear()).slice(-2)+(includeTime?" "+pad2(date.getHours())+":"+pad2(date.getMinutes()):"");
+}
+function todayFileDate(){return formatDrawDate(new Date(),false);
+}
+function getDrawNumber(draw){if(!draw)return"";
+return String(draw.drawNumber||draw.drawNum||draw._drawNum||"");
+}
+function normalizeHistoryDraw(draw){var combination=draw&&draw.combination||{};
+var main=Array.isArray(combination.main)?combination.main:[];
+var sub=Array.isArray(combination.sub)?combination.sub:[];
+var third=Array.isArray(combination.third)?combination.third:[];
+var normalized=Object.assign({},draw);
+normalized.drawNumber=getDrawNumber(draw);
+normalized.drawNum=normalized.drawNumber;
+normalized.main=main;
+normalized.sub=sub;
+normalized.extra=sub.concat(third);
+normalized.jackpotAmount=null!=draw.jackpot?draw.jackpot:draw.jackpotAmount;
+normalized._drawNum=normalized.drawNumber;
+normalized._summaryOnly=true;
+return normalized;
+}
+function normalizeDetailedDraw(detail,summary,productId){var normalized=Object.assign({},detail||{});
+var summaryCombination=summary&&summary.combination||{};
+var detailCombination=normalized.combination||{};
+var main=Array.isArray(detailCombination.main)?detailCombination.main:Array.isArray(normalized.main)?normalized.main:Array.isArray(summaryCombination.main)?summaryCombination.main:[];
+var sub=Array.isArray(detailCombination.sub)?detailCombination.sub:Array.isArray(normalized.sub)?normalized.sub:Array.isArray(summaryCombination.sub)?summaryCombination.sub:[];
+var third=Array.isArray(detailCombination.third)?detailCombination.third:Array.isArray(normalized.third)?normalized.third:Array.isArray(summaryCombination.third)?summaryCombination.third:[];
+normalized.combination={main:main,sub:sub,third:third};
+normalized.main=main;
+normalized.sub=sub;
+normalized.extra=sub.concat(third);
+normalized.productId=normalized.productId||(summary&&summary.productId)||productId;
+normalized.drawNumber=getDrawNumber(normalized)||getDrawNumber(summary);
+normalized.drawNum=normalized.drawNumber;
+normalized.drawDate=normalized.drawDate||(summary&&summary.drawDate);
+normalized.basePrice=null!=normalized.basePrice?normalized.basePrice:summary&&summary.basePrice;
+normalized.jackpotAmount=null!=normalized.jackpotAmount?normalized.jackpotAmount:null!=normalized.jackpot?normalized.jackpot:summary&&summary.jackpotAmount;
+normalized._drawNum=normalized.drawNumber;
+normalized._summaryOnly=false;
+return normalized;
+}
+function hasRealData(draw){if(!draw)return false;
+var date=parseDrawDate(draw.drawDate);
+if(!date||date>new Date())return false;
+return extractNumbers(draw).main.length>0;
+}
+function extractNumbers(draw){if(!draw)return{main:[],extra:[]};
+if(draw.combination){var combination=draw.combination;
+var combinationMain=Array.isArray(combination.main)?combination.main:[];
+var combinationExtra=[];
+if(Array.isArray(combination.sub))combinationExtra=combinationExtra.concat(combination.sub);
+if(Array.isArray(combination.third))combinationExtra=combinationExtra.concat(combination.third);
+if(combinationMain.length>0)return{main:combinationMain,extra:combinationExtra};
+}
+if(draw.main&&draw.main.length>0){var ext=draw.sub||draw.extra||[];
+if(!Array.isArray(ext))ext=[ext];
+return{main:draw.main,extra:ext};
+}if(draw.digitalDetails){var det=draw.digitalDetails;
+if(Array.isArray(det)){if(typeof det[0]==="number"){var e=draw.sub||draw.extra||[];
+if(!Array.isArray(e))e=[e];
+return{main:det,extra:e};
+}var mainArr=[],extraArr=[];
+for(var i=0;
+i<det.length;
+i++){if(det[i].numbers&&Array.isArray(det[i].numbers)){mainArr=det[i].numbers;
+}if(void 0!==det[i].extraNumber){extraArr=[det[i].extraNumber];
+}if(det[i].additionalNumbers){extraArr=det[i].additionalNumbers;
+}}if(mainArr.length>0){if(extraArr.length===0){extraArr=draw.sub||draw.extra||[];
+if(!Array.isArray(extraArr))extraArr=[extraArr];
+}return{main:mainArr,extra:extraArr};
+}for(var j=0;
+j<det.length;
+j++){if(typeof det[j].value==="number")mainArr.push(det[j].value);
+else if(typeof det[j].number==="number")mainArr.push(det[j].number);
+}if(mainArr.length>0)return{main:mainArr,extra:draw.sub||draw.extra||[]};
+}if(typeof det==="object"&&!Array.isArray(det)){if(det.numbers)return{main:det.numbers,extra:det.sub?[det.sub]:det.extraNumber?[det.extraNumber]:det.additionalNumbers||[]};
+if(det.main)return{main:det.main,extra:det.extra||[]};
+if(det.fields)return{main:det.fields,extra:[]};
+}}var leftover=draw.sub||draw.extra||[];
+if(!Array.isArray(leftover))leftover=[leftover];
+return{main:draw.main||[],extra:leftover};
+}
+function getDrawFields(draw){if(!draw)return[];
+var fields=[];
+var combination=draw.combination;
+if(combination&&typeof combination==="object"){var orderedKeys=["main","sub","third"];
+for(var i=0;i<orderedKeys.length;i++){var key=orderedKeys[i];
+var values=combination[key];
+if(Array.isArray(values)&&values.length>0)fields.push({key:key,numbers:values});
+}
+if(fields.length>0)return fields;
+}
+var legacy=extractNumbers(draw);
+if(legacy.main.length>0)fields.push({key:"main",numbers:legacy.main});
+if(legacy.extra.length>0)fields.push({key:"extra",numbers:legacy.extra});
+return fields;
+}
+function getFieldNumbers(draw,fieldKey){var fields=getDrawFields(draw);
+for(var i=0;i<fields.length;i++){if(fields[i].key===fieldKey)return fields[i].numbers;
+}
+return[];
+}
+function fieldBaseLabel(key,index){if(key==="main")return"Поле 1";
+if(key==="sub")return"Поле 2";
+if(key==="third")return"Поле 3";
+if(key==="extra")return"Доп. поле";
+return"Поле "+(index+1);
+}
+function numberWord(count){var mod10=count%10;
+var mod100=count%100;
+if(mod10===1&&mod100!==11)return"число";
+if(mod10>=2&&mod10<=4&&(mod100<12||mod100>14))return"числа";
+return"чисел";
+}
+function getFieldSchema(draws){var order=["main","sub","third","extra"];
+var stats={};
+var firstProductId=draws.length&&draws[0].productId;
+var lottery=getLotteryByProductId(firstProductId)||(state.selectedLottery||null);
+var configuredPools=lottery&&Array.isArray(lottery.fieldPools)?lottery.fieldPools:[];
+var lotteryType=lottery&&lottery.type||state.lotteryType||"UNKNOWN";
+for(var i=0;i<draws.length;i++){var fields=getDrawFields(draws[i]);
+for(var j=0;j<fields.length;j++){var field=fields[j];
+if(!stats[field.key])stats[field.key]={key:field.key,maxCount:0,minCount:999999,maxValue:0};
+var item=stats[field.key];
+item.maxCount=Math.max(item.maxCount,field.numbers.length);
+item.minCount=Math.min(item.minCount,field.numbers.length);
+for(var n=0;n<field.numbers.length;n++){if(Number(field.numbers[n])>item.maxValue)item.maxValue=Number(field.numbers[n]);
+}}}
+var schema=[];
+for(var k=0;k<order.length;k++){if(!stats[order[k]])continue;
+var stat=stats[order[k]];
+stat.label=fieldBaseLabel(stat.key,schema.length);
+if(stat.key==="main"&&(lotteryType==="BINGO"||lotteryType==="MULTIGAME"))stat.label="Порядок шаров";
+else if(stat.key==="main"&&lotteryType==="BETTING")stat.label="Исходы";
+else if(stat.key==="main"&&lotteryType==="COMPLEX")stat.label="Кубики";
+var countText=stat.minCount===stat.maxCount?String(stat.maxCount):stat.minCount+"–"+stat.maxCount;
+var configuredIndex=stat.key==="sub"||stat.key==="extra"?1:stat.key==="third"?2:0;
+stat.poolSize=Number(configuredPools[configuredIndex]||0);
+if(stat.key==="main"&&(lotteryType==="BETTING"||lotteryType==="COMPLEX"))stat.header=stat.label+" ("+countText+")";
+else stat.header=stat.label+" ("+countText+(stat.poolSize?" из "+stat.poolSize:" "+numberWord(stat.maxCount))+")";
+schema.push(stat);
+}
+var extraKeys=Object.keys(stats);
+for(var x=0;x<extraKeys.length;x++){if(order.indexOf(extraKeys[x])>=0)continue;
+var extraStat=stats[extraKeys[x]];
+extraStat.label=fieldBaseLabel(extraStat.key,schema.length);
+extraStat.header=extraStat.label+" ("+extraStat.maxCount+" "+numberWord(extraStat.maxCount)+")";
+schema.push(extraStat);
+}
+return schema;
+}
+function selectFieldSchema(draws,tabName){var schema=getFieldSchema(draws);
+if(schema.length===0)return{schema:schema,selected:null};
+var wanted=state.fieldSelection[tabName]||schema[0].key;
+var selected=schema[0];
+for(var i=0;i<schema.length;i++){if(schema[i].key===wanted){selected=schema[i];
+break;
+}}
+state.fieldSelection[tabName]=selected.key;
+return{schema:schema,selected:selected};
+}
+function fieldSelectorHtml(schema,selectedKey,selectId){if(schema.length<=1)return'<div style="font-size:12px;color:#888;margin-bottom:10px">Анализируется: '+escHtml(schema[0]?schema[0].header:"нет данных")+"</div>";
+var html='<label style="display:block;font-size:12px;color:#aaa;margin-bottom:10px">Поле для расчётов: <select id="'+selectId+'" style="margin-left:8px;padding:5px 8px;background:#0d0d1a;color:#fff;border:1px solid #555;border-radius:5px">';
+for(var i=0;i<schema.length;i++)html+='<option value="'+escHtml(schema[i].key)+'"'+(schema[i].key===selectedKey?" selected":"")+">"+escHtml(schema[i].header)+"</option>";
+return html+"</select></label>";
+}
+function detectPoolRange(draws,fieldKey){var maxNum=0;
+var minNum=1;
+var fieldIndex=fieldKey==="sub"||fieldKey==="extra"?1:fieldKey==="third"?2:0;
+var firstProductId=draws.length&&draws[0].productId;
+var lottery=getLotteryByProductId(firstProductId)||(state.selectedLottery||null);
+if(lottery&&Array.isArray(lottery.fieldPools)&&lottery.fieldPools[fieldIndex])maxNum=Number(lottery.fieldPools[fieldIndex])||0;
+for(var i=0;
+i<draws.length;
+i++){var nums=getFieldNumbers(draws[i],fieldKey||"main");
+for(var j=0;
+j<nums.length;
+j++){var value=Number(nums[j]);
+if(value>maxNum)maxNum=value;
+if(value<minNum)minNum=value;
+}}return{min:minNum,max:maxNum,size:maxNum>=minNum?maxNum-minNum+1:0};
+}
+function detectNumsPerDraw(draws,fieldKey){if(draws.length===0)return 0;
+for(var i=0;i<draws.length;i++){var values=getFieldNumbers(draws[i],fieldKey||"main");
+if(values.length>0)return values.length;
+}
+return 0;
+}
+function getLotteryByProductId(productId){for(var i=0;i<LOTTERIES.length;i++){if(String(LOTTERIES[i].productId)===String(productId))return LOTTERIES[i];
+}return null;
+}
+function getDrawUrl(draw){var number=getDrawNumber(draw);
+if(!number)return"";
+var lottery=getLotteryByProductId(draw&&draw.productId)||(state.selectedLottery||null);
+var route=lottery&&(lottery.slug||lottery.route||lottery.alias);
+if(!route)return"";
+return"https://nloto.ru/lottery/"+encodeURIComponent(route)+"/history/"+encodeURIComponent(number);
+}
+function drawLinkHtml(draw){var number=getDrawNumber(draw)||"-";
+var url=getDrawUrl(draw);
+if(!url)return'<b style="color:#4CAF50;font-size:14px">'+escHtml(number)+"</b>";
+return'<a href="'+escHtml(url)+'" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" title="Открыть официальный результат тиража" style="color:#4CAF50;font-size:14px;font-weight:bold;text-decoration:underline;text-underline-offset:2px">'+escHtml(number)+" ↗</a>";
+}
+function beginRequestSession(){if(state.abortController){try{state.abortController.abort();
+}catch(e){}}
+state.abortFlag=false;
+state.abortController=new AbortController();
+return state.abortController.signal;
+}
+function abortActiveRequests(){state.abortFlag=true;
+if(state.abortController){try{state.abortController.abort();
+}catch(e){}}
+}
+function waitMs(milliseconds){return new Promise(function(resolve){setTimeout(resolve,milliseconds);
+});
+}
+var CACHE_PREFIX="nloto73_";
+var CACHE_TTL=1800000;
+function cacheSet(key,value){try{localStorage.setItem(CACHE_PREFIX+key,JSON.stringify({ts:Date.now(),data:value}));
+}catch(e){}}
+function cacheGet(key){try{var raw=localStorage.getItem(CACHE_PREFIX+key);
+if(!raw)return null;
+var obj=JSON.parse(raw);
+if(Date.now()-obj.ts>CACHE_TTL){localStorage.removeItem(CACHE_PREFIX+key);
+return null;
+}return obj.data;
+}catch(e){return null;
+}}
+function cacheClear(productId){try{var marker="_"+String(productId)+"_";
+var keys=[];
+for(var i=0;i<localStorage.length;i++){var key=localStorage.key(i);
+if(key&&key.indexOf(CACHE_PREFIX)===0&&(key.indexOf(marker)>=0||key===CACHE_PREFIX+"scan_"+productId))keys.push(key);
+}for(var j=0;j<keys.length;j++)localStorage.removeItem(keys[j]);
+}catch(e){}}
+function makeDrawsCacheKey(productId,count,dateFrom,dateTo,mode){return"draws_"+productId+"_"+count+"_"+(dateFrom||"all")+"_"+(dateTo||"all")+"_"+(mode||"details");
+}
+async function fetchJson(url,retries){retries=null==retries?2:retries;
+for(var attempt=0;
+attempt<=retries;
+attempt++){if(state.abortFlag)return null;
+try{var isAbsolute=/^https?:\/\//i.test(url);
+var options={credentials:isAbsolute?"omit":"include"};
+if(state.abortController)options.signal=state.abortController.signal;
+var resp=await fetch(url,options);
+if(resp.ok)return await resp.json();
+if((resp.status===429||resp.status>=500)&&attempt<retries){await waitMs(600 * Math.pow(2,attempt));
+continue;
+}return null;
+}catch(e){if(e&&e.name==="AbortError")return null;
+if(attempt<retries)await waitMs(400 * Math.pow(2,attempt));
+else return null;
+}}return null;
+}
+async function fetchDraw(pid,drawNum,retries){return fetchJson("/api/v2/products/"+encodeURIComponent(pid)+"/draws/"+encodeURIComponent(pad6(drawNum))+"/details",retries);
+}
+async function fetchHistoryPage(productId,page,size,retries){page=Math.max(0,parseInt(page,10)||0);
+size=Math.max(1,Math.min(200,parseInt(size,10)||200));
+return fetchJson("/api/v2/products/"+encodeURIComponent(productId)+"/draws/history?page="+page+"&size="+size,retries);
+}
+async function loadLotteryCatalog(logFn){var endpoints={
+archive:"https://static.nationallottery.ru/_next/image/dictionaries?alias=drawsArchive&tag=WEB&domain=ONLINE",
+routes:"https://static.nationallottery.ru/_next/image/dictionaries?alias=lotteryProducts&tag=WEB&domain=ONLINE",
+catalog:"https://static.nationallottery.ru/_next/image/napi/v2/products?types=BINGO&types=DIGITAL&types=BETTING&types=MULTIGAME&types=COMPLEX"
+};
+try{var responses=await Promise.all([fetch(endpoints.archive),fetch(endpoints.routes),fetch(endpoints.catalog)]);
+for(var r=0;r<responses.length;r++){if(!responses[r].ok)throw new Error("HTTP "+responses[r].status);
+}
+var archivePayload=await responses[0].json();
+var routesPayload=await responses[1].json();
+var catalogPayload=await responses[2].json();
+var archive=Array.isArray(archivePayload.drawsArchive)?archivePayload.drawsArchive:[];
+var routes=Array.isArray(routesPayload.lotteryProducts)?routesPayload.lotteryProducts:[];
+var products=Array.isArray(catalogPayload)?catalogPayload:[];
+var routeById={};
+var productById={};
+for(var i=0;i<routes.length;i++){if(routes[i]&&routes[i].productId)routeById[String(routes[i].productId)]=routes[i];
+}
+for(var j=0;j<products.length;j++){if(products[j]&&products[j].productId)productById[String(products[j].productId)]=products[j];
+}
+var merged=[];
+var used={};
+for(var k=0;k<archive.length;k++){var item=archive[k];
+if(!item||!item.productId)continue;
+var id=String(item.productId);
+var routeItem=routeById[id]||{};
+var product=productById[id]||{};
+var route=routeItem.route||item.route||product.alias||item.alias;
+if(!route)continue;
+merged.push({productId:id,name:item.name||product.name||("ID "+id),alias:item.alias||product.alias||route,slug:route,type:product.type||"UNKNOWN",basePrice:product.draw&&product.draw.basePrice||0,fieldPools:FIELD_POOLS[id]||[],catalogListed:!!product.productId,catalogHasDraw:!!(product.draw&&product.draw.drawNum&&product.draw.drawDate)});
+used[id]=true;
+}
+for(var p=0;p<products.length;p++){var productItem=products[p];
+if(!productItem||!productItem.productId)continue;
+var productId=String(productItem.productId);
+if(used[productId])continue;
+var routeProduct=routeById[productId]||{};
+var productRoute=routeProduct.route||productItem.route||productItem.alias;
+if(!productRoute)continue;
+merged.push({productId:productId,name:productItem.name||routeProduct.name||("ID "+productId),alias:productItem.alias||productRoute,slug:productRoute,type:productItem.type||"UNKNOWN",basePrice:productItem.draw&&productItem.draw.basePrice||0,fieldPools:FIELD_POOLS[productId]||[],catalogListed:true,catalogHasDraw:!!(productItem.draw&&productItem.draw.drawNum&&productItem.draw.drawDate)});
+used[productId]=true;
+}
+for(var q=0;q<routes.length;q++){var routeOnly=routes[q];
+if(!routeOnly||!routeOnly.productId||!routeOnly.route)continue;
+var routeOnlyId=String(routeOnly.productId);
+if(used[routeOnlyId])continue;
+merged.push({productId:routeOnlyId,name:routeOnly.name||("ID "+routeOnlyId),alias:routeOnly.alias||routeOnly.route,slug:routeOnly.route,type:"UNKNOWN",basePrice:0,fieldPools:FIELD_POOLS[routeOnlyId]||[],catalogListed:false,catalogHasDraw:false});
+used[routeOnlyId]=true;
+}
+for(var f=0;f<LOTTERIES.length;f++){var fallbackId=String(LOTTERIES[f].productId);
+if(FIELD_POOLS[fallbackId])LOTTERIES[f].fieldPools=FIELD_POOLS[fallbackId];
+if(!used[fallbackId])merged.push(LOTTERIES[f]);
+}
+merged=applyLotteryVersionLabels(merged);
+if(merged.length>0)LOTTERIES=merged;
+state.catalogLoaded=true;
+if(logFn)logFn("Каталог обновлён: "+LOTTERIES.length+" лотерей","#4CAF50");
+}catch(error){state.catalogLoaded=false;
+if(logFn)logFn("Онлайн-каталог недоступен — используется встроенный список","#FF9800");
+}return LOTTERIES;
+}
+async function scanForLatest(productId,logFn){beginRequestSession();
+logFn("Получаем последний завершённый тираж из архива...","#666");
+var page=await fetchHistoryPage(productId,0,1,2);
+if(state.abortFlag||!page||!Array.isArray(page.content)||page.content.length===0)return null;
+var summary=normalizeHistoryDraw(page.content[0]);
+var details=await fetchDraw(productId,summary.drawNumber,1);
+var data=details&&hasRealData(details)?normalizeDetailedDraw(details,summary,productId):summary;
+data._drawNum=summary.drawNumber;
+data.drawNumber=getDrawNumber(data)||summary.drawNumber;
+var lottery=getLotteryByProductId(productId)||state.selectedLottery;
+state.latestDrawNum=summary.drawNumber;
+state.drawNumFormat="history";
+state.lotteryType=data.type||(lottery&&lottery.type)||"UNKNOWN";
+state.basePrice=data.basePrice||(lottery&&lottery.basePrice)||summary.basePrice||0;
+var result={num:summary.drawNumber,data:data,format:"history",iterations:1};
+cacheSet("scan_"+productId,{num:summary.drawNumber,format:"history",type:state.lotteryType,basePrice:state.basePrice});
+logFn("Последний тираж: #"+summary.drawNumber+" от "+formatDrawDate(summary.drawDate,true),"#4CAF50");
+return result;
+}
+async function enrichDrawDetails(productId,draws,progressFn){var output=new Array(draws.length);
+var cursor=0;
+var completed=0;
+var failed=0;
+var workers=Math.min(8,draws.length);
+async function worker(){while(!state.abortFlag){var index=cursor++;
+if(index>=draws.length)return;
+var summary=draws[index];
+var detail=await fetchDraw(productId,getDrawNumber(summary),2);
+if(detail&&hasRealData(detail)){output[index]=normalizeDetailedDraw(detail,summary,productId);
+}else{failed++;
+output[index]=summary;
+}
+completed++;
+var pct=90+Math.min(9,Math.round(completed/Math.max(1,draws.length)*9));
+progressFn(pct,completed,draws.length,failed);
+}}
+var promises=[];
+for(var i=0;i<workers;i++)promises.push(worker());
+await Promise.all(promises);
+return output.filter(Boolean);
+}
+async function loadDraws(productId,count,dateFrom,dateTo,progressFn,mode){beginRequestSession();
+mode=mode||"details";
+count=Math.min(Math.max(parseInt(count,10)||20,1),10000);
+var from=dateFrom?new Date(dateFrom+"T00:00:00+03:00"):null;
+var to=dateTo?new Date(dateTo+"T23:59:59+03:00"):null;
+if(from&&to&&from>to)throw new Error("Дата «от» должна быть раньше даты «до»");
+var cacheKey=makeDrawsCacheKey(productId,count,dateFrom,dateTo,mode);
+state.lastCacheKey=cacheKey;
+var cached=cacheGet(cacheKey);
+if(cached&&cached.length>0){progressFn(100,cached.length,cached.length,0);
+return cached;
+}
+var pageSize=from||to?200:Math.min(200,count);
+var pageCache={};
+async function getPage(pageNumber){if(pageCache[pageNumber])return pageCache[pageNumber];
+var value=await fetchHistoryPage(productId,pageNumber,pageSize,2);
+if(value)pageCache[pageNumber]=value;
+return value;
+}
+var firstPage=await getPage(0);
+if(state.abortFlag||!firstPage||!Array.isArray(firstPage.content)||firstPage.content.length===0)return[];
+var totalPages=Math.max(1,firstPage.totalPages||1);
+var totalElements=firstPage.totalElements||firstPage.content.length;
+var startPage=0;
+if(to&&totalPages>1){var firstItems=firstPage.content;
+var firstOldest=parseDrawDate(firstItems[firstItems.length-1].drawDate);
+if(firstOldest&&firstOldest>to){var low=1;
+var high=totalPages-1;
+var candidate=high;
+while(low<=high&&!state.abortFlag){var middle=Math.floor((low+high)/2);
+var middlePage=await getPage(middle);
+if(!middlePage||!middlePage.content||middlePage.content.length===0){high=middle-1;
+continue;
+}
+var newest=parseDrawDate(middlePage.content[0].drawDate);
+var oldest=parseDrawDate(middlePage.content[middlePage.content.length-1].drawDate);
+if(newest&&oldest&&to<=newest&&to>=oldest){candidate=middle;
+break;
+}
+if(oldest&&to<oldest){low=middle+1;
+candidate=Math.min(totalPages-1,low);
+}else{high=middle-1;
+candidate=middle;
+}}
+startPage=Math.max(0,Math.min(totalPages-1,candidate));
+}}
+var loaded=[];
+var reachedFrom=false;
+for(var pageNumber=startPage;pageNumber<totalPages&&!state.abortFlag;pageNumber++){var pageData=await getPage(pageNumber);
+if(!pageData||!Array.isArray(pageData.content))break;
+for(var i=0;i<pageData.content.length;i++){var normalized=normalizeHistoryDraw(pageData.content[i]);
+var date=parseDrawDate(normalized.drawDate);
+if(!date)continue;
+if(to&&date>to)continue;
+if(from&&date<from){reachedFrom=true;
+break;
+}
+if(hasRealData(normalized))loaded.push(normalized);
+if(loaded.length>=count)break;
+}
+var expected=Math.min(count,totalElements);
+var pct=Math.min(89,Math.max(1,Math.round(loaded.length/Math.max(1,expected)*89)));
+progressFn(pct,loaded.length,expected,0);
+if(reachedFrom||loaded.length>=count)break;
+}
+loaded=loaded.slice(0,count);
+if(mode==="details"&&loaded.length>0&&!state.abortFlag)loaded=await enrichDrawDetails(productId,loaded,progressFn);
+loaded.sort(function(a,b){return(parseDrawDate(b.drawDate)||0)-(parseDrawDate(a.drawDate)||0);
+});
+var lottery=getLotteryByProductId(productId)||state.selectedLottery;
+state.latestDrawNum=loaded.length?getDrawNumber(loaded[0]):state.latestDrawNum;
+state.drawNumFormat="history";
+state.lotteryType=(lottery&&lottery.type)||(loaded[0]&&loaded[0].type)||"UNKNOWN";
+state.basePrice=(loaded[0]&&loaded[0].basePrice)||(lottery&&lottery.basePrice)||state.basePrice||0;
+var cacheable=mode!=="details"||loaded.every(function(draw){return draw._summaryOnly===false;
+});
+if(loaded.length>0&&!state.abortFlag&&cacheable)cacheSet(cacheKey,loaded);
+return loaded;
+}
+function analyzeHotCold(draws,fieldKey){var totalDraws=draws.length;
+if(totalDraws===0)return null;
+fieldKey=fieldKey||"main";
+var poolRange=detectPoolRange(draws,fieldKey);
+var poolSize=poolRange.size;
+var totalObservations=0;
+for(var observationIndex=0;observationIndex<draws.length;observationIndex++)totalObservations+=getFieldNumbers(draws[observationIndex],fieldKey).length;
+var numsPerDraw=totalDraws>0?totalObservations/totalDraws:0;
+if(poolSize<=0||totalObservations<=0)return null;
+var expectedFreq=totalObservations/poolSize;
+var numCount={};
+for(var i=0;
+i<draws.length;
+i++){var nums=getFieldNumbers(draws[i],fieldKey);
+for(var j=0;
+j<nums.length;
+j++){numCount[nums[j]]=(numCount[nums[j]]||0)+1;
+}}var hot=[],cold=[],normal=[];
+for(var n=poolRange.min;
+n<=poolRange.max;
+n++){var freq=numCount[n]||0;
+var ratio=expectedFreq>0?freq / expectedFreq:0;
+var item={num:n,freq:freq,expected:expectedFreq.toFixed(1),ratio:ratio.toFixed(2)};
+if(ratio>1.3)hot.push(item);
+else if(ratio<0.7)cold.push(item);
+else normal.push(item);
+}hot.sort(function(a,b){return parseFloat(b.ratio)-parseFloat(a.ratio);
+});
+cold.sort(function(a,b){return parseFloat(a.ratio)-parseFloat(b.ratio);
+});
+return{hot:hot,cold:cold,normal:normal,expectedFreq:expectedFreq,poolSize:poolSize,numCount:numCount,numsPerDraw:numsPerDraw,totalObservations:totalObservations};
+}
+function analyzeGaps(draws,fieldKey){if(draws.length===0)return[];
+fieldKey=fieldKey||"main";
+var poolRange=detectPoolRange(draws,fieldKey);
+var appearances={};
+for(var i=0;
+i<draws.length;
+i++){var nums=getFieldNumbers(draws[i],fieldKey);
+for(var j=0;
+j<nums.length;
+j++){var n=nums[j];
+if(!appearances[n])appearances[n]=[];
+appearances[n].push(i);
+}}var gaps=[];
+for(var n=poolRange.min;
+n<=poolRange.max;
+n++){var app=appearances[n]||[];
+var currentGap=app.length>0?app[0]:draws.length;
+var gapList=[];
+for(var k=0;
+k<app.length-1;
+k++){gapList.push(app[k+1]-app[k]);
+}var avgGap=gapList.length>0?sumArr(gapList)/ gapList.length:draws.length;
+var maxGapVal=gapList.length>0?Math.max.apply(null,gapList):draws.length;
+var gapRatio=avgGap>0?currentGap / avgGap:0;
+gaps.push({num:n,currentGap:currentGap,avgGap:avgGap.toFixed(1),maxGap:maxGapVal,freq:app.length,gapRatio:gapRatio.toFixed(2),isOverdue:gapRatio>1.5});
+}gaps.sort(function(a,b){return parseFloat(b.gapRatio)-parseFloat(a.gapRatio);
+});
+return gaps;
+}
+function analyzePairs(draws,topN,fieldKey){topN=topN||25;
+fieldKey=fieldKey||"main";
+var pairCount={};
+for(var i=0;
+i<draws.length;
+i++){var nums=getFieldNumbers(draws[i],fieldKey).slice().sort(function(a,b){return a-b;
+});
+for(var j=0;
+j<nums.length;
+j++){for(var k=j+1;
+k<nums.length;
+k++){var key=nums[j]+"-"+nums[k];
+pairCount[key]=(pairCount[key]||0)+1;
+}}}var pairs=[];
+var keys=Object.keys(pairCount);
+for(var i=0;
+i<keys.length;
+i++){var parts=keys[i].split("-");
+pairs.push({pair:keys[i],a:parseInt(parts[0]),b:parseInt(parts[1]),count:pairCount[keys[i]]});
+}pairs.sort(function(a,b){return b.count-a.count;
+});
+return pairs.slice(0,topN);
+}
+function lnGamma(z){var c=[76.18009172947146,-86.50532032941677,24.01409824083091,-1.231739572450155,0.1208650973866179e-2,-0.5395239384953e-5];
+var x=z,y=z,tmp=x+5.5;
+tmp-=(x+0.5)* Math.log(tmp);
+var ser=1.000000000190015;
+for(var j=0;
+j<6;
+j++){y+=1;
+ser+=c[j]/ y;
+}return-tmp+Math.log(2.5066282746310005 * ser / x);
+}
+function gammaQ(a,x){if(x<=0)return 1;
+if(x<a+1)return 1-gammaSeriesP(a,x);
+return gammaCFQ(a,x);
+}
+function gammaSeriesP(a,x){var maxIter=200,eps=3e-7;
+if(x===0)return 0;
+var ap=a,sum=1 / a,del=sum;
+for(var n=1;
+n<=maxIter;
+n++){ap+=1;
+del *=x / ap;
+sum+=del;
+if(Math.abs(del)<Math.abs(sum)* eps)break;
+}return sum * Math.exp(-x+a * Math.log(x)-lnGamma(a));
+}
+function gammaCFQ(a,x){var maxIter=200,eps=3e-7,tiny=1e-30;
+var b=x+1-a,c=1 / tiny,d=1 / b,h=d;
+for(var i=1;
+i<=maxIter;
+i++){var an=-i *(i-a);
+b+=2;
+d=an * d+b;
+if(Math.abs(d)<tiny)d=tiny;
+c=b+an / c;
+if(Math.abs(c)<tiny)c=tiny;
+d=1 / d;
+var del=d * c;
+h *=del;
+if(Math.abs(del-1)<eps)break;
+}return Math.exp(-x+a * Math.log(x)-lnGamma(a))* h;
+}
+function chiSquareTest(draws,fieldKey){if(draws.length<10)return null;
+fieldKey=fieldKey||"main";
+var poolRange=detectPoolRange(draws,fieldKey);
+var poolSize=poolRange.size;
+var totalObservations=0;
+for(var observationIndex=0;observationIndex<draws.length;observationIndex++)totalObservations+=getFieldNumbers(draws[observationIndex],fieldKey).length;
+if(poolSize<=1||totalObservations<=0)return null;
+var expected=totalObservations / poolSize;
+var numCount={};
+for(var i=0;
+i<draws.length;
+i++){var nums=getFieldNumbers(draws[i],fieldKey);
+for(var j=0;
+j<nums.length;
+j++){numCount[nums[j]]=(numCount[nums[j]]||0)+1;
+}}var chiSq=0;
+var deviations=[];
+for(var n=poolRange.min;
+n<=poolRange.max;
+n++){var observed=numCount[n]||0;
+var dev=observed-expected;
+chiSq+=(dev * dev)/ expected;
+deviations.push({num:n,observed:observed,expected:expected.toFixed(1),deviation:dev.toFixed(1)});
+}deviations.sort(function(a,b){return Math.abs(parseFloat(b.deviation))-Math.abs(parseFloat(a.deviation));
+});
+var df=poolSize-1;
+var pValue=gammaQ(df / 2,chiSq / 2);
+var isRandom=pValue>0.05;
+return{chiSquare:chiSq.toFixed(2),degreesOfFreedom:df,expected:expected.toFixed(2),pValue:pValue<0.0001?pValue.toExponential(2):pValue.toFixed(4),isRandom:isRandom,conclusion:isRandom?"Нет оснований отклонять гипотезу о равномерности(p="+(pValue<0.0001?pValue.toExponential(2):pValue.toFixed(4))+">0.05)":"Распределение значимо отличается от равномерного(p="+(pValue<0.0001?pValue.toExponential(2):pValue.toFixed(4))+"<0.05). Могут быть паттерны.",topDeviations:deviations.slice(0,10)};
+}
+function analyzeTrends(draws,windowSize,fieldKey){windowSize=windowSize||10;
+fieldKey=fieldKey||"main";
+if(draws.length===0)return null;
+var sums=[];
+for(var i=0;
+i<draws.length;
+i++){var nums=getFieldNumbers(draws[i],fieldKey);
+if(nums.length===0)continue;
+sums.push({index:i,drawNum:getDrawNumber(draws[i]),date:draws[i].drawDate,sum:sumArr(nums)});
+}if(sums.length===0)return null;
+var movingAvg=[];
+for(var i=0;
+i<sums.length;
+i++){var start=Math.max(0,i-windowSize+1);
+var wSum=0,wCount=0;
+for(var j=start;
+j<=i;
+j++){wSum+=sums[j].sum;
+wCount++;
+}movingAvg.push(wCount>0?wSum / wCount:0);
+}var n=sums.length;
+var sumX=0,sumY=0,sumXY=0,sumX2=0;
+for(var i=0;
+i<n;
+i++){sumX+=i;
+sumY+=sums[i].sum;
+sumXY+=i * sums[i].sum;
+sumX2+=i * i;
+}var denominator=n * sumX2-sumX * sumX;
+var slope=denominator!==0?(n * sumXY-sumX * sumY)/denominator:0;
+var intercept=(sumY-slope * sumX)/ n;
+var trendDir=slope>1?"up":slope<-1?"down":"stable";
+var trendLabel=slope>1?"Восходящий":slope<-1?"Нисходящий":"Стабильный";
+return{sums:sums,movingAvg:movingAvg,windowSize:windowSize,slope:slope.toFixed(2),intercept:intercept.toFixed(1),trend:trendDir,trendLabel:trendLabel,avgSum:(sumY / n).toFixed(1),minSum:Math.min.apply(null,sums.map(function(s){return s.sum;
+})),maxSum:Math.max.apply(null,sums.map(function(s){return s.sum;
+}))};
+}
+function generateRecommendations(draws,fieldKey){if(draws.length<5)return[];
+fieldKey=fieldKey||"main";
+var hotCold=analyzeHotCold(draws,fieldKey);
+if(!hotCold)return[];
+var gaps=analyzeGaps(draws,fieldKey);
+var pairs=analyzePairs(draws,10,fieldKey);
+var trends=analyzeTrends(draws,10,fieldKey);
+var recs=[];
+var overdue=gaps.filter(function(g){return g.isOverdue;
+}).slice(0,5);
+if(overdue.length>0){recs.push({type:"overdue",icon:"WARNING",title:"Пересроченные числа",desc:"Не выпадали значительно дольше среднего. Вероятность появления повышается(гамblers' heuristic).",numbers:overdue.map(function(g){return g.num;
+}),detail:overdue.map(function(g){return g.num+"(пропуск "+g.currentGap+",средн. "+g.avgGap+")";
+}),color:"#f44336"});
+}if(hotCold.hot.length>0){var topHot=hotCold.hot.slice(0,5);
+recs.push({type:"hot",icon:"FIRE",title:"Горячие числа",desc:"Выпадают чаще ожидаемого(>1.3x). Могут быть в текущем тренде.",numbers:topHot.map(function(h){return h.num;
+}),detail:topHot.map(function(h){return h.num+"("+h.freq+" раз,x"+h.ratio+")";
+}),color:"#FF9800"});
+}if(hotCold.cold.length>0){var topCold=hotCold.cold.slice(0,5);
+recs.push({type:"cold",icon:"SNOW",title:"Холодные числа",desc:"Выпадают реже ожидаемого(<0.7x). Возможна регрессия к среднему.",numbers:topCold.map(function(c){return c.num;
+}),detail:topCold.map(function(c){return c.num+"("+c.freq+" раз,x"+c.ratio+")";
+}),color:"#2196F3"});
+}if(pairs.length>0){var topPairs=pairs.slice(0,5);
+recs.push({type:"pairs",icon:"LINK",title:"Частые пары",desc:"Пары чисел,которые выпадают вместе чаще других.",numbers:[],detail:topPairs.map(function(p){return p.pair+"("+p.count+" раз)";
+}),color:"#9C27B0"});
+}if(trends){var trendColor=trends.trend==="up"?"#f44336":trends.trend==="down"?"#2196F3":"#4CAF50";
+recs.push({type:"trend",icon:"CHART",title:"Тренд сумм:"+trends.trendLabel,desc:"Скользящее среднее "+trends.trendLabel.toLowerCase()+". Наклон:"+trends.slope+" за тираж. Средняя сумма:"+trends.avgSum+".",numbers:[],detail:["Диапазон:"+trends.minSum+"-"+trends.maxSum,"Окно MA("+trends.windowSize+"):"+(trends.movingAvg.length>0?trends.movingAvg[trends.movingAvg.length-1].toFixed(1):"?")],color:trendColor});
+}var suggested=[];
+var suggestDetails=[];
+var odNums=overdue.slice(0,2).map(function(g){return g.num;
+});
+var htNums=(hotCold.hot||[]).slice(0,2).map(function(h){return h.num;
+});
+var clNums=(hotCold.cold||[]).slice(0,1).map(function(c){return c.num;
+});
+suggested=suggested.concat(odNums,htNums,clNums);
+suggested=suggested.filter(function(v,i,a){return a.indexOf(v)===i;
+}).sort(function(a,b){return a-b;
+});
+suggestDetails.push("2 пересроченных:"+(odNums.join(",")||"нет"));
+suggestDetails.push("2 горячих:"+(htNums.join(",")||"нет"));
+suggestDetails.push("1 холодное:"+(clNums.join(",")||"нет"));
+if(suggested.length>0){recs.push({type:"combo",icon:"STAR",title:"Комбинированная рекомендация",desc:"Сбалансированная комбинация на основе всех метрик.",numbers:suggested,detail:suggestDetails,color:"#4CAF50"});
+}return recs;
+}
+function setupCanvas(canvas){var dpr=window.devicePixelRatio||1;
+var rect=canvas.getBoundingClientRect();
+canvas.width=rect.width * dpr;
+canvas.height=rect.height * dpr;
+var ctx=canvas.getContext("2d");
+ctx.scale(dpr,dpr);
+return{ctx:ctx,w:rect.width,h:rect.height};
+}
+function drawBarChart(canvas,data,opts){var s=setupCanvas(canvas);
+var ctx=s.ctx,W=s.w,H=s.h;
+var pad=opts.padding||{top:10,right:10,bottom:25,left:40};
+var chartW=W-pad.left-pad.right;
+var chartH=H-pad.top-pad.bottom;
+var n=data.length;
+if(n===0)return;
+var maxVal=opts.maxVal||0;
+for(var i=0;
+i<n;
+i++){if(data[i].value>maxVal)maxVal=data[i].value;
+}maxVal=maxVal * 1.15;
+var barW=opts.barWidth||Math.max(2,(chartW / n)-1);
+var gap=(chartW-barW * n)/(n+1);
+ctx.fillStyle="#0d0d1a";
+ctx.fillRect(0,0,W,H);
+ctx.strokeStyle="#222";
+ctx.lineWidth=0.5;
+for(var i=0;
+i<=4;
+i++){var yy=pad.top+chartH-(chartH / 4 * i);
+ctx.beginPath();
+ctx.moveTo(pad.left,yy);
+ctx.lineTo(W-pad.right,yy);
+ctx.stroke();
+}var fs=opts.fontSize||10;
+ctx.textAlign="center";
+for(var i=0;
+i<n;
+i++){var d=data[i];
+var x=pad.left+gap+i *(barW+gap);
+var barH=maxVal>0?(d.value / maxVal)* chartH:0;
+var y=pad.top+chartH-barH;
+ctx.fillStyle=d.color||"#4CAF50";
+ctx.fillRect(x,y,barW,barH);
+if(opts.showValues!==false&&barW>=8){ctx.fillStyle="#ccc";
+ctx.font=(fs-1)+"px monospace";
+ctx.fillText(d.value,x+barW / 2,y-2);
+}if(opts.showLabels!==false&&barW>=6){ctx.fillStyle="#888";
+ctx.font=fs+"px monospace";
+ctx.fillText(d.label,x+barW / 2,H-4);
+}}}
+function drawLineChart(canvas,points,opts){var s=setupCanvas(canvas);
+var ctx=s.ctx,W=s.w,H=s.h;
+var pad=opts.padding||{top:10,right:10,bottom:25,left:45};
+var chartW=W-pad.left-pad.right;
+var chartH=H-pad.top-pad.bottom;
+ctx.fillStyle="#0d0d1a";
+ctx.fillRect(0,0,W,H);
+if(points.length<2)return;
+var vals=[];
+for(var i=0;
+i<points.length;
+i++){vals.push(typeof points[i]==="number"?points[i]:points[i].y);
+}var minVal=Math.min.apply(null,vals);
+var maxVal=Math.max.apply(null,vals);
+var range=maxVal-minVal||1;
+minVal-=range * 0.1;
+maxVal+=range * 0.1;
+range=maxVal-minVal;
+ctx.strokeStyle="#222";
+ctx.lineWidth=0.5;
+for(var i=0;
+i<=4;
+i++){var yy=pad.top+chartH-(chartH / 4 * i);
+ctx.beginPath();
+ctx.moveTo(pad.left,yy);
+ctx.lineTo(W-pad.right,yy);
+ctx.stroke();
+ctx.fillStyle="#666";
+ctx.font="10px monospace";
+ctx.textAlign="right";
+var yVal=minVal+(range / 4 * i);
+ctx.fillText(yVal.toFixed(0),pad.left-4,yy+3);
+}var chartPoints=[];
+for(var i=0;
+i<points.length;
+i++){var px=pad.left+(i /(points.length-1))* chartW;
+var val=typeof points[i]==="number"?points[i]:points[i].y;
+var py=pad.top+chartH-((val-minVal)/ range)* chartH;
+chartPoints.push({x:px,y:py});
+}if(opts.fillColor){ctx.beginPath();
+ctx.moveTo(chartPoints[0].x,chartPoints[0].y);
+for(var i=1;
+i<chartPoints.length;
+i++)ctx.lineTo(chartPoints[i].x,chartPoints[i].y);
+ctx.lineTo(chartPoints[chartPoints.length-1].x,pad.top+chartH);
+ctx.lineTo(chartPoints[0].x,pad.top+chartH);
+ctx.closePath();
+ctx.fillStyle=opts.fillColor;
+ctx.fill();
+}ctx.beginPath();
+ctx.moveTo(chartPoints[0].x,chartPoints[0].y);
+for(var i=1;
+i<chartPoints.length;
+i++)ctx.lineTo(chartPoints[i].x,chartPoints[i].y);
+ctx.strokeStyle=opts.color||"#4CAF50";
+ctx.lineWidth=opts.lineWidth||1.5;
+ctx.stroke();
+if(opts.showDots!==false&&points.length<=100){for(var i=0;
+i<chartPoints.length;
+i++){ctx.beginPath();
+ctx.arc(chartPoints[i].x,chartPoints[i].y,2,0,Math.PI * 2);
+ctx.fillStyle=opts.color||"#4CAF50";
+ctx.fill();
+}}if(opts.xLabels){ctx.fillStyle="#666";
+ctx.font="9px monospace";
+ctx.textAlign="center";
+var step=Math.max(1,Math.floor(points.length / 8));
+for(var i=0;
+i<points.length;
+i+=step){var lbl=typeof opts.xLabels[i]==="function"?opts.xLabels[i](points[i],i):opts.xLabels[i];
+ctx.fillText(lbl,chartPoints[i].x,H-4);
+}}}
+function row(label,value,color){return '<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #333">'+'<span style="color:#aaa">'+label+'</span>'+'<span style="color:'+(color||"#fff")+';font-weight:bold">'+value+'</span></div>';
+}
+function makePanel(title,color,content){return '<div style="background:#2a2a3e;padding:16px;border-radius:10px;margin-bottom:14px">'+'<div style="color:'+(color||"#FF9800")+';font-weight:bold;font-size:16px;margin-bottom:10px">'+title+'</div>'+content+'</div>';
+}
+function renderOverview(draws){var el=document.getElementById("nl6_tab_overview");
+if(!el)return;
+var count=draws.length;
+var fallbackPrice=state.basePrice||(count>0?draws[0].basePrice||100:100);
+var name=state.selectedLottery?state.selectedLottery.name:(count&&draws[0].productId?"ID:"+draws[0].productId:"Лотерея");
+var slug=state.selectedLottery?state.selectedLottery.slug:"";
+var type=state.lotteryType||(count>0?draws[0].type||"UNKNOWN":"UNKNOWN");
+var archiveUrl="https://nloto.ru/lottery/"+slug+"/history";
+var hasFinancialDetails=false;
+for(var detailIndex=0;detailIndex<count;detailIndex++){if(draws[detailIndex]._summaryOnly===false||null!=draws[detailIndex].ticketCount||null!=draws[detailIndex].winAmount){hasFinancialDetails=true;
+break;
+}}
+if(!hasFinancialDetails){el.innerHTML=makePanel(escHtml(name)+" — "+escHtml(type)+" | "+count+" тиражей","#FFD700",row("Цена билета:",getPriceSummary(draws,fallbackPrice),"#4CAF50")+row("Период:",formatDrawDate(draws[0]&&draws[0].drawDate,false)+" — "+formatDrawDate(draws[count-1]&&draws[count-1].drawDate,false),"#aaa")+'<div style="margin-top:12px;padding:10px;background:#FF980018;border:1px solid #FF980066;border-radius:8px;color:#FFB74D">Финансовые показатели доступны в расширенном режиме.</div>');
+return;
+}
+var totalTickets=0,totalWin=0,totalRevenue=0,profitDraws=0,maxJackpot=null;
+var minSum=9999,maxSum=0,sumAll=0,sumCount=0;
+var sumFreq={};
+var hourActivity={};
+var allNumsFreq={};
+for(var i=0;
+i<count;
+i++){var d=draws[i];
+var overviewNumbers=getFieldNumbers(d,"main");
+var s=sumArr(overviewNumbers);
+var tickets=d.ticketCount||0;
+var win=d.winAmount||0;
+var revenue=getDrawRevenue(d,tickets,fallbackPrice);
+var roi=revenue>0?win / revenue * 100:0;
+var jackpot=getDrawJackpot(d);
+totalTickets+=tickets;
+totalWin+=win;
+totalRevenue+=revenue;
+if(roi>=100)profitDraws++;
+if(null!=jackpot&&(null==maxJackpot||jackpot>maxJackpot))maxJackpot=jackpot;
+if(overviewNumbers.length>0){if(s<minSum)minSum=s;
+if(s>maxSum)maxSum=s;
+sumAll+=s;
+sumCount++;
+sumFreq[s]=(sumFreq[s]||0)+1;
+for(var j=0;
+j<overviewNumbers.length;
+j++)allNumsFreq[overviewNumbers[j]]=(allNumsFreq[overviewNumbers[j]]||0)+1;
+}var parsedHour=parseDrawDate(d.drawDate);
+var hour=parsedHour?parsedHour.getUTCHours():0;
+hourActivity[hour]=(hourActivity[hour]||0)+1;
+}var avgROI=totalRevenue>0?totalWin / totalRevenue * 100:0;
+var avgSum=sumCount>0?sumAll / sumCount:0;
+var avgTickets=count>0?Math.round(totalTickets / count):0;
+var payoutPct=totalRevenue>0?(totalWin / totalRevenue * 100).toFixed(1):"0";
+var latestJackpot=count>0?getDrawJackpot(draws[0]):null;
+var priceSummary=getPriceSummary(draws,fallbackPrice);
+var h="";
+h+=makePanel(escHtml(name)+" — "+escHtml(type)+"|"+count+" тиражей","#FFD700",'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">'+'<div style="color:#FFD700;font-weight:bold;font-size:18px">'+escHtml(name)+"&mdash;"+count+" тиражей</div>"+'<a href="'+archiveUrl+'" target="_blank" style="padding:6px 14px;background:#FF9800;color:#fff;border-radius:6px;text-decoration:none;font-size:13px;font-weight:bold">Архив</a>'+'</div>'+'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 20px;font-size:15px">'+row("Цена билета:",priceSummary,"#4CAF50")+row("Среднее билетов:",avgTickets,"#fff")+row("Период:",formatDrawDate(draws[0].drawDate,false)+" — "+formatDrawDate(draws[count-1].drawDate,false),"#aaa")+row("Общая выручка:",fmtNum(totalRevenue)+" руб.","#fff")+row("Общий выигрыш:",fmtNum(totalWin)+" руб.","#FFD700")+row("Суперприз последнего тиража:",null!=latestJackpot?fmtNum(latestJackpot)+" руб.":"—","#CE93D8")+row("Максимальный суперприз:",null!=maxJackpot?fmtNum(maxJackpot)+" руб.":"—","#CE93D8")+row("Выплата>100%:",profitDraws+" тиражей",profitDraws>0?"#f44336":"#4CAF50")+'<div style="grid-column:1/-1;margin-top:10px;padding:12px;background:'+(avgROI>=50?"#4CAF50":"#FF9800")+'18;border:2px solid '+(avgROI>=50?"#4CAF50":"#FF9800")+'44;border-radius:8px;text-align:center;font-weight:bold;font-size:22px;color:'+(avgROI>=50?"#4CAF50":"#FF9800")+'">'+"Доля выплат:"+avgROI.toFixed(2)+"%|Выплачено:"+payoutPct+"% от выручки</div>"+'</div>');
+h+=makePanel("Активность по часам","#E91E63",'<canvas id="nl6_canvas_hours" style="width:100%;height:70px;display:block"></canvas>');
+el.innerHTML=h;
+requestAnimationFrame(function(){var hoursCanvas=document.getElementById("nl6_canvas_hours");
+if(hoursCanvas){var hoursData=[];
+var maxHour=1;
+for(var hr=0;
+hr<24;
+hr++){var val=hourActivity[hr]||0;
+if(val>maxHour)maxHour=val;
+hoursData.push({label:String(hr),value:val,color:val/maxHour>0.7?"#f44336":val/maxHour>0.4?"#FF9800":"#4CAF50"});
+}drawBarChart(hoursCanvas,hoursData,{showValues:false,fontSize:9,showLabels:true});
+}});
+}
+function renderFrequency(draws){var el=document.getElementById("nl6_tab_freq");
+if(!el)return;
+var fieldData=selectFieldSchema(draws,"freq");
+if(!fieldData.selected){el.innerHTML=makePanel("Частоты","#888","Нет числовых полей для анализа.");
+return;
+}
+var fieldKey=fieldData.selected.key;
+var fieldLabel=fieldData.selected.label;
+var hotCold=analyzeHotCold(draws,fieldKey);
+var gaps=analyzeGaps(draws,fieldKey);
+var h=fieldSelectorHtml(fieldData.schema,fieldKey,"nl7_freq_field");
+if(hotCold){h+=makePanel(fieldLabel+": горячие числа (частота > 1.3x)","#f44336",'<div style="font-size:13px;color:#888;margin-bottom:8px">Ожидаемая частота:'+hotCold.expectedFreq.toFixed(1)+" (пул:"+hotCold.poolSize+", среднее чисел за тираж:"+hotCold.numsPerDraw.toFixed(1)+")</div>"+(hotCold.hot.length>0?'<div style="display:flex;gap:6px;flex-wrap:wrap">'+hotCold.hot.map(function(item){return '<div style="text-align:center;min-width:48px">'+'<div style="background:#f44336;color:#fff;font-weight:bold;font-size:18px;border-radius:8px;padding:6px 8px">'+item.num+'</div>'+'<div style="color:#aaa;font-size:12px;margin-top:3px">'+item.freq+'(x'+item.ratio+')</div></div>';
+}).join("")+'</div>':'<div style="color:#888">Нет горячих чисел</div>'));
+h+=makePanel("Холодные числа(частота<0.7x от ожидаемой)","#2196F3",(hotCold.cold.length>0?'<div style="display:flex;gap:6px;flex-wrap:wrap">'+hotCold.cold.map(function(item){return '<div style="text-align:center;min-width:48px">'+'<div style="background:#2196F3;color:#fff;font-weight:bold;font-size:18px;border-radius:8px;padding:6px 8px">'+item.num+'</div>'+'<div style="color:#aaa;font-size:12px;margin-top:3px">'+item.freq+'(x'+item.ratio+')</div></div>';
+}).join("")+'</div>':'<div style="color:#888">Нет холодных чисел</div>'));
+h+=makePanel("Тепловая карта частот","#9C27B0",'<canvas id="nl6_canvas_heatmap" style="width:100%;height:80px;display:block"></canvas>');
+}h+=makePanel(fieldLabel+": gap-анализ","#00BCD4",'<div style="font-size:13px;color:#888;margin-bottom:8px">Красным — числа с пропуском>1.5x от среднего. Сортировка по gap ratio.</div>'+'<canvas id="nl6_canvas_gaps" style="width:100%;height:200px;display:block"></canvas>'+'<div style="max-height:200px;overflow-y:auto;margin-top:8px">'+'<table style="width:100%;border-collapse:collapse;font-size:12px;text-align:center"><thead><tr style="background:#1a1a2e;position:sticky;top:0">'+'<th style="padding:5px;border:1px solid #444">Число</th><th style="padding:5px;border:1px solid #444">Текущий gap</th>'+'<th style="padding:5px;border:1px solid #444">Средн. gap</th><th style="padding:5px;border:1px solid #444">Макс. gap</th>'+'<th style="padding:5px;border:1px solid #444">Частота</th><th style="padding:5px;border:1px solid #444">Gap ratio</th>'+'</tr></thead><tbody>'+gaps.map(function(g){var rc=g.isOverdue?"rgba(244,67,54,0.15)":"transparent";
+return '<tr style="background:'+rc+'">'+'<td style="padding:3px;border:1px solid #333;font-weight:bold;color:#fff">'+g.num+'</td>'+'<td style="padding:3px;border:1px solid #333;color:'+(g.isOverdue?'#f44336':'#fff')+';font-weight:bold">'+g.currentGap+'</td>'+'<td style="padding:3px;border:1px solid #333">'+g.avgGap+'</td>'+'<td style="padding:3px;border:1px solid #333">'+g.maxGap+'</td>'+'<td style="padding:3px;border:1px solid #333">'+g.freq+'</td>'+'<td style="padding:3px;border:1px solid #333;font-weight:bold;color:'+(g.isOverdue?'#f44336':'#4CAF50')+'">'+g.gapRatio+'</td></tr>';
+}).join("")+'</tbody></table></div>');
+el.innerHTML=h;
+var fieldSelect=document.getElementById("nl7_freq_field");
+if(fieldSelect)fieldSelect.onchange=function(){state.fieldSelection.freq=this.value;
+renderFrequency(draws);
+};
+requestAnimationFrame(function(){if(hotCold){var hmCanvas=document.getElementById("nl6_canvas_heatmap");
+if(hmCanvas){var hmData=[];
+var maxFreq=1;
+var keys=Object.keys(hotCold.numCount).sort(function(a,b){return parseInt(a)-parseInt(b);
+});
+for(var i=0;
+i<keys.length;
+i++){var f=hotCold.numCount[keys[i]];
+if(f>maxFreq)maxFreq=f;
+}for(var i=0;
+i<keys.length;
+i++){var f=hotCold.numCount[keys[i]];
+var ratio=f / maxFreq;
+var r=Math.round(ratio * 244);
+var g=Math.round((1-ratio)* 67);
+var color="rgb("+r+","+g+",54)";
+hmData.push({label:keys[i],value:f,color:color});
+}drawBarChart(hmCanvas,hmData,{showValues:false,fontSize:9});
+}}var gapCanvas=document.getElementById("nl6_canvas_gaps");
+if(gapCanvas){var gapData=gaps.slice(0,40).reverse();
+gapData=gapData.map(function(g){return{label:String(g.num),value:g.currentGap,color:g.isOverdue?"#f44336":"#4CAF50"};
+});
+drawBarChart(gapCanvas,gapData,{showLabels:true,fontSize:9});
+}});
+}
+function renderAnalysis(draws){var el=document.getElementById("nl6_tab_analysis");
+if(!el)return;
+var fieldData=selectFieldSchema(draws,"analysis");
+if(!fieldData.selected){el.innerHTML=makePanel("Анализ","#888","Нет числовых полей для анализа.");
+return;
+}
+var fieldKey=fieldData.selected.key;
+var fieldLabel=fieldData.selected.label;
+var chi2=chiSquareTest(draws,fieldKey);
+var pairs=analyzePairs(draws,25,fieldKey);
+var trends=analyzeTrends(draws,10,fieldKey);
+var h=fieldSelectorHtml(fieldData.schema,fieldKey,"nl7_analysis_field");
+if(trends){h+=makePanel(fieldLabel+": тренд сумм (MA"+trends.windowSize+")","#FF9800",'<div style="display:flex;gap:15px;margin-bottom:10px;font-size:14px">'+'<span style="color:#aaa">Тренд:<b style="color:'+(trends.trend==="up"?"#f44336":trends.trend==="down"?"#2196F3":"#4CAF50")+'">'+trends.trendLabel+'</b></span>'+'<span style="color:#aaa">Средн:<b style="color:#fff">'+trends.avgSum+'</b></span>'+'<span style="color:#aaa">Диапазон:<b style="color:#fff">'+trends.minSum+"-"+trends.maxSum+'</b></span>'+'<span style="color:#aaa">Наклон:<b style="color:#fff">'+trends.slope+'/тираж</b></span>'+'</div>'+'<canvas id="nl6_canvas_trend" style="width:100%;height:180px;display:block"></canvas>');
+}if(chi2){h+=makePanel(fieldLabel+": Chi-квадрат тест случайности","#9C27B0",'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;font-size:14px;margin-bottom:10px">'+row("Chi-square:",chi2.chiSquare,"#FFD700")+row("df:",chi2.degreesOfFreedom,"#aaa")+row("p-value:",chi2.pValue,parseFloat(chi2.pValue)<0.05?"#f44336":"#4CAF50")+'</div>'+'<div style="padding:10px;background:'+(chi2.isRandom?"#4CAF50":"#f44336")+'18;border:1px solid '+(chi2.isRandom?"#4CAF50":"#f44336")+'44;border-radius:8px;font-size:14px;color:#fff">'+'<b>'+(chi2.isRandom?"RANDOM":"NOT RANDOM")+'</b>:'+chi2.conclusion+'</div>'+'<div style="margin-top:10px;font-size:13px;color:#888">Топ-10 отклонений от ожидаемой частоты('+chi2.expected+'):</div>'+'<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">'+chi2.topDeviations.map(function(d){var isAbove=parseFloat(d.deviation)>0;
+return '<div style="text-align:center;min-width:42px">'+'<div style="background:'+(isAbove?"#f44336":"#2196F3")+';color:#fff;font-weight:bold;font-size:15px;border-radius:6px;padding:4px 6px">'+d.num+'</div>'+'<div style="font-size:10px;color:#aaa;margin-top:2px">'+d.observed+'/'+d.expected+'</div></div>';
+}).join("")+'</div>');
+}if(pairs.length>0){h+=makePanel(fieldLabel+": топ-25 частых пар ("+draws.length+" тиражей)","#00BCD4",'<table style="width:100%;border-collapse:collapse;font-size:13px;text-align:center"><thead><tr style="background:#1a1a2e;position:sticky;top:0">'+'<th style="padding:5px;border:1px solid #444">#</th>'+'<th style="padding:5px;border:1px solid #444">Пара</th>'+'<th style="padding:5px;border:1px solid #444">Совпадений</th>'+'<th style="padding:5px;border:1px solid #444">Частота</th>'+'</tr></thead><tbody>'+pairs.map(function(p,idx){return '<tr style="background:'+(idx<5?"rgba(255,152,0,0.1)":"transparent")+'">'+'<td style="padding:4px;border:1px solid #333;color:#888">'+(idx+1)+'</td>'+'<td style="padding:4px;border:1px solid #333;font-weight:bold;color:#FF9800;font-size:15px">'+p.a+":"+p.b+'</td>'+'<td style="padding:4px;border:1px solid #333;font-weight:bold">'+p.count+'</td>'+'<td style="padding:4px;border:1px solid #333;color:#aaa">'+(draws.length>0?(p.count / draws.length * 100).toFixed(1):"0")+'%</td></tr>';
+}).join("")+'</tbody></table>');
+}var sumFreq={};
+var minSum=9999,maxSum=0;
+for(var i=0;
+i<draws.length;
+i++){var nums=getFieldNumbers(draws[i],fieldKey);
+var s=sumArr(nums);
+if(nums.length>0){sumFreq[s]=(sumFreq[s]||0)+1;
+if(s<minSum)minSum=s;
+if(s>maxSum)maxSum=s;
+}}if(minSum!==9999)h+=makePanel(fieldLabel+": распределение сумм (мин="+minSum+" макс="+maxSum+")","#E91E63",'<canvas id="nl6_canvas_sumdist" style="width:100%;height:140px;display:block"></canvas>');
+el.innerHTML=h;
+var fieldSelect=document.getElementById("nl7_analysis_field");
+if(fieldSelect)fieldSelect.onchange=function(){state.fieldSelection.analysis=this.value;
+renderAnalysis(draws);
+};
+requestAnimationFrame(function(){if(trends){var trendCanvas=document.getElementById("nl6_canvas_trend");
+if(trendCanvas&&trends.sums.length>1){var sumPoints=trends.sums.map(function(s){return s.sum;
+});
+var avgPoints=trends.movingAvg;
+drawLineChart(trendCanvas,sumPoints,{color:"#FF9800",fillColor:"rgba(255,152,0,0.08)",lineWidth:1,xLabels:function(pt,i){if(i % Math.max(1,Math.floor(trends.sums.length / 8))===0)return trends.sums[i].drawNum;
+return "";
+},showDots:false});
+var s=setupCanvas(trendCanvas);
+var ctx=s.ctx,W=s.w,H=s.h;
+var pad={top:10,right:10,bottom:25,left:45};
+var chartW=W-pad.left-pad.right;
+var chartH=H-pad.top-pad.bottom;
+var vals=sumPoints;
+var minVal=Math.min.apply(null,vals);
+var maxVal=Math.max.apply(null,vals);
+var range=maxVal-minVal||1;
+minVal-=range * 0.1;
+maxVal+=range * 0.1;
+range=maxVal-minVal;
+ctx.beginPath();
+for(var i=0;
+i<avgPoints.length;
+i++){var px=pad.left+(i /(avgPoints.length-1))* chartW;
+var py=pad.top+chartH-((avgPoints[i]-minVal)/ range)* chartH;
+if(i===0)ctx.moveTo(px,py);
+else ctx.lineTo(px,py);
+}ctx.strokeStyle="#4CAF50";
+ctx.lineWidth=2.5;
+ctx.stroke();
+}}var sumCanvas=document.getElementById("nl6_canvas_sumdist");
+if(sumCanvas){var sumData=[];
+for(var s=minSum;
+s<=maxSum;
+s++){sumData.push({label:String(s),value:sumFreq[s]||0,color:"#E91E63"});
+}drawBarChart(sumCanvas,sumData,{fontSize:9});
+}});
+}
+function renderRecommendations(draws){var el=document.getElementById("nl6_tab_recommend");
+if(!el)return;
+var fieldData=selectFieldSchema(draws,"recommend");
+if(!fieldData.selected){el.innerHTML=makePanel("Рекомендации","#888","Нет числовых полей для анализа.");
+return;
+}
+var fieldKey=fieldData.selected.key;
+var selector=fieldSelectorHtml(fieldData.schema,fieldKey,"nl7_recommend_field");
+var recs=generateRecommendations(draws,fieldKey);
+if(recs.length===0){el.innerHTML=selector+'<div style="background:#2a2a3e;padding:16px;border-radius:10px;margin-bottom:14px"><div style="color:#888;font-weight:bold;font-size:16px;margin-bottom:10px">Недостаточно данных</div><div style="color:#888;padding:20px;text-align:center">Загрузите минимум 5 тиражей для рекомендаций по этому полю.</div></div>';
+var emptySelect=document.getElementById("nl7_recommend_field");
+if(emptySelect)emptySelect.onchange=function(){state.fieldSelection.recommend=this.value;
+renderRecommendations(draws);
+};
+return;
+}var h=selector;
+var iconMap={"WARNING":"&#9888;","FIRE":"&#128293;","SNOW":"&#10052;","LINK":"&#128279;","CHART":"&#128200;","STAR":"&#11088;"};
+for(var i=0;
+i<recs.length;
+i++){var r=recs[i];
+var icon=iconMap[r.icon]||"&#9679;";
+h+='<div style="background:#2a2a3e;padding:16px;border-radius:10px;margin-bottom:12px;border-left:4px solid '+r.color+'">';
+h+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">';
+h+='<span style="font-size:20px">'+icon+'</span>';
+h+='<span style="color:'+r.color+';font-weight:bold;font-size:16px">'+r.title+'</span>';
+h+='</div>';
+h+='<div style="font-size:14px;color:#ccc;margin-bottom:10px">'+r.desc+'</div>';
+if(r.numbers&&r.numbers.length>0){h+='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">';
+for(var j=0;
+j<r.numbers.length;
+j++){h+='<div style="background:'+r.color+';color:#fff;font-weight:bold;font-size:20px;border-radius:8px;padding:8px 12px;min-width:44px;text-align:center">'+r.numbers[j]+'</div>';
+}h+='</div>';
+}if(r.detail&&r.detail.length>0){h+='<div style="font-size:13px;color:#999">';
+for(var j=0;
+j<r.detail.length;
+j++){h+='<div style="padding:2px 0">'+r.detail[j]+'</div>';
+}h+='</div>';
+}h+='</div>';
+}h+='<div style="background:#1a1a2e;padding:12px;border-radius:8px;margin-top:12px;border:1px solid #555">'+'<div style="font-size:12px;color:#888;text-align:center">'+"&#9888;Рекомендации основаны исключительно на статистическом анализе исторических данных. "+"Лотерея — это случайный процесс. Рекомендации не гарантируют выигрыш и не являются финансовым советом."+'</div></div>';
+el.innerHTML=h;
+var fieldSelect=document.getElementById("nl7_recommend_field");
+if(fieldSelect)fieldSelect.onchange=function(){state.fieldSelection.recommend=this.value;
+renderRecommendations(draws);
+};
+}
+function renderDrawsTable(draws){var el=document.getElementById("nl6_tab_draws");
+if(!el)return;
+var count=draws.length;
+var fallbackPrice=state.basePrice||(count>0?draws[0].basePrice||100:100);
+var type=state.lotteryType||"UNKNOWN";
+var schema=getFieldSchema(draws);
+var isComplex=type==="COMPLEX";
+var showSum=isComplex&&schema.length>0;
+var totalTickets=0,totalWin=0,totalRevenue=0,financialCount=0,maxJackpot=null;
+var hasDetails=false;
+for(var i=0;i<count;i++){if(draws[i]._summaryOnly===false||null!=draws[i].ticketCount||null!=draws[i].winAmount)hasDetails=true;
+}
+var note='<div style="font-size:12px;color:#aaa;margin-bottom:8px">Сверху — новые. Нажмите номер тиража, чтобы открыть официальный результат в новой вкладке.</div>';
+note+='<div style="font-size:12px;color:#81C784;margin-bottom:8px">Выручка считается отдельно для каждой строки: билеты × цена билета именно этого тиража. Суперприз показывается отдельно и не прибавляется повторно к общей сумме выигрышей.</div>';
+if(schema.length>0)note+='<div style="font-size:12px;color:#81D4FA;margin-bottom:8px">Структура результата: '+schema.map(function(field){return escHtml(field.header);
+}).join(" · ")+"</div>";
+if(!hasDetails)note+='<div style="font-size:12px;color:#FFB74D;margin-bottom:8px">Быстрый режим: финансовые поля не загружены. Для них выберите расширенный режим.</div>';
+var header='<tr style="background:#1a1a2e;position:sticky;top:0"><th style="padding:6px;border:1px solid #444">№</th><th style="padding:6px;border:1px solid #444">Дата</th>';
+for(var column=0;column<schema.length;column++)header+='<th style="padding:6px;border:1px solid #444">'+escHtml(schema[column].header)+"</th>";
+if(showSum)header+='<th style="padding:6px;border:1px solid #444">Сумма поля 1</th>';
+header+='<th style="padding:6px;border:1px solid #444">Билетов</th><th style="padding:6px;border:1px solid #444">Цена билета</th><th style="padding:6px;border:1px solid #444">Выручка</th><th style="padding:6px;border:1px solid #444">Выигрыш</th><th style="padding:6px;border:1px solid #444">Суперприз</th><th style="padding:6px;border:1px solid #444">Выплата%</th></tr>';
+var h=makePanel("Все тиражи ("+count+")","#4CAF50",note+'<div style="max-height:600px;overflow:auto">'+'<table style="width:100%;min-width:1100px;border-collapse:collapse;font-size:13px;text-align:center"><thead>'+header+"</thead><tbody>");
+for(var i=0;
+i<count;
+i++){var d=draws[i];
+var hasFinancial=d._summaryOnly===false||null!=d.ticketCount||null!=d.winAmount;
+var tickets=hasFinancial?Number(d.ticketCount||0):0;
+var win=hasFinancial?Number(d.winAmount||0):0;
+var drawPrice=getDrawPrice(d,fallbackPrice);
+var revenue=hasFinancial?getDrawRevenue(d,tickets,fallbackPrice):0;
+var jackpot=getDrawJackpot(d);
+var roi=hasFinancial&&revenue>0?win / revenue * 100:0;
+if(hasFinancial){totalTickets+=tickets;
+totalWin+=win;
+totalRevenue+=revenue;
+financialCount++;
+}
+if(null!=jackpot&&(null==maxJackpot||jackpot>maxJackpot))maxJackpot=jackpot;
+var roiColor=hasFinancial?(roi>=100?"#f44336":roi>=50?"#4CAF50":"#aaa"):"#777";
+var rowBg=hasFinancial&&roi>=100?"rgba(244,67,54,0.15)":hasFinancial&&roi>=70?"rgba(255,152,0,0.08)":"transparent";
+h+='<tr style="background:'+rowBg+'">'+'<td style="padding:4px;border:1px solid #333">'+drawLinkHtml(d)+'</td>'+'<td style="padding:4px;border:1px solid #333;white-space:nowrap">'+formatDrawDate(d.drawDate,true)+"</td>";
+var fieldColors=["#fff","#4DD0E1","#CE93D8","#FFD54F"];
+for(var fieldIndex=0;fieldIndex<schema.length;fieldIndex++){var fieldValues=getFieldNumbers(d,schema[fieldIndex].key);
+h+='<td style="padding:4px;border:1px solid #333;font-size:14px;font-weight:bold;color:'+fieldColors[fieldIndex%fieldColors.length]+'">'+(fieldValues.length?fieldValues.join(", "):"—")+"</td>";
+}
+if(showSum)h+='<td style="padding:4px;border:1px solid #333;font-weight:bold">'+sumArr(getFieldNumbers(d,"main"))+"</td>";
+h+='<td style="padding:4px;border:1px solid #333">'+(hasFinancial?fmtNum(tickets):"—")+'</td>'+'<td style="padding:4px;border:1px solid #333;color:#81C784">'+(drawPrice>0?fmtNum(drawPrice)+" ₽":"—")+'</td>'+'<td style="padding:4px;border:1px solid #333">'+(hasFinancial?fmtNum(revenue):"—")+'</td>'+'<td style="padding:4px;border:1px solid #333">'+(hasFinancial?fmtNum(win):"—")+'</td>'+'<td style="padding:4px;border:1px solid #333;color:#CE93D8">'+(null!=jackpot?fmtNum(jackpot):"—")+'</td>'+'<td style="padding:4px;border:1px solid #333;font-weight:bold;color:'+roiColor+'">'+(hasFinancial?roi.toFixed(1)+"%":"—")+'</td></tr>';
+}var avgROI=totalRevenue>0?totalWin / totalRevenue * 100:0;
+var roiTotalColor=avgROI>=50?"#4CAF50":"#FF9800";
+var totalTicketsText=financialCount?fmtNum(totalTickets):"—";
+var totalRevenueText=financialCount?fmtNum(totalRevenue):"—";
+var totalWinText=financialCount?fmtNum(totalWin):"—";
+var totalRoiText=financialCount?avgROI.toFixed(2)+"%":"—";
+var priceSummary=getPriceSummary(draws,fallbackPrice);
+h+='</tbody><tfoot><tr style="background:#1b5e20;font-weight:bold">'+'<td colspan="'+(2+schema.length+(showSum?1:0))+'" style="padding:6px;border:1px solid #444;font-size:14px">ИТОГО ('+count+')</td>'+'<td style="padding:6px;border:1px solid #444">'+totalTicketsText+'</td>'+'<td style="padding:6px;border:1px solid #444">'+priceSummary+'</td>'+'<td style="padding:6px;border:1px solid #444">'+totalRevenueText+'</td>'+'<td style="padding:6px;border:1px solid #444;color:#FFD700">'+totalWinText+'</td>'+'<td style="padding:6px;border:1px solid #444;color:#CE93D8">'+(null!=maxJackpot?"макс. "+fmtNum(maxJackpot):"—")+'</td>'+'<td style="padding:6px;border:1px solid #444;color:'+roiTotalColor+'">'+totalRoiText+'</td>'+'</tr></tfoot></table></div>';
+el.innerHTML=h;
+}
+function switchTab(tabId){state.currentTab=tabId;
+var btns=document.querySelectorAll(".nl6-tab-btn");
+for(var i=0;
+i<btns.length;
+i++){if(btns[i].getAttribute("data-tab")===tabId){btns[i].style.background="#FF9800";
+btns[i].style.color="#fff";
+btns[i].style.borderColor="#FF9800";
+}else{btns[i].style.background="#2a2a3e";
+btns[i].style.color="#aaa";
+btns[i].style.borderColor="#555";
+}}var panels=document.querySelectorAll(".nl6-tab-panel");
+for(var i=0;
+i<panels.length;
+i++){panels[i].style.display=panels[i].getAttribute("data-tab")===tabId?"block":"none";
+}if(state.draws.length>0){if(tabId==="overview")renderOverview(state.draws);
+else if(tabId==="freq")renderFrequency(state.draws);
+else if(tabId==="analysis")renderAnalysis(state.draws);
+else if(tabId==="recommend")renderRecommendations(state.draws);
+else if(tabId==="draws")renderDrawsTable(state.draws);
+}}
+function renderAllTabs(draws){switchTab("draws");
+}
+function logMsg(text,color){var logEl=document.getElementById("nl6_scanLog");
+if(!logEl)return;
+logEl.style.display="block";
+var div=document.createElement("div");
+div.style.color=color||"#aaa";
+div.style.marginBottom="3px";
+div.textContent=text;
+logEl.appendChild(div);
+logEl.scrollTop=logEl.scrollHeight;
+}
+function destroyUI(){var r=document.getElementById("nl6_root");
+if(r)r.remove();
+}var root=document.createElement("div");
+root.id="nl6_root";
+root.style.cssText="position:fixed;top:10px;left:50%;transform:translateX(-50%);z-index:999999;background:#1a1a2e;color:#fff;padding:0;border-radius:14px;font-family:monospace;box-shadow:0 0 40px rgba(0,0,0,.6);width:94vw;max-width:1400px;max-height:96vh;overflow:hidden;display:flex;flex-direction:column";
+var header=document.createElement("div");
+header.id="nl6_header";
+header.style.cssText="background:linear-gradient(135deg,#FF9800,#E91E63);padding:10px 20px;cursor:move;display:flex;justify-content:space-between;align-items:center;user-select:none";
+var headerLeft=document.createElement("span");
+headerLeft.style.cssText="font-size:18px;font-weight:bold";
+headerLeft.textContent="NLOTO STATISTICS v7.3";
+var headerRight=document.createElement("span");
+headerRight.id="nl6_headerSub";
+headerRight.style.cssText="flex:1;text-align:center;font-size:13px;opacity:0.8";
+headerRight.textContent="Выберите лотерею";
+var closeX=document.createElement("span");
+closeX.innerHTML="&#10005;";
+closeX.style.cssText="width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-size:20px;cursor:pointer;border-radius:50%;background:rgba(255,255,255,0.15);transition:all 0.15s;flex-shrink:0;font-weight:bold;color:#fff";
+closeX.title="Закрыть";
+closeX.onmouseenter=function(){this.style.background="rgba(255,255,255,0.35)";
+this.style.transform="scale(1.15)";
+};
+closeX.onmouseleave=function(){this.style.background="rgba(255,255,255,0.15)";
+this.style.transform="scale(1)";
+};
+closeX.onclick=function(e){e.stopPropagation();
+destroyUI();
+};
+header.appendChild(headerLeft);
+header.appendChild(headerRight);
+header.appendChild(closeX);
+root.appendChild(header);
+var isMinimized=false;
+header.addEventListener("dblclick",function(e){if(e.target===closeX)return;
+isMinimized=!isMinimized;
+document.getElementById("nl6_body").style.display=isMinimized?"none":"block";
+root.style.maxHeight=isMinimized?"50px":"96vh";
+});
+var body=document.createElement("div");
+body.id="nl6_body";
+body.style.cssText="padding:16px;overflow-y:auto;flex:1";
+root.appendChild(body);
+var sec1=document.createElement("div");
+sec1.style.cssText="margin-bottom:14px";
+sec1.innerHTML='<div style="color:#FF9800;font-weight:bold;font-size:15px;margin-bottom:8px">1. ВЫБОР ЛОТЕРЕИ</div>';
+var lotteryBtns=document.createElement("select");
+lotteryBtns.id="nl7_lottery_select";
+lotteryBtns.style.cssText="width:100%;padding:10px 12px;background:#0d0d1a;color:#ddd;border:2px solid #555;border-radius:8px;cursor:pointer;font-size:14px;font-family:monospace;box-sizing:border-box;margin-bottom:10px";
+function setLotterySelectColor(item){var color=!item?"#555":item.versionPhase==="after"?"#4CAF50":item.versionPhase==="before"?"#FFB300":item.versionPhase==="archive"?"#777":"#555";
+lotteryBtns.style.borderColor=color;
+lotteryBtns.style.color=!item?"#aaa":item.versionPhase==="after"?"#B9F6CA":item.versionPhase==="before"?"#FFE082":item.versionPhase==="archive"?"#bbb":"#ddd";
+}
+function selectLotteryItem(item){if(!item)return;
+pidInput.value=String(item.productId);
+document.getElementById("nl6_headerSub").textContent=(item.displayName||item.name).replace(/\n/g," · ");
+state.selectedLottery=item;
+state.latestDrawNum=null;
+state.drawNumFormat="history";
+state.lotteryType=item.type||"UNKNOWN";
+state.basePrice=item.basePrice||0;
+state.draws=[];
+state.fieldSelection={freq:"main",analysis:"main",recommend:"main"};
+loadBtn.disabled=false;
+loadBtn.textContent="ЗАГРУЗИТЬ СТАТИСТИКУ";
+tabsWrap.style.display="none";
+controlBar.style.display="none";
+setLotterySelectColor(item);
+var cachedScan=cacheGet("scan_"+item.productId);
+if(cachedScan){state.latestDrawNum=cachedScan.num;
+state.drawNumFormat=cachedScan.format;
+state.lotteryType=cachedScan.type||state.lotteryType;
+state.basePrice=cachedScan.basePrice||state.basePrice;
+logMsg("Из кэша: последний тираж #"+cachedScan.num,"#00BCD4");
+}}
+function renderLotteryButtons(){var selectedId=state.selectedLottery&&String(state.selectedLottery.productId);
+lotteryBtns.innerHTML="";
+var placeholder=document.createElement("option");
+placeholder.value="";
+placeholder.textContent="— Выберите лотерею из списка —";
+placeholder.disabled=true;
+placeholder.selected=!selectedId;
+lotteryBtns.appendChild(placeholder);
+for(var i=0;i<LOTTERIES.length;i++){var lottery=LOTTERIES[i];
+var option=document.createElement("option");
+option.value=String(lottery.productId);
+option.textContent=(lottery.displayName||lottery.name).replace(/\n/g," — ");
+option.title="productId: "+lottery.productId+(lottery.versionLabel?" · "+lottery.versionLabel:"");
+if(selectedId===String(lottery.productId))option.selected=true;
+lotteryBtns.appendChild(option);
+}
+setLotterySelectColor(state.selectedLottery);
+}
+lotteryBtns.onchange=function(){var selectedProductId=this.value;
+for(var i=0;i<LOTTERIES.length;i++){if(String(LOTTERIES[i].productId)===selectedProductId){selectLotteryItem(LOTTERIES[i]);
+break;
+}}};
+renderLotteryButtons();
+sec1.appendChild(lotteryBtns);
+var pidRow=document.createElement("div");
+pidRow.style.cssText="display:flex;gap:10px;align-items:center;margin-bottom:8px";
+pidRow.innerHTML='<span style="color:#888;font-size:13px;font-weight:bold">productId:</span>';
+var pidInput=document.createElement("input");
+pidInput.type="text";
+pidInput.style.cssText="flex:1;padding:8px 10px;background:#0d0d1a;color:#fff;border:1px solid #555;border-radius:6px;font-size:14px;font-family:monospace;box-sizing:border-box";
+pidInput.placeholder="вручную...";
+pidRow.appendChild(pidInput);
+sec1.appendChild(pidRow);
+body.appendChild(sec1);
+var sec2=document.createElement("div");
+sec2.style.cssText="margin-bottom:14px";
+sec2.innerHTML='<div style="color:#2196F3;font-weight:bold;font-size:15px;margin-bottom:8px">2. ПРОВЕРКА ПОСЛЕДНЕГО ТИРАЖА</div>';
+var scanBtn=document.createElement("button");
+scanBtn.textContent="ПРОВЕРИТЬ";
+scanBtn.style.cssText="width:100%;padding:12px;background:#2196F3;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:bold;font-size:15px;font-family:monospace";
+sec2.appendChild(scanBtn);
+var scanLog=document.createElement("div");
+scanLog.id="nl6_scanLog";
+scanLog.style.cssText="display:none;background:#0d0d1a;padding:10px;border-radius:8px;font-size:13px;max-height:180px;overflow-y:auto;margin-top:8px;border:1px solid #333";
+sec2.appendChild(scanLog);
+body.appendChild(sec2);
+var sec3=document.createElement("div");
+sec3.style.cssText="margin-bottom:14px;background:#2a2a3e;padding:14px;border-radius:10px";
+sec3.innerHTML='<div style="color:#4CAF50;font-weight:bold;font-size:15px;margin-bottom:8px">3. ФИЛЬТРЫ ЗАГРУЗКИ</div>'+
+'<div style="margin-bottom:8px"><label style="font-size:13px;color:#aaa;font-weight:bold">Максимум тиражей:</label>'+
+'<input id="nl6_fCount" type="number" value="20" min="1" max="10000" style="width:100%;padding:8px;background:#0d0d1a;color:#fff;border:1px solid #555;border-radius:6px;font-size:15px;font-family:monospace;box-sizing:border-box;margin-top:4px"></div>'+
+'<div style="display:flex;gap:10px;margin-bottom:8px"><div style="flex:1"><label style="font-size:13px;color:#aaa;font-weight:bold">Дата от:</label>'+
+'<input id="nl6_fFrom" type="date" style="width:100%;padding:8px;background:#0d0d1a;color:#fff;border:1px solid #555;border-radius:6px;font-size:14px;box-sizing:border-box;margin-top:4px"></div>'+
+'<div style="flex:1"><label style="font-size:13px;color:#aaa;font-weight:bold">Дата до:</label>'+
+'<input id="nl6_fTo" type="date" style="width:100%;padding:8px;background:#0d0d1a;color:#fff;border:1px solid #555;border-radius:6px;font-size:14px;box-sizing:border-box;margin-top:4px"></div></div>'+
+'<div style="margin-bottom:8px"><label style="font-size:13px;color:#aaa;font-weight:bold">Режим:</label>'+
+'<select id="nl7_mode" style="width:100%;padding:8px;background:#0d0d1a;color:#fff;border:1px solid #555;border-radius:6px;font-size:14px;box-sizing:border-box;margin-top:4px">'+
+'<option value="details" selected>Полная статистика — билеты, выплаты и ROI</option>'+
+'<option value="summary">Быстро — только комбинации</option></select></div>'+
+'<div style="font-size:12px;color:#777;margin-bottom:8px">Архив загружается страницами до 200 тиражей. Расширенный режим затем получает финансовые детали выбранных тиражей.</div>';
+var loadBtn=document.createElement("button");
+loadBtn.textContent="Сначала выберите лотерею";
+loadBtn.disabled=true;
+loadBtn.style.cssText="width:100%;padding:12px;background:#4CAF50;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:bold;font-size:15px;font-family:monospace";
+sec3.appendChild(loadBtn);
+body.appendChild(sec3);
+var progWrap=document.createElement("div");
+progWrap.id="nl6_progWrap";
+progWrap.style.cssText="display:none;margin-bottom:14px;background:#2a2a3e;padding:12px;border-radius:10px";
+progWrap.innerHTML='<div style="display:flex;justify-content:space-between;font-size:13px;color:#aaa;margin-bottom:6px"><span id="nl6_progTxt">...</span><span id="nl6_progPct">0%</span></div>'+'<div style="background:#333;border-radius:6px;height:8px;overflow:hidden"><div id="nl6_progBar" style="height:100%;background:#4CAF50;width:0%;transition:width 0.15s;border-radius:6px"></div></div>';
+body.appendChild(progWrap);
+var tabsWrap=document.createElement("div");
+tabsWrap.style.cssText="display:none;margin-bottom:0";
+var tabDefs=[{id:"draws",label:"Тиражи"},{id:"overview",label:"Обзор"},{id:"freq",label:"Частоты"},{id:"analysis",label:"Анализ"},{id:"recommend",label:"Совет"}];
+var tabBar=document.createElement("div");
+tabBar.style.cssText="display:flex;gap:3px;margin-bottom:14px";
+for(var i=0;
+i<tabDefs.length;
+i++){var tabBtn=document.createElement("button");
+tabBtn.className="nl6-tab-btn";
+tabBtn.setAttribute("data-tab",tabDefs[i].id);
+tabBtn.textContent=tabDefs[i].label;
+tabBtn.style.cssText="padding:8px 16px;background:"+(i===0?"#FF9800":"#2a2a3e")+";color:"+(i===0?"#fff":"#aaa")+";border:1px solid "+(i===0?"#FF9800":"#555")+";border-radius:6px 6px 0 0;cursor:pointer;font-size:13px;font-family:monospace;font-weight:bold";
+tabBtn.onclick=(function(tid){return function(){switchTab(tid);
+};
+})(tabDefs[i].id);
+tabBar.appendChild(tabBtn);
+}tabsWrap.appendChild(tabBar);
+body.appendChild(tabsWrap);
+for(var i=0;
+i<tabDefs.length;
+i++){var tabPanelEl=document.createElement("div");
+tabPanelEl.className="nl6-tab-panel";
+tabPanelEl.id="nl6_tab_"+tabDefs[i].id;
+tabPanelEl.setAttribute("data-tab",tabDefs[i].id);
+tabPanelEl.style.cssText="display:"+(i===0?"block":"none");
+body.appendChild(tabPanelEl);
+}var controlBar=document.createElement("div");
+controlBar.id="nl6_controls";
+controlBar.style.cssText="display:none;flex-wrap:wrap;gap:8px;margin-top:12px";
+var btnExpJSON=document.createElement("button");
+btnExpJSON.textContent="Экспорт JSON";
+btnExpJSON.style.cssText="flex:1;min-width:100px;padding:10px;background:#FF9800;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:bold;font-size:13px;font-family:monospace";
+var btnExpCSV=document.createElement("button");
+btnExpCSV.textContent="Экспорт CSV";
+btnExpCSV.style.cssText="flex:1;min-width:100px;padding:10px;background:#2196F3;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:bold;font-size:13px;font-family:monospace";
+var btnReset=document.createElement("button");
+btnReset.textContent="Сброс";
+btnReset.style.cssText="flex:1;min-width:100px;padding:10px;background:#666;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:bold;font-size:13px;font-family:monospace";
+var btnAbort=document.createElement("button");
+btnAbort.id="nl6_btnAbort";
+btnAbort.textContent="Стоп";
+btnAbort.style.cssText="display:none;flex:1;min-width:100px;padding:10px;background:#f44336;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:bold;font-size:13px;font-family:monospace";
+controlBar.appendChild(btnExpJSON);
+controlBar.appendChild(btnExpCSV);
+controlBar.appendChild(btnReset);
+controlBar.appendChild(btnAbort);
+body.appendChild(controlBar);
+document.body.appendChild(root);
+loadLotteryCatalog(logMsg).then(function(){renderLotteryButtons();
+});
+(function(){var hdr=document.getElementById("nl6_header");
+var dragging=false,startX,startY,origX,origY;
+hdr.addEventListener("mousedown",function(e){if(e.target===closeX||e.target.tagName==="A"||e.target.tagName==="BUTTON")return;
+dragging=true;
+startX=e.clientX;
+startY=e.clientY;
+var rect=root.getBoundingClientRect();
+origX=rect.left;
+origY=rect.top;
+root.style.transform="none";
+root.style.left=origX+"px";
+root.style.top=origY+"px";
+e.preventDefault();
+});
+document.addEventListener("mousemove",function(e){if(!dragging)return;
+root.style.left=(origX+e.clientX-startX)+"px";
+root.style.top=Math.max(0,origY+e.clientY-startY)+"px";
+});
+document.addEventListener("mouseup",function(){dragging=false;
+});
+})();
+btnReset.onclick=function(){var previousLottery=state.selectedLottery;
+abortActiveRequests();
+state.draws=[];
+state.latestDrawNum=null;
+state.drawNumFormat=null;
+state.lotteryType=null;
+state.basePrice=0;
+state.selectedLottery=null;
+state.loadMode="details";
+state.fieldSelection={freq:"main",analysis:"main",recommend:"main"};
+loadBtn.disabled=true;
+loadBtn.textContent="Сначала выберите лотерею";
+pidInput.value="";
+scanLog.style.display="none";
+scanLog.innerHTML="";
+progWrap.style.display="none";
+tabsWrap.style.display="none";
+controlBar.style.display="none";
+btnAbort.style.display="none";
+var panels=document.querySelectorAll(".nl6-tab-panel");
+for(var i=0;
+i<panels.length;
+i++)panels[i].innerHTML="";
+if(previousLottery){cacheClear(previousLottery.productId);
+}document.getElementById("nl6_headerSub").textContent="Выберите лотерею";
+renderLotteryButtons();
+};
+btnAbort.onclick=function(){abortActiveRequests();
+btnAbort.style.display="none";
+logMsg("ОСТАНОВКА по запросу пользователя","#f44336");
+scanBtn.disabled=false;
+scanBtn.textContent="ПРОВЕРИТЬ";
+loadBtn.disabled=false;
+loadBtn.textContent="ЗАГРУЗИТЬ СТАТИСТИКУ";
+state.loading=false;
+};
+scanBtn.onclick=async function(){var btn=this;
+var pid=pidInput.value.trim();
+if(!pid){logMsg("Введите productId!","#f44336");
+return;
+}btn.disabled=true;
+btnAbort.style.display="block";
+btn.textContent="Проверяем...";
+scanLog.innerHTML="";
+scanLog.style.display="block";
+logMsg("Лотерея:"+(state.selectedLottery?state.selectedLottery.name:"ID:"+pid)+"(productId="+pid+")","#FF9800");
+try{var result=await scanForLatest(pid,logMsg);
+if(result){var resultFields=getDrawFields(result.data);
+var info=resultFields.map(function(field,index){return fieldBaseLabel(field.key,index)+"=["+field.numbers.join(",")+"]";
+}).join(" | ");
+if((result.data.type||state.lotteryType)==="COMPLEX"&&resultFields.length>0)info+=" | сумма поля 1="+sumArr(resultFields[0].numbers);
+logMsg("===НАЙДЕН ТИРАЖ #"+result.num+"("+result.format+")===","#4CAF50");
+logMsg("Тип:"+(result.data.type||state.lotteryType||"UNKNOWN")+"|Формат:"+result.format,"#fff");
+logMsg("Дата:"+formatDrawDate(result.data.drawDate,true)+"|"+info,"#fff");
+if(null!=result.data.ticketCount||null!=result.data.winAmount)logMsg("Билетов:"+(null!=result.data.ticketCount?result.data.ticketCount:"?")+"|Выигрыш:"+fmtNum(result.data.winAmount),"#FFD700");
+if(result.data.basePrice)logMsg("Цена билета:"+result.data.basePrice+" руб.","#4CAF50");
+if(result.data.jackpotAmount)logMsg("Джекпот:"+fmtNum(result.data.jackpotAmount),"#fff");
+loadBtn.disabled=false;
+loadBtn.textContent="ЗАГРУЗИТЬ СТАТИСТИКУ";
+}else if(!state.abortFlag){logMsg("===ТИРАЖ НЕ НАЙДЕН===","#f44336");
+}}catch(e){if(!state.abortFlag)logMsg("Ошибка проверки:"+e.message,"#f44336");
+}finally{btn.disabled=false;
+btn.textContent="ПРОВЕРИТЬ";
+btnAbort.style.display="none";
+}
+};
+loadBtn.onclick=async function(){var btn=this;
+var pid=pidInput.value.trim();
+if(!pid){logMsg("Сначала выберите лотерею!","#f44336");
+return;
+}if(state.loading)return;
+var selectedById=getLotteryByProductId(pid);
+if(selectedById)state.selectedLottery=selectedById;
+state.loading=true;
+btn.disabled=true;
+btn.textContent="Загрузка...";
+btnAbort.style.display="block";
+var panels=document.querySelectorAll(".nl6-tab-panel");
+for(var i=0;
+i<panels.length;
+i++)panels[i].innerHTML="";
+tabsWrap.style.display="none";
+controlBar.style.display="none";
+progWrap.style.display="block";
+document.getElementById("nl6_progBar").style.width="0%";
+document.getElementById("nl6_progPct").textContent="0%";
+var count=parseInt(document.getElementById("nl6_fCount").value)||20;
+var dateFrom=document.getElementById("nl6_fFrom").value;
+var dateTo=document.getElementById("nl6_fTo").value;
+var mode=document.getElementById("nl7_mode").value||"details";
+state.loadMode=mode;
+function progress(pct,loaded,total,failed){if(pct===-1){document.getElementById("nl6_progTxt").textContent="Повтор неудачных...("+failed+")";
+}else{document.getElementById("nl6_progBar").style.width=pct+"%";
+document.getElementById("nl6_progPct").textContent=pct+"%";
+document.getElementById("nl6_progTxt").textContent=(pct>=90&&mode==="details"?"Детализация:":"Архив:")+" "+loaded+" / "+total+(failed>0?"(ошибок:"+failed+")":"");
+}}try{var loaded=await loadDraws(pid,count,dateFrom,dateTo,progress,mode);
+if(state.abortFlag){logMsg("Загрузка прервана","#f44336");
+btn.disabled=false;
+btn.textContent="ЗАГРУЗИТЬ СТАТИСТИКУ";
+btnAbort.style.display="none";
+state.loading=false;
+return;
+}document.getElementById("nl6_progBar").style.width="100%";
+document.getElementById("nl6_progPct").textContent="100%";
+document.getElementById("nl6_progTxt").textContent="Готово! "+loaded.length+" тиражей";
+if(loaded.length===0){logMsg("Тиражи не найдены. Измените параметры.","#f44336");
+btn.disabled=false;
+btn.textContent="ЗАГРУЗИТЬ СТАТИСТИКУ";
+btnAbort.style.display="none";
+state.loading=false;
+return;
+}state.draws=loaded;
+tabsWrap.style.display="block";
+controlBar.style.display="flex";
+renderAllTabs(loaded);
+logMsg("Загружено "+loaded.length+" тиражей. Режим: "+(mode==="details"?"расширенный":"быстрый"),"#4CAF50");
+if(mode==="details"){var missingDetails=loaded.filter(function(draw){return draw._summaryOnly!==false;
+}).length;
+if(missingDetails>0)logMsg("Не удалось получить финансовые данные для "+missingDetails+" тиражей — они не сохранены в кэш и будут повторно запрошены.","#FF9800");
+}
+}catch(e){if(!state.abortFlag)logMsg("Ошибка загрузки:"+e.message,"#f44336");
+}btn.disabled=false;
+btn.textContent="ЗАГРУЗИТЬ СТАТИСТИКУ";
+btnAbort.style.display="none";
+state.loading=false;
+};
+btnExpJSON.onclick=function(){if(state.draws.length===0)return;
+var clean=state.draws.map(function(d){var o={};
+for(var k in d){if(k!=="_drawNum"&&k!=="_summaryOnly")o[k]=d[k];
+}o.resultUrl=getDrawUrl(d);
+return o;
+});
+var blob=new Blob([JSON.stringify(clean,null,2)],{type:"application/json"});
+var url=URL.createObjectURL(blob);
+var a=document.createElement("a");
+a.href=url;
+a.download="nloto_"+(state.selectedLottery?state.selectedLottery.slug:"data")+"_"+todayFileDate()+".json";
+a.click();
+URL.revokeObjectURL(url);
+};
+btnExpCSV.onclick=function(){if(state.draws.length===0)return;
+var fallbackPrice=state.basePrice||100;
+var csv="";
+var schema=getFieldSchema(state.draws);
+for(var i=0;
+i<state.draws.length;
+i++){var d=state.draws[i];
+var hasFinancial=d._summaryOnly===false||null!=d.ticketCount||null!=d.winAmount;
+var tickets=hasFinancial?Number(d.ticketCount||0):"";
+var win=hasFinancial?Number(d.winAmount||0):"";
+var drawPrice=getDrawPrice(d,fallbackPrice);
+var revenue=hasFinancial?getDrawRevenue(d,tickets,fallbackPrice):"";
+var jackpot=getDrawJackpot(d);
+var roi=hasFinancial&&revenue>0?(Number(win)/ revenue * 100).toFixed(2):"";
+var line=[getDrawNumber(d),formatDrawDate(d.drawDate,true)];
+for(var fieldIndex=0;fieldIndex<schema.length;fieldIndex++)line.push(getFieldNumbers(d,schema[fieldIndex].key).join(","));
+line.push(tickets,drawPrice||"",revenue,win,null!=jackpot?jackpot:"",roi,getDrawUrl(d));
+csv+=line.join(";")+"\n";
+}var csvHeader=["Тираж","Дата"];
+for(var headerIndex=0;headerIndex<schema.length;headerIndex++)csvHeader.push(schema[headerIndex].header);
+csvHeader=csvHeader.concat(["Билетов","Цена билета","Выручка","Выигрыш","Суперприз","Выплата%","Ссылка"]);
+var blob=new Blob(["\ufeff"+csvHeader.join(";")+"\n"+csv],{type:"text/csv;charset=utf-8"});
+var url=URL.createObjectURL(blob);
+var a=document.createElement("a");
+a.href=url;
+a.download="nloto_"+(state.selectedLottery?state.selectedLottery.slug:"data")+"_"+todayFileDate()+".csv";
+a.click();
+URL.revokeObjectURL(url);
+};
+console.log("NLOTO STATISTICS v7.3 — UI ready.");
+}();
+
