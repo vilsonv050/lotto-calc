@@ -35,14 +35,14 @@ function Invoke-SyncGit {
     if ($Capture) {
         $syncCapturedOutput = & $syncGitExe @syncGitArgs @Arguments
         if ($LASTEXITCODE -ne 0) {
-            throw "Git завершился с кодом $LASTEXITCODE: git $($Arguments -join ' ')"
+            throw "Git exited with code ${LASTEXITCODE}: git $($Arguments -join ' ')"
         }
         return $syncCapturedOutput
     }
 
     & $syncGitExe @syncGitArgs @Arguments
     if ($LASTEXITCODE -ne 0) {
-        throw "Git завершился с кодом $LASTEXITCODE: git $($Arguments -join ' ')"
+        throw "Git exited with code ${LASTEXITCODE}: git $($Arguments -join ' ')"
     }
 }
 
@@ -50,7 +50,7 @@ Push-Location -LiteralPath $syncRepoRoot
 try {
     $syncCurrentBranch = (Invoke-SyncGit -Arguments @('branch', '--show-current') -Capture | Select-Object -First 1)
     if ($syncCurrentBranch -ne 'main') {
-        throw "Ожидалась ветка main, сейчас открыта: $syncCurrentBranch"
+        throw "Expected branch main; current branch: $syncCurrentBranch"
     }
 
     $syncDirtyFiles = @(Invoke-SyncGit -Arguments @('status', '--porcelain') -Capture)
@@ -63,7 +63,7 @@ try {
 
         'pull' {
             if ($syncDirtyFiles.Count -gt 0) {
-                throw 'Есть незакоммиченные изменения. Сначала сохраните или осознанно закоммитьте их; автоматическая синхронизация остановлена.'
+                throw 'Uncommitted changes found. Save or commit them intentionally before synchronization.'
             }
 
             Invoke-SyncGit -Arguments @('fetch', 'origin', 'main')
@@ -73,13 +73,13 @@ try {
 
         'push' {
             if ($syncDirtyFiles.Count -gt 0) {
-                throw 'Есть незакоммиченные изменения. Перед push создайте проверенный коммит вместе с обновлением PROJECT_CONTEXT.md.'
+                throw 'Uncommitted changes found. Commit verified work together with PROJECT_CONTEXT.md before push.'
             }
 
             Invoke-SyncGit -Arguments @('fetch', 'origin', 'main')
             $syncBehindCount = [int](Invoke-SyncGit -Arguments @('rev-list', '--count', 'HEAD..origin/main') -Capture | Select-Object -First 1)
             if ($syncBehindCount -gt 0) {
-                throw "Локальная ветка отстаёт от origin/main на $syncBehindCount коммит(ов). Сначала выполните: .\SYNC_GITHUB.ps1 pull"
+                throw "Local main is behind origin/main by $syncBehindCount commit(s). Run: .\SYNC_GITHUB.ps1 pull"
             }
 
             Invoke-SyncGit -Arguments @('push', 'origin', 'main')
