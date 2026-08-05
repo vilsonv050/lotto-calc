@@ -288,7 +288,318 @@
             </div>
 
             <div class="ss" id="sfts" style="display:none">
-                <h3>Ставки (<span id="sftc">0</span>) <button class="rb" id="sftd" style="margin-left:…3805 tokens truncated…       header.innerHTML = '<span class="mh-arrow">' + (isOpen ? '\u25bc' : '\u25b6') + '</span> ' + label + ' <span class="mh-count">' + months[mk].length + ' \u0434\u043d.</span>';
+                <h3>Ставки (<span id="sftc">0</span>) <button class="rb" id="sftd" style="margin-left:auto">Удалить все</button></h3>
+                <div id="sftl"></div>
+            </div>
+        </div>
+
+        <div class="right-panel">
+            <div class="days-bar" id="days-bar">
+                <div class="days-sidebar">
+                    <label class="btn-load" for="file-input">Загрузить файл</label>
+                    <div class="days-filename" id="days-filename"><span id="days-fname"></span></div>
+                </div>
+                <input type="file" id="file-input" accept=".csv,.txt">
+                <div class="days-tabs" id="days-tabs"></div>
+            </div>
+
+            <div class="autofill-box">
+                <input type="text" id="af-input" placeholder="Вставь сюда числа (через запятую) или Ctrl+V">
+                <button class="btn-fill" id="af-btn">Заполнить</button>
+            </div>
+            
+            <div class="ss" style="margin-bottom: 0; height: 100%; min-height: 0; display: flex; flex-direction: column;">
+                <h3>Тиражи (<span id="draw-count">24</span>) <button class="rb" id="sfrd" style="margin:0 0 0 10px;vertical-align:middle">Сбросить</button></h3>
+                <div class="dg" id="sfdg"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="sf">
+        <div class="tpc"><div class="tpl">Затраты</div><div class="tpv" id="stc">0 ₽</div></div>
+        <div class="tpw"><div class="tpl">Выигрыш</div><div class="tpv" id="stw">0 ₽</div></div>
+        <div class="tpp"><div class="tpl">Прибыль</div><div class="tpv" id="stp">0 ₽</div></div>
+        <div class="tppct"><div class="tpl">% Выигрыша</div><div class="tpv" id="stpct">—</div></div>
+    </div>
+</div>
+
+<script>
+    const CF = {
+        6:8000, 7:6000, 8:4000, 9:250, 10:140, 11:70, 12:55, 13:30, 14:24, 15:18, 16:12,
+        17:10, 18:9, 19:8, 20:7, 21:7, 22:7, 23:8, 24:9, 25:10, 26:12, 27:18, 28:24,
+        29:30, 30:55, 31:70, 32:140, 33:250, 34:4000, 35:6000, 36:8000
+    };
+
+    const MONTH_NAMES = {
+        '01':'Январь','02':'Февраль','03':'Март','04':'Апрель','05':'Май','06':'Июнь',
+        '07':'Июль','08':'Август','09':'Сентябрь','10':'Октябрь','11':'Ноябрь','12':'Декабрь'
+    };
+
+    const DRAW_COUNTS = [24, 96];
+    const MAX_DRAW_COUNT = 96;
+    const MAX_SAFE_AUTO_QTY = Number.MAX_SAFE_INTEGER;
+
+    let layers = [{ id: 1, name: 'Слой 1', tickets: [] }];
+    let activeLayerId = 1;
+    let layerCounter = 1;
+    let sn = new Set(); 
+    let drawCount = 24;
+    let drawValues = new Array(MAX_DRAW_COUNT).fill('');
+
+    let loadedDays = {};
+    let activeDay = null;
+    let loadedFileName = '';
+    let openMonthKey = null;
+
+    function fm(n) {
+        if (!Number.isFinite(n)) return '\u221e';
+        return Math.round(n).toLocaleString('ru-RU').replace(/[\u00a0\u202f]/g, ' ');
+    }
+    function fc(v) { return v >= 1000 ? (v/1000)+'К' : ''+v; }
+    function getActiveLayer() { return layers.find(l => l.id === activeLayerId); }
+
+    function ensureTicketQty(ticket) {
+        if (!Array.isArray(ticket.qty)) ticket.qty = [];
+        while (ticket.qty.length < drawCount) ticket.qty.push(0);
+    }
+
+    function captureDrawValues() {
+        for (let i = 1; i <= drawCount; i++) {
+            let inp = document.getElementById('sfi' + i);
+            if (inp) drawValues[i - 1] = inp.value;
+        }
+    }
+
+    function setDrawValues(values) {
+        drawValues.fill('');
+        values.slice(0, MAX_DRAW_COUNT).forEach((value, i) => { drawValues[i] = value; });
+    }
+
+    function updateDrawModeUI() {
+        document.getElementById('draw-count').textContent = drawCount;
+        document.querySelectorAll('.mode-btn').forEach(btn => {
+            btn.classList.toggle('active', parseInt(btn.dataset.count) === drawCount);
+        });
+        let grid = document.getElementById('sfdg');
+        grid.style.setProperty('--draw-rows', Math.ceil(drawCount / 6));
+        document.getElementById('af-input').placeholder = 'Вставь сюда до ' + drawCount + ' чисел (через запятую) или Ctrl+V';
+    }
+
+    function setDrawMode(count) {
+        count = parseInt(count);
+        if (!DRAW_COUNTS.includes(count)) return;
+        if (count === drawCount) { updateDrawModeUI(); return; }
+        captureDrawValues();
+        drawCount = count;
+        layers.forEach(layer => layer.tickets.forEach(ensureTicketQty));
+        updateDrawModeUI();
+        renderDrawGrid();
+        renderTk();
+        fullRecalc();
+    }
+
+    function getBaseCost(numCount) {
+        let p = parseInt(document.getElementById('sfp').value) || 0;
+        let d = parseInt(document.getElementById('sfd').value) || 0;
+        d = Math.min(100, Math.max(0, d)); 
+        return numCount * p * (1 - d / 100);
+    }
+
+    function parseStep(stepStr) {
+        let s = (stepStr || '').trim();
+        if (!s) return { type: 'add', value: 1, display: '+1' };
+        if (s.charAt(0) === '*') {
+            let v = parseFloat(s.substring(1));
+            if (!isNaN(v) && v > 0) return { type: 'mul', value: v, display: s };
+        }
+        if (s.charAt(0) === '+') {
+            let v = parseInt(s.substring(1));
+            if (!isNaN(v) && v > 0) return { type: 'add', value: v, display: s };
+        }
+        return { type: 'add', value: 1, display: '+1' };
+    }
+
+    function applyAutoCalc(ticket) {
+        if (!ticket.auto) return;
+        ensureTicketQty(ticket);
+        let rule = parseStep(ticket.step);
+        let currentQty = 1;
+        ticket.autoLimited = false;
+        for (let i = 1; i <= drawCount; i++) {
+            ticket.qty[i - 1] = currentQty;
+            let drawnVal = parseInt(document.getElementById('sfi' + i).value);
+            if (!isNaN(drawnVal) && drawnVal >= 6 && drawnVal <= 36 && ticket.nums.includes(drawnVal)) {
+                currentQty = 1;
+            } else {
+                if (rule.type === 'mul') {
+                    currentQty = Math.round(currentQty * rule.value);
+                } else {
+                    currentQty = currentQty + rule.value;
+                }
+                if (!Number.isSafeInteger(currentQty) || currentQty > MAX_SAFE_AUTO_QTY) {
+                    currentQty = MAX_SAFE_AUTO_QTY;
+                    ticket.autoLimited = true;
+                }
+            }
+        }
+    }
+
+    // === УНИВЕРСАЛЬНЫЙ ПАРСЕР ===
+    function parseFile(text) {
+        text = text.replace(/^\uFEFF/, '');
+        let lines = text.split(/\r?\n/).filter(l => l.trim());
+        if (lines.length < 2) return {};
+
+        // Определяем формат по первому разделителю в первой строке данных
+        let firstLine = lines[0].trim();
+
+        // Проверяем заголовок: если есть ; — это CSV с суммами
+        if (firstLine.indexOf(';') !== -1) {
+            return parseCSV_Sums(lines);
+        }
+
+        // Если есть , и полей 8 — это TXT с числами для суммирования
+        if (firstLine.indexOf(',') !== -1) {
+            let testParts = firstLine.split(',');
+            if (testParts.length === 8) {
+                return parseTXT_Numbers(lines);
+            }
+        }
+
+        // Если не распознали — пробуем CSV
+        return parseCSV_Sums(lines);
+    }
+
+    function parseTimeOrder(value) {
+        let match = String(value || '').match(/(\d{1,2}):(\d{2})/);
+        if (!match) return null;
+        let hours = parseInt(match[1]);
+        let minutes = parseInt(match[2]);
+        if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59) return null;
+        return hours * 60 + minutes;
+    }
+
+    function finalizeParsedDays(days) {
+        Object.keys(days).forEach(date => {
+            days[date].sort((a, b) => {
+                if (a.order !== null && b.order !== null && a.order !== b.order) return a.order - b.order;
+                return a.seq - b.seq;
+            });
+            days[date] = days[date].map(item => item.sum);
+        });
+        return days;
+    }
+
+    // Старый формат: Дата;Час;Сумма
+    function parseCSV_Sums(lines) {
+        let days = {};
+        for (let i = 0; i < lines.length; i++) {
+            let parts = lines[i].split(';').map(s => s.trim());
+            if (parts.length < 3) continue;
+            let date = parts[0];
+            let sum = parseInt(parts[2]);
+            if (isNaN(sum)) continue;
+            if (!days[date]) days[date] = [];
+            days[date].push({ sum: sum, order: parseTimeOrder(parts[1]), seq: i });
+        }
+        return finalizeParsedDays(days);
+    }
+
+    // Новый формат: Номер,Дата,ч1,ч2,ч3,ч4,ч5,ч6
+    function parseTXT_Numbers(lines) {
+        let days = {};
+        for (let i = 0; i < lines.length; i++) {
+            let parts = lines[i].split(',').map(s => s.trim());
+            if (parts.length < 8) continue;
+            let date = parts[1];
+            // Проверяем что дата выглядит как дата DD.MM.YYYY
+            if (!/^\d{2}\.\d{2}\.\d{4}$/.test(date)) continue;
+            // Суммируем 6 чисел (индексы 2–7)
+            let sum = 0;
+            let valid = true;
+            for (let j = 2; j <= 7; j++) {
+                let n = parseInt(parts[j]);
+                if (isNaN(n)) { valid = false; break; }
+                sum += n;
+            }
+            if (!valid) continue;
+            if (!days[date]) days[date] = [];
+            let drawNumber = parseInt(parts[0]);
+            days[date].push({ sum: sum, order: isNaN(drawNumber) ? null : drawNumber, seq: i });
+        }
+        return finalizeParsedDays(days);
+    }
+
+    document.getElementById('file-input').addEventListener('change', function(e) {
+        let file = e.target.files[0];
+        if (!file) return;
+        loadedFileName = file.name;
+        let reader = new FileReader();
+        reader.onload = function(ev) {
+            let parsed = parseFile(ev.target.result);
+            if (Object.keys(parsed).length === 0) {
+                alert('Не удалось найти тиражи в файле.\n\nПоддерживаемые форматы:\n1) Дата;Час;Сумма (через ;)\n2) Номер,Дата,ч1,ч2,ч3,ч4,ч5,ч6 (через ,)');
+                return;
+            }
+            loadedDays = parsed;
+            let firstDate = Object.keys(loadedDays)[0];
+            activeDay = firstDate;
+            let fp = firstDate.split('.');
+            openMonthKey = fp[1] + '.' + fp[2];
+            fillDay(activeDay);
+            renderDayTabs();
+            document.getElementById('days-fname').textContent = loadedFileName;
+            document.getElementById('days-filename').classList.add('show');
+        };
+        reader.readAsText(file, 'UTF-8');
+        this.value = '';
+    });
+
+    function fillDay(date) {
+        let values = loadedDays[date];
+        if (!values) return;
+        activeDay = date;
+        if (values.length > 24 && drawCount !== 96) setDrawMode(96);
+        if (values.length > MAX_DRAW_COUNT) alert('В выбранном дне найдено ' + values.length + ' тиражей. Будут использованы первые ' + MAX_DRAW_COUNT + '.');
+        setDrawValues(values);
+        renderDrawGrid();
+        renderDayTabs();
+        fullRecalc();
+    }
+
+    function renderDayTabs() {
+        let cont = document.getElementById('days-tabs');
+        cont.innerHTML = '';
+        let dates = Object.keys(loadedDays);
+        if (!dates.length) return;
+
+        let months = {};
+        dates.forEach(date => {
+            let p = date.split('.');
+            let mk = p[1] + '.' + p[2];
+            if (!months[mk]) months[mk] = [];
+            months[mk].push(date);
+        });
+
+        let monthKeys = Object.keys(months).sort((a, b) => {
+            let pa = a.split('.'), pb = b.split('.');
+            if (pa[1] !== pb[1]) return pa[1] - pb[1];
+            return pa[0] - pb[0];
+        });
+
+        monthKeys.forEach(mk => {
+            let mp = mk.split('.');
+            let mName = MONTH_NAMES[mp[0]] || mp[0];
+            let mYear = mp[1];
+            let label = mName + ' ' + mYear;
+            let isOpen = (mk === openMonthKey);
+
+            let group = document.createElement('div');
+            group.className = 'month-group';
+
+            let header = document.createElement('div');
+            header.className = 'month-header' + (isOpen ? ' open' : '');
+            header.innerHTML = '<span class="mh-arrow">' + (isOpen ? '\u25bc' : '\u25b6') + '</span> ' + label + ' <span class="mh-count">' + months[mk].length + ' \u0434\u043d.</span>';
 
             let datesCont = document.createElement('div');
             datesCont.className = 'month-dates' + (isOpen ? ' show' : '');
