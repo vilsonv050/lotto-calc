@@ -152,6 +152,7 @@
             white-space: nowrap; user-select: none; text-align: center;
         }
         .btn-load:hover { color: #d4af37; border-color: #d4af37; }
+        .days-bar > input[type="file"] { display: none; }
         .days-filename { color: #5a4a3a; font-size: 9px; font-weight: 600; text-align: center; max-width: 90px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: none; }
         .days-filename.show { display: block; }
         .days-filename span { color: #8a6a5a; }
@@ -172,8 +173,15 @@
         }
         .mh-arrow { font-size: 9px; color: #6a4a2a; transition: 0.2s; }
         .month-header.open .mh-arrow { color: #d4af37; }
-        .mh-count { color: #4a3a2a; font-size: 10px; font-weight: 600; margin-left: auto; }
+        .mh-title { white-space: nowrap; }
+        .mh-count { color: #4a3a2a; font-size: 10px; font-weight: 600; }
         .month-header.open .mh-count { color: #6a5a3a; }
+        .month-calc {
+            display: inline-flex; align-items: center; gap: 5px; margin-left: auto;
+            color: #8a6a5a; font-size: 10px; font-weight: 700; cursor: pointer; white-space: nowrap;
+        }
+        .month-calc:hover, .month-calc.checked { color: #f5c518; }
+        .month-calc input { margin: 0; accent-color: #d4af37; cursor: pointer; }
 
         .month-dates {
             display: none; gap: 4px; flex-wrap: wrap;
@@ -191,6 +199,13 @@
         .day-tab:hover { color: #d4af37; border-color: #d4af37; }
         .day-tab.active { background: #d4af37; color: #1a0505; border-color: #d4af37; box-shadow: 0 0 8px rgba(212, 175, 55, 0.3); }
         .day-tab .dt-count { font-size: 9px; opacity: 0.7; margin-left: 3px; }
+
+        .calc-scope {
+            display: inline-block; margin-left: 8px; padding: 2px 7px; border-radius: 10px;
+            background: #2a1008; border: 1px solid #5a2a1a; color: #c8920a;
+            font-size: 9px; font-weight: 700; text-transform: none; letter-spacing: 0;
+        }
+        .calc-scope.month { background: #2a1a05; border-color: #8a6a2a; color: #f5c518; }
 
         .autofill-box {
             background: #1f0a05; border: 1px solid #3a1508; border-radius: 8px; padding: 10px 15px;
@@ -309,7 +324,7 @@
             </div>
             
             <div class="ss" style="margin-bottom: 0; height: 100%; min-height: 0; display: flex; flex-direction: column;">
-                <h3>Тиражи (<span id="draw-count">24</span>) <button class="rb" id="sfrd" style="margin:0 0 0 10px;vertical-align:middle">Сбросить</button></h3>
+                <h3>Тиражи (<span id="draw-count">24</span>) <span class="calc-scope" id="calc-scope">День</span> <button class="rb" id="sfrd" style="margin:0 0 0 10px;vertical-align:middle">Сбросить</button></h3>
                 <div class="dg" id="sfdg"></div>
             </div>
         </div>
@@ -350,6 +365,7 @@
     let activeDay = null;
     let loadedFileName = '';
     let openMonthKey = null;
+    let calculationMonthKey = null;
 
     function fm(n) {
         if (!Number.isFinite(n)) return '\u221e';
@@ -357,6 +373,43 @@
     }
     function fc(v) { return v >= 1000 ? (v/1000)+'К' : ''+v; }
     function getActiveLayer() { return layers.find(l => l.id === activeLayerId); }
+
+    function getMonthKey(date) {
+        let parts = String(date || '').split('.');
+        return parts.length === 3 ? parts[1] + '.' + parts[2] : '';
+    }
+
+    function dateSortValue(date) {
+        let parts = String(date || '').split('.');
+        if (parts.length !== 3) return 0;
+        return parseInt(parts[2] + parts[1] + parts[0]) || 0;
+    }
+
+    function getMonthDates(monthKey) {
+        return Object.keys(loadedDays)
+            .filter(date => getMonthKey(date) === monthKey)
+            .sort((a, b) => dateSortValue(a) - dateSortValue(b));
+    }
+
+    function getMonthLabel(monthKey) {
+        let parts = String(monthKey || '').split('.');
+        if (parts.length !== 2) return monthKey || '';
+        return (MONTH_NAMES[parts[0]] || parts[0]) + ' ' + parts[1];
+    }
+
+    function updateCalculationScope() {
+        let scope = document.getElementById('calc-scope');
+        if (!scope) return;
+        if (calculationMonthKey) {
+            let dates = getMonthDates(calculationMonthKey);
+            let draws = dates.reduce((total, date) => total + Math.min(loadedDays[date].length, drawCount), 0);
+            scope.textContent = getMonthLabel(calculationMonthKey) + ' · ' + draws + ' тир.';
+            scope.className = 'calc-scope month';
+        } else {
+            scope.textContent = activeDay ? 'День · ' + activeDay : 'День';
+            scope.className = 'calc-scope';
+        }
+    }
 
     function ensureTicketQty(ticket) {
         if (!Array.isArray(ticket.qty)) ticket.qty = [];
@@ -448,7 +501,7 @@
     function parseFile(text) {
         text = text.replace(/^\uFEFF/, '');
         let lines = text.split(/\r?\n/).filter(l => l.trim());
-        if (lines.length < 2) return {};
+        if (lines.length < 1) return {};
 
         // Определяем формат по первому разделителю в первой строке данных
         let firstLine = lines[0].trim();
@@ -458,10 +511,12 @@
             return parseCSV_Sums(lines);
         }
 
-        // Если есть , и полей 8 — это TXT с числами для суммирования
+        // TXT: Номер,Дата,ч1..ч6 или Дата,ч1..ч6
         if (firstLine.indexOf(',') !== -1) {
-            let testParts = firstLine.split(',');
-            if (testParts.length === 8) {
+            let testParts = firstLine.split(',').map(s => s.trim());
+            let firstIsDate = /^\d{2}\.\d{2}\.\d{4}$/.test(testParts[0] || '');
+            let secondIsDate = /^\d{2}\.\d{2}\.\d{4}$/.test(testParts[1] || '');
+            if ((firstIsDate && testParts.length >= 7) || (secondIsDate && testParts.length >= 8)) {
                 return parseTXT_Numbers(lines);
             }
         }
@@ -505,26 +560,26 @@
         return finalizeParsedDays(days);
     }
 
-    // Новый формат: Номер,Дата,ч1,ч2,ч3,ч4,ч5,ч6
+    // TXT: Номер,Дата,ч1,ч2,ч3,ч4,ч5,ч6 или Дата,ч1,ч2,ч3,ч4,ч5,ч6
     function parseTXT_Numbers(lines) {
         let days = {};
         for (let i = 0; i < lines.length; i++) {
             let parts = lines[i].split(',').map(s => s.trim());
-            if (parts.length < 8) continue;
-            let date = parts[1];
-            // Проверяем что дата выглядит как дата DD.MM.YYYY
-            if (!/^\d{2}\.\d{2}\.\d{4}$/.test(date)) continue;
-            // Суммируем 6 чисел (индексы 2–7)
+            let dateIndex = /^\d{2}\.\d{2}\.\d{4}$/.test(parts[0] || '') ? 0 : 1;
+            let numberStart = dateIndex + 1;
+            let date = parts[dateIndex];
+            if (!/^\d{2}\.\d{2}\.\d{4}$/.test(date || '') || parts.length < numberStart + 6) continue;
+            // Суммируем ровно 6 чисел после даты
             let sum = 0;
             let valid = true;
-            for (let j = 2; j <= 7; j++) {
+            for (let j = numberStart; j < numberStart + 6; j++) {
                 let n = parseInt(parts[j]);
                 if (isNaN(n)) { valid = false; break; }
                 sum += n;
             }
             if (!valid) continue;
             if (!days[date]) days[date] = [];
-            let drawNumber = parseInt(parts[0]);
+            let drawNumber = dateIndex === 1 ? parseInt(parts[0]) : null;
             days[date].push({ sum: sum, order: isNaN(drawNumber) ? null : drawNumber, seq: i });
         }
         return finalizeParsedDays(days);
@@ -538,10 +593,11 @@
         reader.onload = function(ev) {
             let parsed = parseFile(ev.target.result);
             if (Object.keys(parsed).length === 0) {
-                alert('Не удалось найти тиражи в файле.\n\nПоддерживаемые форматы:\n1) Дата;Час;Сумма (через ;)\n2) Номер,Дата,ч1,ч2,ч3,ч4,ч5,ч6 (через ,)');
+                alert('Не удалось найти тиражи в файле.\n\nПоддерживаемые форматы:\n1) Дата;Час;Сумма (через ;)\n2) Номер,Дата,ч1,ч2,ч3,ч4,ч5,ч6\n3) Дата,ч1,ч2,ч3,ч4,ч5,ч6');
                 return;
             }
             loadedDays = parsed;
+            calculationMonthKey = null;
             let firstDate = Object.keys(loadedDays)[0];
             activeDay = firstDate;
             let fp = firstDate.split('.');
@@ -575,10 +631,12 @@
 
         let months = {};
         dates.forEach(date => {
-            let p = date.split('.');
-            let mk = p[1] + '.' + p[2];
+            let mk = getMonthKey(date);
             if (!months[mk]) months[mk] = [];
             months[mk].push(date);
+        });
+        Object.keys(months).forEach(mk => {
+            months[mk].sort((a, b) => dateSortValue(a) - dateSortValue(b));
         });
 
         let monthKeys = Object.keys(months).sort((a, b) => {
@@ -599,7 +657,35 @@
 
             let header = document.createElement('div');
             header.className = 'month-header' + (isOpen ? ' open' : '');
-            header.innerHTML = '<span class="mh-arrow">' + (isOpen ? '\u25bc' : '\u25b6') + '</span> ' + label + ' <span class="mh-count">' + months[mk].length + ' \u0434\u043d.</span>';
+            header.innerHTML = '<span class="mh-arrow">' + (isOpen ? '\u25bc' : '\u25b6') + '</span><span class="mh-title">' + label + '</span>';
+
+            let monthCalc = document.createElement('label');
+            monthCalc.className = 'month-calc' + (calculationMonthKey === mk ? ' checked' : '');
+            let monthCheckbox = document.createElement('input');
+            monthCheckbox.type = 'checkbox';
+            monthCheckbox.checked = calculationMonthKey === mk;
+            let monthCalcText = document.createElement('span');
+            monthCalcText.textContent = 'Посчитать месяц';
+            monthCalc.appendChild(monthCheckbox);
+            monthCalc.appendChild(monthCalcText);
+            monthCalc.onclick = function(e) { e.stopPropagation(); };
+            monthCheckbox.onchange = function(e) {
+                e.stopPropagation();
+                calculationMonthKey = this.checked ? mk : null;
+                if (this.checked) openMonthKey = mk;
+                if (this.checked && !months[mk].includes(activeDay)) {
+                    fillDay(months[mk][0]);
+                } else {
+                    renderDayTabs();
+                    fullRecalc();
+                }
+            };
+
+            let monthCount = document.createElement('span');
+            monthCount.className = 'mh-count';
+            monthCount.textContent = months[mk].length + ' дн.';
+            header.appendChild(monthCalc);
+            header.appendChild(monthCount);
 
             let datesCont = document.createElement('div');
             datesCont.className = 'month-dates' + (isOpen ? ' show' : '');
@@ -655,6 +741,7 @@
         if (nums.length > MAX_DRAW_COUNT) alert('Найдено ' + nums.length + ' чисел. Будут использованы первые ' + MAX_DRAW_COUNT + '.');
         activeDay = null;
         openMonthKey = null;
+        calculationMonthKey = null;
         renderDayTabs();
         setDrawValues(nums);
         renderDrawGrid();
@@ -721,6 +808,7 @@
                 if (val >= 6 && val <= 36 && idx < drawCount) document.getElementById('sfi' + (idx + 1)).focus();
                 activeDay = null;
                 openMonthKey = null;
+                calculationMonthKey = null;
                 renderDayTabs();
                 let currentTickets = getActiveLayer().tickets;
                 currentTickets.forEach((t, tIdx) => {
@@ -753,6 +841,7 @@
         renderDrawGrid();
         activeDay = null;
         openMonthKey = null;
+        calculationMonthKey = null;
         renderDayTabs();
         updateSumOfNums(); recalc();
     };
@@ -878,13 +967,7 @@
         updateSumOfNums();
     }
 
-    function recalc() {
-        let tc = 0, tw = 0; let currentTickets = getActiveLayer().tickets;
-        for (let i = 1; i <= drawCount; i++) {
-            let v = parseInt(document.getElementById('sfi' + i).value); if (isNaN(v) || v < 6 || v > 36) continue;
-            let mw = parseInt(document.getElementById('sfm').value) || 550; let c = CF[v];
-            currentTickets.forEach(t => { let q = t.qty[i - 1]; if (q > 0) { tc += t.cost * q; if (t.nums.indexOf(v) !== -1) { tw += mw * c * q; } } });
-        }
+    function renderTotals(tc, tw) {
         let pr = tw - tc;
         document.getElementById('stc').textContent = fm(tc) + ' \u20bd'; 
         document.getElementById('stw').textContent = fm(tw) + ' \u20bd';
@@ -900,6 +983,71 @@
             pctEl.textContent = (pct > 0 ? '+' : '') + pct.toFixed(1) + '%';
             pctEl.className = pct >= 0 ? 'tpv' : 'tpv neg';
         }
+    }
+
+    function recalcMonth(monthKey) {
+        let dates = getMonthDates(monthKey);
+        let currentTickets = getActiveLayer().tickets;
+        let mw = parseInt(document.getElementById('sfm').value) || 550;
+        let tc = 0, tw = 0, monthSum = 0;
+
+        dates.forEach(date => {
+            let values = loadedDays[date].slice(0, drawCount);
+            values.forEach(value => {
+                let v = parseInt(value);
+                if (!isNaN(v) && v >= 6 && v <= 36) monthSum += v;
+            });
+
+            currentTickets.forEach(ticket => {
+                ensureTicketQty(ticket);
+                if (ticket.auto) {
+                    let rule = parseStep(ticket.step);
+                    let currentQty = 1;
+                    values.forEach(value => {
+                        let v = parseInt(value);
+                        if (isNaN(v) || v < 6 || v > 36) return;
+                        let q = currentQty;
+                        tc += ticket.cost * q;
+                        if (ticket.nums.indexOf(v) !== -1) {
+                            tw += mw * CF[v] * q;
+                            currentQty = 1;
+                        } else {
+                            currentQty = rule.type === 'mul' ? Math.round(currentQty * rule.value) : currentQty + rule.value;
+                            if (!Number.isSafeInteger(currentQty) || currentQty > MAX_SAFE_AUTO_QTY) currentQty = MAX_SAFE_AUTO_QTY;
+                        }
+                    });
+                } else {
+                    values.forEach((value, index) => {
+                        let v = parseInt(value);
+                        if (isNaN(v) || v < 6 || v > 36) return;
+                        let q = ticket.qty[index] || 0;
+                        if (q <= 0) return;
+                        tc += ticket.cost * q;
+                        if (ticket.nums.indexOf(v) !== -1) tw += mw * CF[v] * q;
+                    });
+                }
+            });
+        });
+
+        document.getElementById('sum-nums').textContent = monthSum;
+        updateCalculationScope();
+        renderTotals(tc, tw);
+    }
+
+    function recalc() {
+        if (calculationMonthKey) {
+            recalcMonth(calculationMonthKey);
+            return;
+        }
+
+        let tc = 0, tw = 0; let currentTickets = getActiveLayer().tickets;
+        for (let i = 1; i <= drawCount; i++) {
+            let v = parseInt(document.getElementById('sfi' + i).value); if (isNaN(v) || v < 6 || v > 36) continue;
+            let mw = parseInt(document.getElementById('sfm').value) || 550; let c = CF[v];
+            currentTickets.forEach(t => { let q = t.qty[i - 1]; if (q > 0) { tc += t.cost * q; if (t.nums.indexOf(v) !== -1) { tw += mw * c * q; } } });
+        }
+        updateCalculationScope();
+        renderTotals(tc, tw);
     }
 
     document.querySelectorAll('.mode-btn').forEach(btn => {
