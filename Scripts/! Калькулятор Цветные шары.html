@@ -280,6 +280,48 @@
         .number-btn.active { background: rgba(35,137,245,.2); border-color: var(--blue); box-shadow: 0 0 0 3px rgba(35,137,245,.08); }
         .number-btn.disabled { opacity: .4; cursor: not-allowed; }
 
+        .builder-tools {
+            display: grid;
+            grid-template-columns: minmax(120px, .7fr) minmax(110px, .55fr) minmax(205px, 1.2fr);
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+            padding: 11px;
+            border: 1px solid rgba(255,255,255,.08);
+            border-radius: 14px;
+            background: rgba(30,30,43,.56);
+        }
+        .builder-tools > * { min-width: 0; }
+        .system-size-field, .generation-count-field {
+            display: grid;
+            grid-template-columns: 1fr 58px;
+            align-items: center;
+            gap: 8px;
+            min-width: 0;
+            color: #d7d7e4;
+            font-size: 10px;
+            font-weight: 900;
+        }
+        .system-size-field input, .generation-count-field input {
+            width: 58px;
+            padding: 9px 5px;
+            border: 1px solid rgba(255,255,255,.12);
+            border-radius: 9px;
+            outline: 0;
+            background: #252532;
+            color: white;
+            text-align: center;
+            font-weight: 950;
+        }
+        .system-size-field input:focus, .generation-count-field input:focus { border-color: var(--blue-2); box-shadow: 0 0 0 3px rgba(35,137,245,.12); }
+        .auto-fill-btn { min-height: 39px; white-space: normal; }
+        .auto-fill-btn span { margin-right: 5px; color: #dfeaff; }
+        .builder-side { grid-column: 1 / -1; display: flex; align-items: center; flex-wrap: wrap; gap: 5px 12px; min-width: 0; }
+        .builder-side .builder-help { flex: 1 1 260px; }
+        .bundle-auto-option { display: flex; align-items: center; gap: 7px; color: #dedeea; font-size: 10px; font-weight: 900; cursor: pointer; }
+        .bundle-auto-option input { accent-color: var(--blue); }
+        .builder-help { color: var(--muted); font-size: 10px; line-height: 1.35; }
+
         .builder-summary {
             display: grid;
             grid-template-columns: 1fr auto;
@@ -344,6 +386,7 @@
         .ticket-balls { display: flex; flex-wrap: wrap; gap: 5px; margin: 10px 0; }
         .ticket-extras { display: flex; flex-wrap: wrap; gap: 5px; }
         .extra-tag { padding: 5px 7px; border-radius: 999px; background: rgba(130,87,255,.13); color: #d6cfff; border: 1px solid rgba(130,87,255,.2); font-size: 9px; font-weight: 900; }
+        .bundle-badge { display: inline-flex; margin-left: 6px; padding: 4px 7px; border-radius: 999px; background: rgba(35,137,245,.15); color: #bcdcff; border: 1px solid rgba(35,137,245,.28); font-size: 9px; font-weight: 950; vertical-align: middle; }
         .ticket-controls {
             display: grid;
             grid-template-columns: auto minmax(90px, 130px) auto auto;
@@ -408,6 +451,12 @@
         .draw-result div { padding: 6px; border-radius: 8px; text-align: center; background: rgba(255,255,255,.035); }
         .draw-result small { display: block; color: var(--muted); font-size: 7px; font-weight: 900; text-transform: uppercase; }
         .draw-result strong { display: block; margin-top: 2px; font-size: 10px; }
+        .draw-extra-wins { display: grid; gap: 6px; margin: 0 11px 10px; padding: 9px; border: 1px solid rgba(76,203,123,.22); border-radius: 11px; background: linear-gradient(135deg, rgba(25,141,84,.12), rgba(130,87,255,.08)); }
+        .draw-extra-title { color: #9ee7bb; font-size: 9px; font-weight: 950; text-transform: uppercase; letter-spacing: .05em; }
+        .draw-extra-row { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; }
+        .draw-extra-ticket { margin-right: 3px; color: #efeff7; font-size: 9px; font-weight: 950; }
+        .winning-extra-tag { padding: 5px 7px; border: 1px solid rgba(88,225,144,.34); border-radius: 999px; background: rgba(52,190,112,.18); color: #baffd4; box-shadow: 0 0 14px rgba(52,190,112,.08); font-size: 9px; font-weight: 950; }
+        .draw-extra-amount { margin-left: auto; color: var(--green); font-size: 10px; font-style: normal; font-weight: 950; }
         .positive { color: var(--green) !important; }
         .negative { color: #ff8a96 !important; }
         .draw-card details { border-top: 1px solid var(--line); }
@@ -470,6 +519,9 @@
             .qty-grid { grid-template-columns: repeat(6,minmax(0,1fr)); }
             .ticket-controls { grid-template-columns: repeat(2,minmax(0,1fr)); }
             .prize-grid { grid-template-columns: repeat(3,minmax(0,1fr)); }
+            .builder-tools { grid-template-columns: repeat(2,minmax(0,1fr)); }
+            .builder-side { grid-column: 1 / -1; }
+            .auto-fill-btn { grid-column: 1 / -1; width: 100%; padding: 10px 7px; font-size: 10px; }
             .totals { grid-template-columns: repeat(2,1fr); }
         }
     </style>
@@ -550,11 +602,26 @@
                     <div class="card-head">
                         <div>
                             <h2 class="card-title">Соберите ставку</h2>
-                            <div class="card-note">Выберите от 6 до 16 чисел. Стоимость системы = C(n, 6) × цена комбинации.</div>
+                            <div class="card-note">Задайте размер ставки от 6 до 16 чисел. Стоимость системы = C(n, 6) × цена комбинации.</div>
                         </div>
                         <button class="soft-btn" id="clear-builder">Очистить</button>
                     </div>
                     <div class="selected-strip" id="selected-strip"></div>
+                    <div class="builder-tools">
+                        <label class="system-size-field" for="target-count">
+                            <span>Чисел в ставке</span>
+                            <input id="target-count" type="number" min="6" max="16" step="1" value="6" inputmode="numeric">
+                        </label>
+                        <label class="generation-count-field" for="generation-count">
+                            <span>Билетов</span>
+                            <input id="generation-count" type="number" min="1" max="500" step="1" value="1" inputmode="numeric">
+                        </label>
+                        <button class="primary-btn auto-fill-btn" id="auto-fill-numbers" type="button"><span>✦</span>Заполнить автоматически</button>
+                        <div class="builder-side">
+                            <label class="bundle-auto-option"><input id="bundle-auto-generation" type="checkbox"> Авто +1 для комплекта</label>
+                            <div class="builder-help">Выбранные шары сохранятся. Один билет будет заполнен здесь, несколько — сразу добавятся в активный слой.</div>
+                        </div>
+                    </div>
                     <div class="number-grid" id="number-grid"></div>
                     <div class="builder-summary">
                         <div>
@@ -572,7 +639,7 @@
                             </div>
                             <span class="scope-pill" id="extra-count">0 выбрано</span>
                         </div>
-                        <div class="extras-grid locked" id="extras-grid">
+                        <div class="extras-grid" id="extras-grid">
                             <div class="extra-card">
                                 <div class="extra-title">Первое число</div>
                                 <div class="extra-options">
@@ -715,9 +782,14 @@
             firstFiveSum: { low:'Сумма 5: 1–122', high:'Сумма 5: 123–230' }
         };
         const MAX_QTY = Number.MAX_SAFE_INTEGER;
+        const MAX_GENERATED_TICKETS = 500;
 
         let drawCount = 48;
         let selected = new Set();
+        let targetNumberCount = 6;
+        let generationTicketCount = 1;
+        let generationBundleAuto = false;
+        let bundleCounter = 0;
         let draftExtras = emptyExtras();
         let layers = [{ id: 1, name: 'Слой 1', tickets: [] }];
         let activeLayerId = 1;
@@ -803,21 +875,129 @@
         }
 
         function draftCost() {
-            if (selected.size < 6) return 0;
+            if (selected.size !== targetNumberCount) return 0;
             return ticketCost({ numbers:Array.from(selected), extras:draftExtras });
+        }
+
+        function syncTargetNumberCount(value, notify = false) {
+            const requested = Math.round(Number(value));
+            let next = Number.isFinite(requested) ? requested : 6;
+            const clamped = Math.min(16, Math.max(6, next));
+            if (notify && clamped !== next) showToast('Количество чисел должно быть от 6 до 16.');
+            next = clamped;
+            if (next < selected.size) {
+                next = selected.size;
+                if (notify) showToast(`Сначала снимите лишние числа. Сейчас выбрано: ${selected.size}.`);
+            }
+            targetNumberCount = next;
+            if ($('target-count')) $('target-count').value = next;
+            return next;
+        }
+
+        function syncGenerationTicketCount(value, notify = false) {
+            const requested = Math.round(Number(value));
+            const normalized = Number.isFinite(requested) ? requested : 1;
+            generationTicketCount = Math.min(MAX_GENERATED_TICKETS, Math.max(1, normalized));
+            if (notify && generationTicketCount !== normalized) showToast(`За один раз можно создать от 1 до ${MAX_GENERATED_TICKETS} билетов.`);
+            if ($('generation-count')) $('generation-count').value = generationTicketCount;
+            return generationTicketCount;
+        }
+
+        function randomIndex(max) {
+            if (globalThis.crypto?.getRandomValues) {
+                const values = new Uint32Array(1);
+                const limit = 0x100000000 - (0x100000000 % max);
+                do globalThis.crypto.getRandomValues(values); while (values[0] >= limit);
+                return values[0] % max;
+            }
+            return Math.floor(Math.random() * max);
+        }
+
+        function shuffleNumbers(numbers) {
+            for (let index = numbers.length - 1; index > 0; index--) {
+                const swapIndex = randomIndex(index + 1);
+                [numbers[index], numbers[swapIndex]] = [numbers[swapIndex], numbers[index]];
+            }
+            return numbers;
+        }
+
+        function randomTicketNumbers(fixedNumbers, target) {
+            const numbers = new Set(fixedNumbers);
+            const available = shuffleNumbers(Array.from({length:48}, (_, index) => index + 1).filter(number => !numbers.has(number)));
+            available.slice(0, target - numbers.size).forEach(number => numbers.add(number));
+            return Array.from(numbers).sort((a,b) => a-b);
+        }
+
+        function newTicket(numbers, options = {}) {
+            return {
+                numbers,
+                extras: {...draftExtras},
+                qty: new Array(drawCount).fill(0),
+                auto: false,
+                step: '×2',
+                bundleId: options.bundleId || null,
+                bundleAuto: Boolean(options.bundleAuto),
+                bundleStep: options.bundleStep || '+1'
+            };
+        }
+
+        function autoFillNumbers() {
+            const target = syncTargetNumberCount($('target-count').value, true);
+            const requestedTickets = syncGenerationTicketCount($('generation-count').value, true);
+            generationBundleAuto = $('bundle-auto-generation').checked;
+            if (requestedTickets === 1) {
+                if (selected.size === target) return showToast(`Уже выбрано ${target} из ${target} чисел.`);
+                const missing = target - selected.size;
+                selected = new Set(randomTicketNumbers(Array.from(selected), target));
+                renderBuilder();
+                return showToast(`Автозаполнение добавило ${missing}. Выбрано ${target} из ${target}.`);
+            }
+
+            const fixedNumbers = Array.from(selected).sort((a,b) => a-b);
+            const missing = target - fixedNumbers.length;
+            const maximumUnique = comb(48 - fixedNumbers.length, missing);
+            if (maximumUnique < 2) return showToast('Для разных билетов оставьте хотя бы одно число автозаполнению.');
+            const ticketCount = Math.min(requestedTickets, maximumUnique);
+            const generatedNumbers = [];
+            const seen = new Set();
+            const maxAttempts = Math.max(2000, ticketCount * 200);
+            let attempts = 0;
+            while (generatedNumbers.length < ticketCount && attempts < maxAttempts) {
+                attempts++;
+                const numbers = randomTicketNumbers(fixedNumbers, target);
+                const key = numbers.join('-');
+                if (seen.has(key)) continue;
+                seen.add(key);
+                generatedNumbers.push(numbers);
+            }
+            if (!generatedNumbers.length) return showToast('Не удалось создать разные билеты. Измените выбранные числа.');
+            const bundleId = generationBundleAuto ? ++bundleCounter : null;
+            const generated = generatedNumbers.map(numbers => newTicket(numbers, {
+                bundleId,
+                bundleAuto:generationBundleAuto,
+                bundleStep:'+1'
+            }));
+            activeLayer().tickets.push(...generated);
+            resetBuilder(false);
+            renderTickets();
+            renderDrawsAndTotals();
+            const limited = ticketCount < requestedTickets ? ` Максимум для выбранных чисел: ${ticketCount}.` : '';
+            const autoNote = generationBundleAuto ? ' Авто +1 для комплекта включено.' : '';
+            showToast(`Создано билетов: ${generated.length}.${limited}${autoNote}`);
         }
 
         function renderNumberGrid() {
             $('number-grid').innerHTML = Array.from({length:48}, (_, index) => {
                 const number = index + 1;
-                return `<button class="number-btn${selected.has(number) ? ' active' : ''}" data-number="${number}" type="button">${ballHtml(number, 'sm')}</button>`;
+                const disabled = !selected.has(number) && selected.size >= targetNumberCount;
+                return `<button class="number-btn${selected.has(number) ? ' active' : ''}${disabled ? ' disabled' : ''}" data-number="${number}" type="button" aria-pressed="${selected.has(number)}"${disabled ? ' disabled' : ''}>${ballHtml(number, 'sm')}</button>`;
             }).join('');
             $('number-grid').querySelectorAll('.number-btn').forEach(button => {
                 button.onclick = () => {
                     const number = Number(button.dataset.number);
                     if (selected.has(number)) selected.delete(number);
-                    else if (selected.size < 16) selected.add(number);
-                    else return showToast('В системной ставке можно выбрать не более 16 чисел.');
+                    else if (selected.size < targetNumberCount) selected.add(number);
+                    else return showToast(`Для этой ставки можно выбрать ${targetNumberCount} чисел. Увеличьте размер системы.`);
                     renderBuilder();
                 };
             });
@@ -834,14 +1014,17 @@
             renderNumberGrid();
             renderSelectedStrip();
             const count = selected.size;
-            const combinations = count >= 6 ? comb(count, 6) : 0;
-            $('builder-title').textContent = `Выбрано ${count} из 16`;
-            $('builder-sub').textContent = count < 6
-                ? `Выберите ещё ${6 - count}`
+            const combinations = count === targetNumberCount ? comb(count, 6) : 0;
+            $('target-count').value = targetNumberCount;
+            $('generation-count').value = generationTicketCount;
+            $('bundle-auto-generation').checked = generationBundleAuto;
+            $('builder-title').textContent = `Выбрано ${count} из ${targetNumberCount}`;
+            $('builder-sub').textContent = count < targetNumberCount
+                ? `Выберите ещё ${targetNumberCount - count}`
                 : `${plainNumber(combinations)} ${combinationWord(combinations)} по 6 чисел · ${Object.values(draftExtras).filter(Boolean).length} доп. игр`;
             $('builder-price').textContent = money(draftCost());
-            $('add-ticket').disabled = count < 6;
-            $('extras-grid').classList.toggle('locked', count < 6);
+            $('add-ticket').disabled = count !== targetNumberCount;
+            $('extras-grid').classList.remove('locked');
             renderExtraSelections();
         }
 
@@ -855,7 +1038,6 @@
             $('first-five-number').innerHTML += Array.from({length:48}, (_, index) => `<option value="${index+1}">${index+1}</option>`).join('');
             document.querySelectorAll('.choice[data-extra]').forEach(button => {
                 button.onclick = () => {
-                    if (selected.size < 6) return;
                     const field = button.dataset.extra;
                     const value = button.dataset.value;
                     draftExtras[field] = draftExtras[field] === value ? null : value;
@@ -877,9 +1059,14 @@
             $('extra-count').textContent = `${count} выбрано`;
         }
 
-        function resetBuilder() {
+        function resetBuilder(resetDefaults = false) {
             selected.clear();
             draftExtras = emptyExtras();
+            if (resetDefaults) {
+                targetNumberCount = 6;
+                generationTicketCount = 1;
+                generationBundleAuto = false;
+            }
             renderBuilder();
         }
 
@@ -923,15 +1110,9 @@
         }
 
         function addTicket() {
-            if (selected.size < 6) return;
+            if (selected.size !== targetNumberCount) return;
             const numbers = Array.from(selected).sort((a,b) => a-b);
-            activeLayer().tickets.push({
-                numbers,
-                extras: {...draftExtras},
-                qty: new Array(drawCount).fill(0),
-                auto: false,
-                step: '×2'
-            });
+            activeLayer().tickets.push(newTicket(numbers));
             resetBuilder();
             renderTickets();
             renderDrawsAndTotals();
@@ -969,7 +1150,7 @@
         function applyAuto(ticket, draws = activeDraws()) {
             ensureQty(ticket);
             ticket.qty.fill(0);
-            if (!ticket.auto) return;
+            if (!ticket.auto || ticket.bundleAuto) return;
             const rule = parseStep(ticket.step);
             let current = 1;
             draws.forEach((draw, index) => {
@@ -977,6 +1158,37 @@
                 const won = evaluateTicket(ticket, draw).total > 0;
                 current = won ? 1 : nextQty(current, rule);
             });
+        }
+
+        function bundleMembers(ticket, tickets = activeLayer().tickets) {
+            return ticket.bundleId ? tickets.filter(item => item.bundleId === ticket.bundleId) : [ticket];
+        }
+
+        function applyBundleAutos(tickets = activeLayer().tickets, draws = activeDraws()) {
+            const bundles = new Map();
+            tickets.forEach(ticket => {
+                if (!ticket.bundleId || !ticket.bundleAuto) return;
+                if (!bundles.has(ticket.bundleId)) bundles.set(ticket.bundleId, []);
+                bundles.get(ticket.bundleId).push(ticket);
+            });
+            bundles.forEach(members => {
+                members.forEach(ticket => {
+                    ensureQty(ticket);
+                    ticket.qty.fill(0);
+                });
+                const rule = parseStep(members[0].bundleStep || '+1');
+                let current = 1;
+                draws.forEach((draw, drawIndex) => {
+                    members.forEach(ticket => { ticket.qty[drawIndex] = current; });
+                    const bundleWon = members.some(ticket => evaluateTicket(ticket, draw).total > 0);
+                    current = bundleWon ? 1 : nextQty(current, rule);
+                });
+            });
+        }
+
+        function applyAllAutos(tickets = activeLayer().tickets, draws = activeDraws()) {
+            tickets.forEach(ticket => { if (ticket.auto && !ticket.bundleAuto) applyAuto(ticket, draws); });
+            applyBundleAutos(tickets, draws);
         }
 
         function renderTickets() {
@@ -987,14 +1199,18 @@
                 return;
             }
             tickets.forEach(ensureQty);
+            applyAllAutos(tickets);
             $('ticket-list').innerHTML = tickets.map((ticket, index) => {
                 const tags = extraTags(ticket.extras);
                 const combinations = comb(ticket.numbers.length, 6);
+                const autoEnabled = ticket.bundleAuto || ticket.auto;
+                const stepValue = ticket.bundleAuto ? ticket.bundleStep : ticket.step;
+                const autoLabel = ticket.bundleId ? 'Авто комплекта' : 'Автошаг';
                 return `
                     <article class="ticket" data-ticket="${index}">
                         <div class="ticket-top">
                             <div>
-                                <div class="ticket-name">Ставка ${index + 1}</div>
+                                <div class="ticket-name">Ставка ${index + 1}${ticket.bundleId ? `<span class="bundle-badge">Комплект №${ticket.bundleId} · ${ticket.bundleAuto ? `авто ${escapeHtml(ticket.bundleStep)}` : 'ручной'}</span>` : ''}</div>
                                 <div class="ticket-meta">${ticket.numbers.length} чисел · ${plainNumber(combinations)} ${combinationWord(combinations)} · ${money(ticketCost(ticket))} за 1 шт.</div>
                             </div>
                             <button class="danger-btn remove-ticket" type="button">Удалить</button>
@@ -1002,8 +1218,8 @@
                         <div class="ticket-balls">${ticket.numbers.map(number => ballHtml(number, 'xs')).join('')}</div>
                         <div class="ticket-extras">${tags.length ? tags.map(tag => `<span class="extra-tag">${escapeHtml(tag)}</span>`).join('') : '<span class="card-note">Без дополнительных игр</span>'}</div>
                         <div class="ticket-controls">
-                            <label class="auto-label"><input class="auto-check" type="checkbox"${ticket.auto ? ' checked' : ''}> Автошаг</label>
-                            <input class="step-input" value="${escapeHtml(ticket.step)}" title="Например: ×2 или +1">
+                            <label class="auto-label"><input class="auto-check" type="checkbox"${autoEnabled ? ' checked' : ''}> ${autoLabel}</label>
+                            <input class="step-input" value="${escapeHtml(stepValue)}" title="Например: ×2 или +1">
                             <button class="soft-btn qty-all" type="button">Все ×1</button>
                             <button class="soft-btn qty-clear" type="button">Обнулить</button>
                         </div>
@@ -1011,7 +1227,7 @@
                             <summary>Количество по тиражам</summary>
                             <div class="qty-grid">
                                 ${Array.from({length:drawCount}, (_, drawIndex) => `
-                                    <label class="qty-box"><span>T${drawIndex+1}</span><input type="number" min="0" class="qty-input" data-draw="${drawIndex}" value="${ticket.qty[drawIndex] || 0}"${ticket.auto ? ' disabled' : ''}></label>
+                                    <label class="qty-box"><span>T${drawIndex+1}</span><input type="number" min="0" class="qty-input" data-draw="${drawIndex}" value="${ticket.qty[drawIndex] || 0}"${autoEnabled ? ' disabled' : ''}></label>
                                 `).join('')}
                             </div>
                         </details>
@@ -1033,26 +1249,41 @@
                     renderDrawsAndTotals();
                 };
                 card.querySelector('.auto-check').onchange = event => {
-                    ticket.auto = event.target.checked;
-                    applyAuto(ticket);
+                    const members = bundleMembers(ticket, tickets);
+                    if (ticket.bundleId) {
+                        members.forEach(member => {
+                            member.bundleAuto = event.target.checked;
+                            member.auto = false;
+                        });
+                    } else ticket.auto = event.target.checked;
+                    applyAllAutos(tickets);
                     renderTickets();
                     renderDrawsAndTotals();
                 };
                 card.querySelector('.step-input').onchange = event => {
-                    ticket.step = event.target.value || '×2';
-                    if (ticket.auto) applyAuto(ticket);
+                    if (ticket.bundleId) {
+                        const value = event.target.value || '+1';
+                        bundleMembers(ticket, tickets).forEach(member => { member.bundleStep = value; });
+                    } else ticket.step = event.target.value || '×2';
+                    applyAllAutos(tickets);
                     renderTickets();
                     renderDrawsAndTotals();
                 };
                 card.querySelector('.qty-all').onclick = () => {
-                    ticket.auto = false;
-                    ticket.qty.fill(1);
+                    bundleMembers(ticket, tickets).forEach(member => {
+                        member.auto = false;
+                        member.bundleAuto = false;
+                        member.qty.fill(1);
+                    });
                     renderTickets();
                     renderDrawsAndTotals();
                 };
                 card.querySelector('.qty-clear').onclick = () => {
-                    ticket.auto = false;
-                    ticket.qty.fill(0);
+                    bundleMembers(ticket, tickets).forEach(member => {
+                        member.auto = false;
+                        member.bundleAuto = false;
+                        member.qty.fill(0);
+                    });
                     renderTickets();
                     renderDrawsAndTotals();
                 };
@@ -1285,7 +1516,7 @@
             if (!activeDay || !loadedDays[activeDay]) activeDay = dates[0] || null;
             openMonthKey = activeDay ? monthKey(activeDay) : null;
             calculationMonthKey = null;
-            activeLayer().tickets.forEach(ticket => { if (ticket.auto) applyAuto(ticket); });
+            applyAllAutos(activeLayer().tickets);
             renderMonths();
             renderTickets();
             renderDrawsAndTotals();
@@ -1349,7 +1580,7 @@
                         activeDay = button.dataset.date;
                         calculationMonthKey = null;
                         openMonthKey = monthKey(activeDay);
-                        activeLayer().tickets.forEach(ticket => { if (ticket.auto) applyAuto(ticket); });
+                        applyAllAutos(activeLayer().tickets);
                         renderMonths();
                         renderTickets();
                         renderDrawsAndTotals();
@@ -1362,7 +1593,8 @@
             let cost = 0;
             let win = 0;
             let winningTickets = 0;
-            tickets.forEach(ticket => {
+            const extraWins = [];
+            tickets.forEach((ticket, ticketIndex) => {
                 ensureQty(ticket);
                 const qty = ticket.qty[drawIndex] || 0;
                 if (qty <= 0) return;
@@ -1370,8 +1602,14 @@
                 cost += ticketCost(ticket) * qty;
                 win += result.total * qty;
                 if (result.total > 0) winningTickets += qty;
+                if (result.extras.wins.length) extraWins.push({
+                    ticketIndex,
+                    qty,
+                    amount:result.extras.amount * qty,
+                    wins:result.extras.wins
+                });
             });
-            return { cost, win, profit:win-cost, winningTickets };
+            return { cost, win, profit:win-cost, winningTickets, extraWins };
         }
 
         function renderDraws() {
@@ -1396,6 +1634,18 @@
                                 <div><small>Итог</small><strong class="${profitClass}">${stats.profit > 0 ? '+' : ''}${money(stats.profit)}</strong></div>
                             </div>
                         </div>
+                        ${stats.extraWins.length ? `
+                            <div class="draw-extra-wins">
+                                <div class="draw-extra-title">Выиграли дополнительные игры</div>
+                                ${stats.extraWins.map(item => `
+                                    <div class="draw-extra-row">
+                                        <span class="draw-extra-ticket">Ставка ${item.ticketIndex + 1}${item.qty > 1 ? ` × ${plainNumber(item.qty)}` : ''}</span>
+                                        ${item.wins.map(label => `<span class="winning-extra-tag">${escapeHtml(label)}</span>`).join('')}
+                                        <em class="draw-extra-amount">+${money(item.amount)}</em>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        ` : ''}
                         <details><summary>Показать все 35 шаров</summary><div class="all-balls">${draw.numbers.map(number => ballHtml(number,'xs')).join('')}</div></details>
                     </article>
                 `;
@@ -1415,22 +1665,42 @@
             let totalCost = 0;
             let totalWin = 0;
             const perTicket = tickets.map(() => ({ cost:0, win:0 }));
+            const bundleGroups = new Map();
+            tickets.forEach((ticket, ticketIndex) => {
+                ensureQty(ticket);
+                if (!ticket.bundleId || !ticket.bundleAuto) return;
+                if (!bundleGroups.has(ticket.bundleId)) bundleGroups.set(ticket.bundleId, []);
+                bundleGroups.get(ticket.bundleId).push(ticketIndex);
+            });
             groups.forEach(group => {
-                tickets.forEach((ticket, ticketIndex) => {
-                    ensureQty(ticket);
-                    let autoCurrent = 1;
-                    const rule = parseStep(ticket.step);
-                    group.draws.forEach((draw, drawIndex) => {
-                        const qty = ticket.auto ? autoCurrent : ticket.qty[drawIndex] || 0;
+                const individualCurrent = tickets.map(() => 1);
+                const bundleCurrent = new Map(Array.from(bundleGroups.keys(), bundleId => [bundleId, 1]));
+                group.draws.forEach((draw, drawIndex) => {
+                    const drawResults = new Map();
+                    tickets.forEach((ticket, ticketIndex) => {
+                        const qty = ticket.bundleId && ticket.bundleAuto
+                            ? bundleCurrent.get(ticket.bundleId) || 1
+                            : ticket.auto ? individualCurrent[ticketIndex] : ticket.qty[drawIndex] || 0;
                         if (qty <= 0) return;
                         const result = evaluateTicket(ticket, draw);
+                        drawResults.set(ticketIndex, result);
                         const cost = ticketCost(ticket) * qty;
                         const win = result.total * qty;
                         totalCost += cost;
                         totalWin += win;
                         perTicket[ticketIndex].cost += cost;
                         perTicket[ticketIndex].win += win;
-                        if (ticket.auto) autoCurrent = result.total > 0 ? 1 : nextQty(autoCurrent, rule);
+                    });
+                    tickets.forEach((ticket, ticketIndex) => {
+                        if (!ticket.auto || ticket.bundleAuto) return;
+                        const won = (drawResults.get(ticketIndex)?.total || 0) > 0;
+                        individualCurrent[ticketIndex] = won ? 1 : nextQty(individualCurrent[ticketIndex], parseStep(ticket.step));
+                    });
+                    bundleGroups.forEach((memberIndexes, bundleId) => {
+                        const won = memberIndexes.some(ticketIndex => (drawResults.get(ticketIndex)?.total || 0) > 0);
+                        const current = bundleCurrent.get(bundleId) || 1;
+                        const rule = parseStep(tickets[memberIndexes[0]].bundleStep || '+1');
+                        bundleCurrent.set(bundleId, won ? 1 : nextQty(current, rule));
                     });
                 });
             });
@@ -1473,8 +1743,8 @@
             document.querySelectorAll('.mode-btn').forEach(button => button.classList.toggle('active', Number(button.dataset.count) === drawCount));
             layers.forEach(layer => layer.tickets.forEach(ticket => {
                 ensureQty(ticket);
-                if (ticket.auto) applyAuto(ticket);
             }));
+            layers.forEach(layer => applyAllAutos(layer.tickets));
             renderTickets();
             renderDrawsAndTotals();
         }
@@ -1533,7 +1803,11 @@
                     renderDrawsAndTotals();
                 };
             });
-            $('prize-grid').addEventListener('input', () => renderDrawsAndTotals());
+            $('prize-grid').addEventListener('input', () => {
+                applyAllAutos(activeLayer().tickets);
+                renderTickets();
+                renderDrawsAndTotals();
+            });
             document.querySelectorAll('.mode-btn').forEach(button => button.onclick = () => setDrawCount(Number(button.dataset.count)));
         }
 
@@ -1549,7 +1823,14 @@
 
             $('manual-date').value = isoToday();
             $('add-layer').onclick = addLayer;
-            $('clear-builder').onclick = resetBuilder;
+            $('clear-builder').onclick = () => resetBuilder(true);
+            $('target-count').onchange = event => {
+                syncTargetNumberCount(event.target.value, true);
+                renderBuilder();
+            };
+            $('generation-count').onchange = event => syncGenerationTicketCount(event.target.value, true);
+            $('bundle-auto-generation').onchange = event => { generationBundleAuto = event.target.checked; };
+            $('auto-fill-numbers').onclick = autoFillNumbers;
             $('add-ticket').onclick = addTicket;
             $('delete-all-tickets').onclick = () => {
                 activeLayer().tickets = [];
