@@ -1,0 +1,1581 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Калькулятор «Цветные шары»</title>
+    <style>
+        :root {
+            color-scheme: dark;
+            --bg: #242431;
+            --bg-deep: #1c1c28;
+            --panel: #30303f;
+            --panel-2: #373748;
+            --panel-3: #292937;
+            --line: rgba(255,255,255,.09);
+            --text: #f7f7fb;
+            --muted: #a8a8ba;
+            --blue: #2389f5;
+            --blue-2: #4ba6ff;
+            --pink: #f044b5;
+            --purple: #8257ff;
+            --green: #36d58a;
+            --danger: #ff6472;
+            --shadow: 0 18px 50px rgba(0,0,0,.28);
+        }
+
+        * { box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background:
+                radial-gradient(circle at 18% -8%, rgba(130,87,255,.23), transparent 32rem),
+                radial-gradient(circle at 92% 2%, rgba(240,68,181,.16), transparent 28rem),
+                var(--bg);
+            color: var(--text);
+            font: 14px/1.4 Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+        }
+        button, input, select, textarea { font: inherit; }
+        button { color: inherit; }
+
+        .topbar {
+            position: sticky;
+            top: 0;
+            z-index: 40;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            padding: 14px clamp(16px, 3vw, 42px);
+            background: rgba(28,28,40,.9);
+            border-bottom: 1px solid var(--line);
+            backdrop-filter: blur(18px);
+        }
+        .brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
+        .brand-mark {
+            position: relative;
+            width: 42px; height: 42px;
+            border-radius: 50%;
+            background: conic-gradient(#f43f5e, #22c55e, #3b82f6, #a855f7, #f59e0b, #f43f5e);
+            box-shadow: 0 0 24px rgba(130,87,255,.5);
+        }
+        .brand-mark::after {
+            content: "";
+            position: absolute; inset: 7px;
+            border-radius: 50%;
+            background: linear-gradient(145deg, #47475b, #1f1f2b);
+            box-shadow: inset -5px -7px 12px rgba(0,0,0,.35);
+        }
+        .brand-title {
+            font-size: clamp(18px, 2vw, 25px);
+            font-weight: 900;
+            letter-spacing: -.02em;
+            white-space: nowrap;
+        }
+        .brand-title span {
+            background: linear-gradient(90deg, #fff, #c6b8ff 55%, #ff9ada);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        .brand-sub { color: var(--muted); font-size: 11px; font-weight: 700; }
+        .top-badges { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+        .badge {
+            padding: 8px 11px;
+            border: 1px solid var(--line);
+            border-radius: 999px;
+            background: rgba(255,255,255,.04);
+            color: #d6d6e3;
+            font-size: 11px;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+        .badge.accent { color: white; background: linear-gradient(135deg, var(--purple), var(--pink)); border: 0; }
+
+        .hero {
+            position: relative;
+            overflow: hidden;
+            max-width: 1500px;
+            margin: 24px auto 18px;
+            padding: 26px clamp(18px, 4vw, 42px);
+            border: 1px solid rgba(255,255,255,.1);
+            border-radius: 28px;
+            background:
+                linear-gradient(110deg, rgba(32,22,80,.97), rgba(88,28,123,.82) 56%, rgba(10,91,160,.78)),
+                #312258;
+            box-shadow: var(--shadow);
+        }
+        .hero::before, .hero::after {
+            content: "";
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(2px);
+            opacity: .55;
+        }
+        .hero::before {
+            width: 300px; height: 300px; right: 8%; top: -170px;
+            border: 34px solid rgba(255,255,255,.17);
+            box-shadow: 0 0 46px rgba(64,211,255,.5);
+        }
+        .hero::after {
+            width: 180px; height: 180px; right: 28%; bottom: -150px;
+            border: 28px solid rgba(255,63,180,.22);
+            box-shadow: 0 0 42px rgba(255,63,180,.45);
+        }
+        .hero-content { position: relative; z-index: 1; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+        .hero h1 { margin: 0; font-size: clamp(28px, 5vw, 56px); line-height: 1; letter-spacing: -.05em; }
+        .hero h1 span {
+            background: linear-gradient(90deg, #fff, #ff83da 52%, #72d7ff);
+            -webkit-background-clip: text; background-clip: text; color: transparent;
+        }
+        .hero p { max-width: 670px; margin: 12px 0 0; color: #d8d5eb; font-size: 14px; }
+        .hero-stat {
+            min-width: 210px;
+            padding: 17px 20px;
+            border: 1px solid rgba(255,255,255,.18);
+            border-radius: 18px;
+            background: rgba(25,25,38,.48);
+            backdrop-filter: blur(12px);
+        }
+        .hero-stat small { display: block; color: #c6c3da; font-weight: 700; }
+        .hero-stat strong { display: block; margin-top: 4px; font-size: 25px; }
+
+        .app {
+            max-width: 1500px;
+            margin: 0 auto;
+            padding: 0 18px 110px;
+        }
+        .app-grid { display: grid; grid-template-columns: minmax(520px, .95fr) minmax(560px, 1.05fr); gap: 18px; align-items: start; }
+        .column { display: grid; gap: 14px; min-width: 0; }
+        .card {
+            border: 1px solid var(--line);
+            border-radius: 20px;
+            background: linear-gradient(150deg, rgba(55,55,72,.98), rgba(44,44,59,.98));
+            box-shadow: 0 14px 34px rgba(0,0,0,.18);
+        }
+        .card-pad { padding: 18px; }
+        .card-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+        .card-title { margin: 0; font-size: 17px; font-weight: 900; letter-spacing: -.015em; }
+        .card-note { color: var(--muted); font-size: 11px; }
+
+        .settings-grid { display: grid; grid-template-columns: repeat(5, minmax(0,1fr)); gap: 9px; min-width: 0; }
+        .field { min-width: 0; }
+        .field label { display: block; margin: 0 0 5px; color: var(--muted); font-size: 10px; font-weight: 800; }
+        .input, .field input, .field select, textarea {
+            width: 100%;
+            border: 1px solid rgba(255,255,255,.11);
+            border-radius: 10px;
+            outline: 0;
+            background: #252532;
+            color: white;
+            padding: 9px 10px;
+            font-weight: 800;
+        }
+        .field input:focus, .field select:focus, textarea:focus { border-color: var(--blue-2); box-shadow: 0 0 0 3px rgba(35,137,245,.12); }
+        .mode-switch { display: flex; gap: 5px; }
+        .mode-btn, .soft-btn, .primary-btn, .danger-btn {
+            border: 0;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 900;
+            transition: .18s ease;
+        }
+        .mode-btn { flex: 1; padding: 9px 6px; background: #252532; border: 1px solid var(--line); color: var(--muted); }
+        .mode-btn:hover, .mode-btn.active { color: white; border-color: var(--blue); background: rgba(35,137,245,.2); }
+        .soft-btn { padding: 9px 12px; background: rgba(255,255,255,.065); border: 1px solid var(--line); color: #dedee9; }
+        .soft-btn:hover { background: rgba(255,255,255,.11); transform: translateY(-1px); }
+        .primary-btn {
+            padding: 11px 16px;
+            background: linear-gradient(135deg, var(--blue), #1870e8);
+            color: white;
+            box-shadow: 0 9px 22px rgba(35,137,245,.24);
+        }
+        .primary-btn:hover { filter: brightness(1.08); transform: translateY(-1px); }
+        .primary-btn:disabled { opacity: .42; cursor: not-allowed; transform: none; box-shadow: none; }
+        .danger-btn { padding: 8px 10px; color: #ffacb4; background: rgba(255,100,114,.1); border: 1px solid rgba(255,100,114,.2); }
+        .danger-btn:hover { background: rgba(255,100,114,.18); }
+
+        .prize-editor { margin-top: 12px; border-top: 1px solid var(--line); padding-top: 10px; }
+        .prize-editor summary { color: #c8c8d8; cursor: pointer; font-size: 11px; font-weight: 900; }
+        .prize-grid { display: grid; grid-template-columns: repeat(6, minmax(0,1fr)); gap: 6px; margin-top: 10px; }
+        .prize-cell { position: relative; }
+        .prize-cell span { position: absolute; top: 50%; left: 7px; transform: translateY(-50%); color: var(--muted); font-size: 9px; font-weight: 900; pointer-events: none; }
+        .prize-cell input { width: 100%; padding: 7px 5px 7px 27px; border: 1px solid var(--line); border-radius: 8px; background: #252532; color: white; font-size: 10px; font-weight: 800; }
+
+        .layer-tabs { display: flex; flex-wrap: wrap; gap: 7px; }
+        .layer-tab {
+            display: flex; align-items: center; gap: 7px;
+            padding: 9px 12px;
+            border-radius: 11px;
+            border: 1px solid var(--line);
+            background: rgba(255,255,255,.04);
+            color: var(--muted);
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 900;
+        }
+        .layer-tab.active { color: white; background: linear-gradient(135deg, rgba(130,87,255,.82), rgba(240,68,181,.62)); border-color: transparent; }
+        .layer-close { opacity: .7; font-size: 14px; line-height: 1; }
+
+        .selected-strip {
+            min-height: 61px;
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            flex-wrap: wrap;
+            padding: 11px;
+            margin-bottom: 12px;
+            border-radius: 14px;
+            background: #292938;
+            border: 1px solid var(--line);
+        }
+        .selected-empty { color: #77778b; font-weight: 800; }
+        .ball {
+            --ball-color: #788;
+            position: relative;
+            display: inline-grid;
+            place-items: center;
+            width: 38px; height: 38px;
+            flex: 0 0 auto;
+            border-radius: 50%;
+            color: white;
+            font-size: 12px;
+            font-weight: 950;
+            text-shadow: 0 1px 3px rgba(0,0,0,.8);
+            background:
+                radial-gradient(circle at 34% 25%, rgba(255,255,255,.9), rgba(255,255,255,.14) 16%, transparent 28%),
+                radial-gradient(circle at 42% 38%, color-mix(in srgb, var(--ball-color) 78%, white), var(--ball-color) 54%, color-mix(in srgb, var(--ball-color) 65%, black));
+            box-shadow: inset -7px -9px 13px rgba(0,0,0,.33), 0 5px 10px rgba(0,0,0,.24);
+        }
+        .ball.sm { width: 30px; height: 30px; font-size: 10px; }
+        .ball.xs { width: 24px; height: 24px; font-size: 9px; }
+        .ball.red { --ball-color: #e83b55; }
+        .ball.green { --ball-color: #4cab28; }
+        .ball.blue { --ball-color: #2789de; }
+        .ball.purple { --ball-color: #a73bd1; }
+        .ball.brown { --ball-color: #8b4b2e; }
+        .ball.yellow { --ball-color: #e4b91e; color: #211b05; text-shadow: none; }
+        .ball.orange { --ball-color: #ee7228; }
+        .ball.black { --ball-color: #30313b; }
+
+        .number-grid { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 8px; min-width: 0; }
+        .number-btn {
+            min-height: 49px;
+            border: 1px solid transparent;
+            border-radius: 13px;
+            background: #292938;
+            cursor: pointer;
+            display: grid;
+            place-items: center;
+            transition: .16s ease;
+        }
+        .number-btn:hover { border-color: rgba(255,255,255,.2); transform: translateY(-1px); background: #333345; }
+        .number-btn.active { background: rgba(35,137,245,.2); border-color: var(--blue); box-shadow: 0 0 0 3px rgba(35,137,245,.08); }
+        .number-btn.disabled { opacity: .4; cursor: not-allowed; }
+
+        .builder-summary {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            align-items: center;
+            gap: 12px;
+            margin-top: 12px;
+            padding: 12px 14px;
+            border: 1px solid rgba(35,137,245,.24);
+            border-radius: 14px;
+            background: linear-gradient(135deg, rgba(35,137,245,.13), rgba(130,87,255,.08));
+        }
+        .builder-summary strong { display: block; font-size: 15px; }
+        .builder-summary small { color: var(--muted); }
+
+        .extras-wrap { margin-top: 14px; }
+        .extras-head { display: flex; justify-content: space-between; gap: 12px; align-items: center; margin-bottom: 9px; }
+        .extras-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 9px; }
+        .extra-card {
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            padding: 11px;
+            background: rgba(34,34,47,.72);
+            min-width: 0;
+        }
+        .extra-card.wide { grid-column: 1 / -1; }
+        .extra-title { margin-bottom: 8px; color: #dedee8; font-size: 10px; font-weight: 900; }
+        .extra-options { display: flex; flex-wrap: wrap; gap: 6px; }
+        .choice {
+            flex: 1 1 auto;
+            min-width: 70px;
+            padding: 8px;
+            border: 1px solid var(--line);
+            border-radius: 9px;
+            background: #2f2f40;
+            color: #babacc;
+            cursor: pointer;
+            font-size: 10px;
+            font-weight: 900;
+        }
+        .choice:hover, .choice.active { border-color: var(--blue); color: white; background: rgba(35,137,245,.2); }
+        .color-choice { min-width: 64px; }
+        .extra-select { width: 100%; padding: 9px; border: 1px solid var(--line); border-radius: 9px; background: #292938; color: white; font-weight: 800; }
+        .extras-grid.locked { opacity: .4; pointer-events: none; filter: grayscale(.35); }
+
+        .ticket-list { display: grid; gap: 10px; }
+        .empty-state {
+            padding: 28px 18px;
+            border: 1px dashed rgba(255,255,255,.13);
+            border-radius: 15px;
+            text-align: center;
+            color: var(--muted);
+        }
+        .ticket {
+            padding: 13px;
+            border: 1px solid var(--line);
+            border-radius: 15px;
+            background: #292938;
+        }
+        .ticket-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+        .ticket-name { font-weight: 950; }
+        .ticket-meta { margin-top: 3px; color: var(--muted); font-size: 10px; }
+        .ticket-balls { display: flex; flex-wrap: wrap; gap: 5px; margin: 10px 0; }
+        .ticket-extras { display: flex; flex-wrap: wrap; gap: 5px; }
+        .extra-tag { padding: 5px 7px; border-radius: 999px; background: rgba(130,87,255,.13); color: #d6cfff; border: 1px solid rgba(130,87,255,.2); font-size: 9px; font-weight: 900; }
+        .ticket-controls {
+            display: grid;
+            grid-template-columns: auto minmax(90px, 130px) auto auto;
+            gap: 7px;
+            align-items: center;
+            margin-top: 11px;
+        }
+        .auto-label { display: flex; align-items: center; gap: 6px; color: #c9c9d7; font-size: 10px; font-weight: 900; }
+        .auto-label input { accent-color: var(--blue); }
+        .step-input { width: 100%; border: 1px solid var(--line); border-radius: 9px; background: #20202c; color: white; padding: 7px; font-weight: 900; }
+        .qty-details { margin-top: 10px; border-top: 1px solid var(--line); padding-top: 8px; }
+        .qty-details summary { color: #b8b8c8; cursor: pointer; font-size: 10px; font-weight: 900; }
+        .qty-actions { display: flex; gap: 6px; margin: 8px 0; }
+        .qty-grid { display: grid; grid-template-columns: repeat(8, minmax(0,1fr)); gap: 5px; min-width: 0; }
+        .qty-box { min-width: 0; }
+        .qty-box label { display: block; color: #77778b; font-size: 8px; text-align: center; font-weight: 900; }
+        .qty-box input { width: 100%; min-width: 0; padding: 6px 3px; border: 1px solid var(--line); border-radius: 7px; background: #20202c; color: white; text-align: center; font-size: 10px; font-weight: 900; }
+        .qty-box input:disabled { opacity: .35; }
+        .ticket-scope {
+            display: grid;
+            grid-template-columns: repeat(3,1fr);
+            gap: 6px;
+            margin-top: 10px;
+        }
+        .ticket-stat { padding: 7px; border-radius: 9px; background: rgba(255,255,255,.035); text-align: center; }
+        .ticket-stat small { display: block; color: var(--muted); font-size: 8px; font-weight: 800; }
+        .ticket-stat strong { display: block; margin-top: 2px; font-size: 11px; }
+
+        .data-toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+        .file-input { display: none; }
+        .file-name { margin-left: auto; color: var(--muted); font-size: 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 220px; }
+        .months { display: grid; gap: 7px; margin-top: 12px; }
+        .month {
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            background: #292938;
+            overflow: hidden;
+        }
+        .month-head { display: flex; align-items: center; gap: 8px; padding: 9px 11px; cursor: pointer; font-size: 11px; font-weight: 900; }
+        .month-head .count { color: var(--muted); font-size: 9px; }
+        .month-calc { margin-left: auto; display: flex; gap: 5px; align-items: center; color: #b5b5c5; font-size: 9px; cursor: pointer; }
+        .month-calc input { accent-color: var(--blue); }
+        .days { display: none; flex-wrap: wrap; gap: 6px; padding: 0 10px 10px; }
+        .month.open .days { display: flex; }
+        .day-btn { padding: 7px 9px; border: 1px solid var(--line); border-radius: 9px; background: #343446; color: #bdbdca; cursor: pointer; font-size: 9px; font-weight: 900; }
+        .day-btn.active { color: white; background: var(--blue); border-color: var(--blue); }
+
+        .manual-grid { display: grid; grid-template-columns: 110px 90px 100px 1fr auto; gap: 8px; align-items: end; }
+        .manual-grid textarea { min-height: 58px; resize: vertical; font-size: 11px; font-weight: 700; }
+
+        .scope-pill { padding: 5px 9px; border: 1px solid rgba(75,166,255,.25); border-radius: 999px; background: rgba(35,137,245,.1); color: #a9d5ff; font-size: 9px; font-weight: 900; }
+        .draw-list { display: grid; gap: 9px; max-height: 840px; overflow: auto; padding-right: 4px; }
+        .draw-list::-webkit-scrollbar { width: 6px; }
+        .draw-list::-webkit-scrollbar-thumb { background: #555568; border-radius: 999px; }
+        .draw-card { border: 1px solid var(--line); border-radius: 15px; background: #292938; overflow: hidden; }
+        .draw-main { display: grid; grid-template-columns: 90px minmax(190px,1fr) 230px; gap: 12px; align-items: center; padding: 11px; }
+        .draw-id strong { display: block; font-size: 12px; }
+        .draw-id small { color: var(--muted); font-size: 9px; }
+        .draw-first { display: flex; align-items: center; gap: 5px; min-width: 0; }
+        .draw-dots { color: var(--muted); font-weight: 900; }
+        .draw-result { display: grid; grid-template-columns: repeat(3,1fr); gap: 5px; }
+        .draw-result div { padding: 6px; border-radius: 8px; text-align: center; background: rgba(255,255,255,.035); }
+        .draw-result small { display: block; color: var(--muted); font-size: 7px; font-weight: 900; text-transform: uppercase; }
+        .draw-result strong { display: block; margin-top: 2px; font-size: 10px; }
+        .positive { color: var(--green) !important; }
+        .negative { color: #ff8a96 !important; }
+        .draw-card details { border-top: 1px solid var(--line); }
+        .draw-card summary { padding: 7px 11px; color: #9292a6; cursor: pointer; font-size: 9px; font-weight: 900; }
+        .all-balls { display: flex; flex-wrap: wrap; gap: 5px; padding: 0 11px 11px; }
+
+        .totals {
+            position: fixed;
+            z-index: 50;
+            left: 50%; bottom: 14px;
+            transform: translateX(-50%);
+            width: min(980px, calc(100% - 28px));
+            display: grid;
+            grid-template-columns: repeat(4,1fr);
+            gap: 1px;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,.14);
+            border-radius: 17px;
+            background: rgba(31,31,43,.92);
+            box-shadow: 0 18px 55px rgba(0,0,0,.5);
+            backdrop-filter: blur(18px);
+        }
+        .total { padding: 10px 14px; text-align: center; background: rgba(255,255,255,.025); }
+        .total small { display: block; color: var(--muted); font-size: 9px; font-weight: 900; text-transform: uppercase; letter-spacing: .06em; }
+        .total strong { display: block; margin-top: 2px; font-size: clamp(14px, 2vw, 20px); }
+
+        .toast {
+            position: fixed; right: 18px; bottom: 92px; z-index: 80;
+            max-width: 360px;
+            padding: 12px 15px;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            background: #171722;
+            color: white;
+            box-shadow: var(--shadow);
+            opacity: 0; transform: translateY(8px); pointer-events: none; transition: .2s;
+        }
+        .toast.show { opacity: 1; transform: translateY(0); }
+
+        @media (max-width: 1180px) {
+            .app-grid { grid-template-columns: 1fr; }
+            .settings-grid { grid-template-columns: repeat(3,1fr); }
+            .draw-list { max-height: none; }
+        }
+        @media (max-width: 720px) {
+            .top-badges { display: none; }
+            .hero { margin: 14px 12px; border-radius: 20px; }
+            .hero-content { display: block; }
+            .hero-stat { margin-top: 16px; min-width: 0; }
+            .app { padding: 0 10px 112px; }
+            .app-grid, .column, .card, .card-pad, .ticket, .ticket-list, .qty-details { min-width: 0; }
+            .settings-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+            .extras-grid { grid-template-columns: 1fr; }
+            .extra-card.wide { grid-column: auto; }
+            .manual-grid { grid-template-columns: 1fr 1fr; }
+            .manual-grid .numbers-field { grid-column: 1 / -1; }
+            .manual-grid .add-manual { grid-column: 1 / -1; }
+            .draw-main { grid-template-columns: 76px 1fr; }
+            .draw-result { grid-column: 1 / -1; }
+            .qty-grid { grid-template-columns: repeat(6,minmax(0,1fr)); }
+            .ticket-controls { grid-template-columns: repeat(2,minmax(0,1fr)); }
+            .prize-grid { grid-template-columns: repeat(3,minmax(0,1fr)); }
+            .totals { grid-template-columns: repeat(2,1fr); }
+        }
+    </style>
+</head>
+<body>
+    <header class="topbar">
+        <div class="brand">
+            <div class="brand-mark"></div>
+            <div>
+                <div class="brand-title"><span>Цветные шары</span></div>
+                <div class="brand-sub">Локальный калькулятор стратегий</div>
+            </div>
+        </div>
+        <div class="top-badges">
+            <div class="badge">6–16 чисел</div>
+            <div class="badge">35 ходов</div>
+            <div class="badge accent">8 игр в билете</div>
+        </div>
+    </header>
+
+    <section class="hero">
+        <div class="hero-content">
+            <div>
+                <h1>Кено «<span>Цветные шары</span>»</h1>
+                <p>Собирайте системные ставки, подключайте семь дополнительных игр и проверяйте стратегию на архиве тиражей. Расчёты выполняются только в браузере.</p>
+            </div>
+            <div class="hero-stat">
+                <small>Суперприз в расчёте</small>
+                <strong id="hero-jackpot">10 000 000 ₽</strong>
+            </div>
+        </div>
+    </section>
+
+    <main class="app">
+        <div class="app-grid">
+            <section class="column">
+                <div class="card card-pad">
+                    <div class="card-head">
+                        <div>
+                            <h2 class="card-title">Параметры расчёта</h2>
+                            <div class="card-note">Текущая таблица выплат редактируется для исторических периодов</div>
+                        </div>
+                    </div>
+                    <div class="settings-grid">
+                        <div class="field"><label>Комбинация 6 чисел, ₽</label><input id="base-price" type="number" min="0" value="100"></div>
+                        <div class="field"><label>Доп. игра, ₽</label><input id="extra-price" type="number" min="0" value="100"></div>
+                        <div class="field"><label>Скидка, %</label><input id="discount" type="number" min="0" max="100" value="0"></div>
+                        <div class="field"><label>Суперприз, ₽</label><input id="jackpot" type="number" min="0" value="10000000"></div>
+                        <div class="field">
+                            <label>Тиражей в сутках</label>
+                            <div class="mode-switch">
+                                <button class="mode-btn" data-count="24">24</button>
+                                <button class="mode-btn active" data-count="48">48</button>
+                            </div>
+                        </div>
+                    </div>
+                    <details class="prize-editor">
+                        <summary>Таблица выплат основной и дополнительных игр</summary>
+                        <div class="prize-grid" id="prize-grid"></div>
+                        <div class="settings-grid" style="margin-top:9px">
+                            <div class="field"><label>Простые доп. игры</label><input id="pay-simple" type="number" value="150" min="0"></div>
+                            <div class="field"><label>Цвет первого числа</label><input id="pay-first-color" type="number" value="600" min="0"></div>
+                            <div class="field"><label>Полная цветовая группа</label><input id="pay-full-color" type="number" value="550" min="0"></div>
+                            <div class="field"><label>Число в первой пятёрке</label><input id="pay-first-five-number" type="number" value="750" min="0"></div>
+                        </div>
+                    </details>
+                </div>
+
+                <div class="card card-pad">
+                    <div class="card-head">
+                        <h2 class="card-title">Слои стратегии</h2>
+                        <button class="soft-btn" id="add-layer">+ Слой</button>
+                    </div>
+                    <div class="layer-tabs" id="layer-tabs"></div>
+                </div>
+
+                <div class="card card-pad">
+                    <div class="card-head">
+                        <div>
+                            <h2 class="card-title">Соберите ставку</h2>
+                            <div class="card-note">Выберите от 6 до 16 чисел. Стоимость системы = C(n, 6) × цена комбинации.</div>
+                        </div>
+                        <button class="soft-btn" id="clear-builder">Очистить</button>
+                    </div>
+                    <div class="selected-strip" id="selected-strip"></div>
+                    <div class="number-grid" id="number-grid"></div>
+                    <div class="builder-summary">
+                        <div>
+                            <strong id="builder-title">Выбрано 0 из 16</strong>
+                            <small id="builder-sub">Для ставки нужно не менее 6 чисел</small>
+                        </div>
+                        <strong id="builder-price">0 ₽</strong>
+                    </div>
+
+                    <div class="extras-wrap">
+                        <div class="extras-head">
+                            <div>
+                                <strong>Дополнительные игры</strong>
+                                <div class="card-note">Каждая выбранная игра добавляет одну отдельную ставку</div>
+                            </div>
+                            <span class="scope-pill" id="extra-count">0 выбрано</span>
+                        </div>
+                        <div class="extras-grid locked" id="extras-grid">
+                            <div class="extra-card">
+                                <div class="extra-title">Первое число</div>
+                                <div class="extra-options">
+                                    <button class="choice" data-extra="firstParity" data-value="even">Чётное</button>
+                                    <button class="choice" data-extra="firstParity" data-value="odd">Нечётное</button>
+                                </div>
+                            </div>
+                            <div class="extra-card">
+                                <div class="extra-title">Большинство среди первых пяти</div>
+                                <div class="extra-options">
+                                    <button class="choice" data-extra="firstFiveParity" data-value="even">Чётных</button>
+                                    <button class="choice" data-extra="firstFiveParity" data-value="odd">Нечётных</button>
+                                </div>
+                            </div>
+                            <div class="extra-card">
+                                <div class="extra-title">Диапазон первого числа</div>
+                                <div class="extra-options">
+                                    <button class="choice" data-extra="firstHalf" data-value="low">1–24</button>
+                                    <button class="choice" data-extra="firstHalf" data-value="high">25–48</button>
+                                </div>
+                            </div>
+                            <div class="extra-card">
+                                <div class="extra-title">Сумма первых пяти</div>
+                                <div class="extra-options">
+                                    <button class="choice" data-extra="firstFiveSum" data-value="low">1–122</button>
+                                    <button class="choice" data-extra="firstFiveSum" data-value="high">123–230</button>
+                                </div>
+                            </div>
+                            <div class="extra-card wide">
+                                <div class="extra-title">Цвет первого числа</div>
+                                <div class="extra-options color-options" data-extra-colors="firstColor"></div>
+                            </div>
+                            <div class="extra-card wide">
+                                <div class="extra-title">Цветовая группа полностью выпадет к 35-му ходу</div>
+                                <div class="extra-options color-options" data-extra-colors="fullColor"></div>
+                            </div>
+                            <div class="extra-card wide">
+                                <div class="extra-title">Одно число среди первых пяти</div>
+                                <select class="extra-select" id="first-five-number"><option value="">Не выбрано</option></select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button class="primary-btn" id="add-ticket" style="width:100%;margin-top:13px" disabled>Добавить ставку</button>
+                </div>
+
+                <div class="card card-pad">
+                    <div class="card-head">
+                        <div>
+                            <h2 class="card-title">Ставки слоя <span id="ticket-count">(0)</span></h2>
+                            <div class="card-note">Количество можно задать отдельно для каждого тиража или рассчитать автошагом</div>
+                        </div>
+                        <button class="danger-btn" id="delete-all-tickets">Удалить все</button>
+                    </div>
+                    <div class="ticket-list" id="ticket-list"></div>
+                </div>
+            </section>
+
+            <section class="column">
+                <div class="card card-pad">
+                    <div class="card-head">
+                        <div>
+                            <h2 class="card-title">Архив тиражей</h2>
+                            <div class="card-note">JSON из NLOTO Statistics v7.7 или CSV/TXT: тираж, дата, время, 35 чисел</div>
+                        </div>
+                    </div>
+                    <div class="data-toolbar">
+                        <label class="primary-btn" for="file-input">Загрузить архив</label>
+                        <input class="file-input" id="file-input" type="file" accept=".json,.csv,.txt">
+                        <button class="soft-btn" id="load-demo">Демо-тираж</button>
+                        <button class="danger-btn" id="clear-data">Сбросить архив</button>
+                        <span class="file-name" id="file-name">Файл не загружен</span>
+                    </div>
+                    <div class="months" id="months"></div>
+                </div>
+
+                <div class="card card-pad">
+                    <div class="card-head">
+                        <div>
+                            <h2 class="card-title">Добавить тираж вручную</h2>
+                            <div class="card-note">Ровно 35 уникальных чисел от 1 до 48 в порядке выпадения</div>
+                        </div>
+                    </div>
+                    <div class="manual-grid">
+                        <div class="field"><label>Дата</label><input id="manual-date" type="date"></div>
+                        <div class="field"><label>Время</label><input id="manual-time" type="time" value="00:00"></div>
+                        <div class="field"><label>Тираж №</label><input id="manual-number" type="text" placeholder="016800"></div>
+                        <div class="field numbers-field"><label>35 чисел</label><textarea id="manual-numbers" placeholder="2, 21, 23, 42, 48, ..."></textarea></div>
+                        <button class="primary-btn add-manual" id="add-manual-draw">Добавить</button>
+                    </div>
+                </div>
+
+                <div class="card card-pad">
+                    <div class="card-head">
+                        <div>
+                            <h2 class="card-title">Расчёт по тиражам</h2>
+                            <div class="card-note" id="draw-note">Загрузите архив или добавьте тираж вручную</div>
+                        </div>
+                        <span class="scope-pill" id="calc-scope">Нет данных</span>
+                    </div>
+                    <div class="draw-list" id="draw-list"></div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <aside class="totals">
+        <div class="total"><small>Затраты</small><strong id="total-cost">0 ₽</strong></div>
+        <div class="total"><small>Выигрыш</small><strong id="total-win">0 ₽</strong></div>
+        <div class="total"><small>Прибыль</small><strong id="total-profit">0 ₽</strong></div>
+        <div class="total"><small>Возврат</small><strong id="total-return">—</strong></div>
+    </aside>
+    <div class="toast" id="toast"></div>
+
+    <script>
+    (() => {
+        'use strict';
+
+        const COLORS = [
+            { key: 'red', name: 'Красная', nums: [1,9,17,25,33,41] },
+            { key: 'green', name: 'Зелёная', nums: [2,10,18,26,34,42] },
+            { key: 'blue', name: 'Синяя', nums: [3,11,19,27,35,43] },
+            { key: 'purple', name: 'Фиолетовая', nums: [4,12,20,28,36,44] },
+            { key: 'brown', name: 'Коричневая', nums: [5,13,21,29,37,45] },
+            { key: 'yellow', name: 'Жёлтая', nums: [6,14,22,30,38,46] },
+            { key: 'orange', name: 'Оранжевая', nums: [7,15,23,31,39,47] },
+            { key: 'black', name: 'Чёрная', nums: [8,16,24,32,40,48] }
+        ];
+        const DEFAULT_PRIZES = {
+            7:2500000,8:500000,9:125000,10:50000,11:25000,12:5000,
+            13:4000,14:4000,15:3000,16:2000,17:2000,18:1000,19:1000,20:1000,
+            21:900,22:900,23:500,24:500,25:500,26:400,27:400,28:400,
+            29:350,30:350,31:350,32:250,33:250,34:250,35:250
+        };
+        const MONTHS = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+        const EXTRA_LABELS = {
+            firstParity: { even:'Первое: чётное', odd:'Первое: нечётное' },
+            firstFiveParity: { even:'Первые 5: больше чётных', odd:'Первые 5: больше нечётных' },
+            firstHalf: { low:'Первое: 1–24', high:'Первое: 25–48' },
+            firstFiveSum: { low:'Сумма 5: 1–122', high:'Сумма 5: 123–230' }
+        };
+        const MAX_QTY = Number.MAX_SAFE_INTEGER;
+
+        let drawCount = 48;
+        let selected = new Set();
+        let draftExtras = emptyExtras();
+        let layers = [{ id: 1, name: 'Слой 1', tickets: [] }];
+        let activeLayerId = 1;
+        let layerCounter = 1;
+        let loadedDays = {};
+        let activeDay = null;
+        let openMonthKey = null;
+        let calculationMonthKey = null;
+        let toastTimer = null;
+
+        const $ = id => document.getElementById(id);
+        const money = value => Number.isFinite(value)
+            ? Math.round(value).toLocaleString('ru-RU').replace(/[\u00a0\u202f]/g, ' ') + ' ₽'
+            : '∞';
+        const plainNumber = value => Number.isFinite(value)
+            ? Math.round(value).toLocaleString('ru-RU').replace(/[\u00a0\u202f]/g, ' ')
+            : '∞';
+        const combinationWord = value => {
+            const mod10 = value % 10;
+            const mod100 = value % 100;
+            if (mod10 === 1 && mod100 !== 11) return 'комбинация';
+            if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return 'комбинации';
+            return 'комбинаций';
+        };
+        const getNum = (id, fallback = 0) => {
+            const value = Number($(id).value);
+            return Number.isFinite(value) ? value : fallback;
+        };
+        const activeLayer = () => layers.find(layer => layer.id === activeLayerId);
+        const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+
+        function emptyExtras() {
+            return { firstParity:null, firstFiveParity:null, firstHalf:null, firstFiveSum:null, firstColor:null, fullColor:null, firstFiveNumber:null };
+        }
+
+        function comb(n, k) {
+            if (k < 0 || n < k) return 0;
+            k = Math.min(k, n - k);
+            let result = 1;
+            for (let i = 1; i <= k; i++) result = result * (n - k + i) / i;
+            return Math.round(result);
+        }
+
+        function colorForNumber(number) {
+            const index = (Number(number) - 1) % 8;
+            return COLORS[index >= 0 ? index : 0];
+        }
+
+        function ballHtml(number, size = '') {
+            const color = colorForNumber(number);
+            return `<span class="ball ${color.key} ${size}">${escapeHtml(number)}</span>`;
+        }
+
+        function showToast(message) {
+            const toast = $('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => toast.classList.remove('show'), 2600);
+        }
+
+        function renderPrizeEditor() {
+            $('prize-grid').innerHTML = Object.entries(DEFAULT_PRIZES).map(([step, amount]) =>
+                `<label class="prize-cell"><span>${step}-й</span><input class="prize-input" data-step="${step}" type="number" min="0" value="${amount}"></label>`
+            ).join('');
+        }
+
+        function payoutAt(step) {
+            if (step === 6) return getNum('jackpot', 10000000);
+            const input = document.querySelector(`.prize-input[data-step="${step}"]`);
+            return input ? Number(input.value) || 0 : 0;
+        }
+
+        function ticketGrossCost(ticket) {
+            const combinations = comb(ticket.numbers.length, 6);
+            const extras = Object.values(ticket.extras).filter(Boolean).length;
+            return combinations * getNum('base-price', 100) + extras * getNum('extra-price', 100);
+        }
+
+        function ticketCost(ticket) {
+            const discount = Math.min(100, Math.max(0, getNum('discount', 0)));
+            return Math.round(ticketGrossCost(ticket) * (1 - discount / 100));
+        }
+
+        function draftCost() {
+            if (selected.size < 6) return 0;
+            return ticketCost({ numbers:Array.from(selected), extras:draftExtras });
+        }
+
+        function renderNumberGrid() {
+            $('number-grid').innerHTML = Array.from({length:48}, (_, index) => {
+                const number = index + 1;
+                return `<button class="number-btn${selected.has(number) ? ' active' : ''}" data-number="${number}" type="button">${ballHtml(number, 'sm')}</button>`;
+            }).join('');
+            $('number-grid').querySelectorAll('.number-btn').forEach(button => {
+                button.onclick = () => {
+                    const number = Number(button.dataset.number);
+                    if (selected.has(number)) selected.delete(number);
+                    else if (selected.size < 16) selected.add(number);
+                    else return showToast('В системной ставке можно выбрать не более 16 чисел.');
+                    renderBuilder();
+                };
+            });
+        }
+
+        function renderSelectedStrip() {
+            const numbers = Array.from(selected).sort((a,b) => a-b);
+            $('selected-strip').innerHTML = numbers.length
+                ? numbers.map(number => ballHtml(number)).join('')
+                : '<span class="selected-empty">Выбранные числа появятся здесь</span>';
+        }
+
+        function renderBuilder() {
+            renderNumberGrid();
+            renderSelectedStrip();
+            const count = selected.size;
+            const combinations = count >= 6 ? comb(count, 6) : 0;
+            $('builder-title').textContent = `Выбрано ${count} из 16`;
+            $('builder-sub').textContent = count < 6
+                ? `Выберите ещё ${6 - count}`
+                : `${plainNumber(combinations)} ${combinationWord(combinations)} по 6 чисел · ${Object.values(draftExtras).filter(Boolean).length} доп. игр`;
+            $('builder-price').textContent = money(draftCost());
+            $('add-ticket').disabled = count < 6;
+            $('extras-grid').classList.toggle('locked', count < 6);
+            renderExtraSelections();
+        }
+
+        function initExtraControls() {
+            document.querySelectorAll('.color-options').forEach(container => {
+                const field = container.dataset.extraColors;
+                container.innerHTML = COLORS.map(color =>
+                    `<button class="choice color-choice" data-extra="${field}" data-value="${color.key}">${color.name}</button>`
+                ).join('');
+            });
+            $('first-five-number').innerHTML += Array.from({length:48}, (_, index) => `<option value="${index+1}">${index+1}</option>`).join('');
+            document.querySelectorAll('.choice[data-extra]').forEach(button => {
+                button.onclick = () => {
+                    if (selected.size < 6) return;
+                    const field = button.dataset.extra;
+                    const value = button.dataset.value;
+                    draftExtras[field] = draftExtras[field] === value ? null : value;
+                    renderBuilder();
+                };
+            });
+            $('first-five-number').onchange = event => {
+                draftExtras.firstFiveNumber = event.target.value ? Number(event.target.value) : null;
+                renderBuilder();
+            };
+        }
+
+        function renderExtraSelections() {
+            document.querySelectorAll('.choice[data-extra]').forEach(button => {
+                button.classList.toggle('active', draftExtras[button.dataset.extra] === button.dataset.value);
+            });
+            $('first-five-number').value = draftExtras.firstFiveNumber || '';
+            const count = Object.values(draftExtras).filter(Boolean).length;
+            $('extra-count').textContent = `${count} выбрано`;
+        }
+
+        function resetBuilder() {
+            selected.clear();
+            draftExtras = emptyExtras();
+            renderBuilder();
+        }
+
+        function renderLayers() {
+            $('layer-tabs').innerHTML = layers.map(layer => `
+                <button class="layer-tab${layer.id === activeLayerId ? ' active' : ''}" data-layer="${layer.id}">
+                    <span>${escapeHtml(layer.name)}</span>
+                    ${layers.length > 1 ? '<span class="layer-close" data-close="1">×</span>' : ''}
+                </button>
+            `).join('');
+            $('layer-tabs').querySelectorAll('.layer-tab').forEach(button => {
+                button.onclick = event => {
+                    const id = Number(button.dataset.layer);
+                    if (event.target.dataset.close) {
+                        event.stopPropagation();
+                        if (layers.length === 1) return;
+                        layers = layers.filter(layer => layer.id !== id);
+                        if (activeLayerId === id) activeLayerId = layers[0].id;
+                    } else activeLayerId = id;
+                    renderLayers();
+                    renderTickets();
+                    renderDrawsAndTotals();
+                };
+            });
+        }
+
+        function addLayer() {
+            layerCounter++;
+            const name = `Слой ${layerCounter}`;
+            layers.push({ id:layerCounter, name, tickets:[] });
+            activeLayerId = layerCounter;
+            renderLayers();
+            renderTickets();
+            renderDrawsAndTotals();
+        }
+
+        function ensureQty(ticket) {
+            if (!Array.isArray(ticket.qty)) ticket.qty = [];
+            while (ticket.qty.length < drawCount) ticket.qty.push(0);
+            if (ticket.qty.length > drawCount) ticket.qty.length = drawCount;
+        }
+
+        function addTicket() {
+            if (selected.size < 6) return;
+            const numbers = Array.from(selected).sort((a,b) => a-b);
+            activeLayer().tickets.push({
+                numbers,
+                extras: {...draftExtras},
+                qty: new Array(drawCount).fill(0),
+                auto: false,
+                step: '×2'
+            });
+            resetBuilder();
+            renderTickets();
+            renderDrawsAndTotals();
+        }
+
+        function extraTags(extras) {
+            const tags = [];
+            for (const field of Object.keys(EXTRA_LABELS)) {
+                if (extras[field]) tags.push(EXTRA_LABELS[field][extras[field]]);
+            }
+            if (extras.firstColor) tags.push(`Первый цвет: ${COLORS.find(c => c.key === extras.firstColor).name}`);
+            if (extras.fullColor) tags.push(`Полная группа: ${COLORS.find(c => c.key === extras.fullColor).name}`);
+            if (extras.firstFiveNumber) tags.push(`В первых 5: ${extras.firstFiveNumber}`);
+            return tags;
+        }
+
+        function parseStep(value) {
+            const text = String(value || '').trim().replace(',', '.');
+            const multiply = text.match(/^[×x*]\s*(\d+(?:\.\d+)?)$/i);
+            if (multiply) return { type:'mul', value:Math.max(1, Number(multiply[1]) || 1) };
+            const add = text.match(/^\+\s*(\d+)$/);
+            if (add) return { type:'add', value:Math.max(1, Number(add[1]) || 1) };
+            return { type:'mul', value:2 };
+        }
+
+        function nextQty(current, rule) {
+            const next = rule.type === 'mul' ? Math.round(current * rule.value) : current + rule.value;
+            return Number.isSafeInteger(next) && next <= MAX_QTY ? next : MAX_QTY;
+        }
+
+        function activeDraws() {
+            return activeDay && loadedDays[activeDay] ? loadedDays[activeDay].slice(0, drawCount) : [];
+        }
+
+        function applyAuto(ticket, draws = activeDraws()) {
+            ensureQty(ticket);
+            ticket.qty.fill(0);
+            if (!ticket.auto) return;
+            const rule = parseStep(ticket.step);
+            let current = 1;
+            draws.forEach((draw, index) => {
+                ticket.qty[index] = current;
+                const won = evaluateTicket(ticket, draw).total > 0;
+                current = won ? 1 : nextQty(current, rule);
+            });
+        }
+
+        function renderTickets() {
+            const tickets = activeLayer().tickets;
+            $('ticket-count').textContent = `(${tickets.length})`;
+            if (!tickets.length) {
+                $('ticket-list').innerHTML = '<div class="empty-state">Соберите первую ставку выше. Она появится в активном слое.</div>';
+                return;
+            }
+            tickets.forEach(ensureQty);
+            $('ticket-list').innerHTML = tickets.map((ticket, index) => {
+                const tags = extraTags(ticket.extras);
+                const combinations = comb(ticket.numbers.length, 6);
+                return `
+                    <article class="ticket" data-ticket="${index}">
+                        <div class="ticket-top">
+                            <div>
+                                <div class="ticket-name">Ставка ${index + 1}</div>
+                                <div class="ticket-meta">${ticket.numbers.length} чисел · ${plainNumber(combinations)} ${combinationWord(combinations)} · ${money(ticketCost(ticket))} за 1 шт.</div>
+                            </div>
+                            <button class="danger-btn remove-ticket" type="button">Удалить</button>
+                        </div>
+                        <div class="ticket-balls">${ticket.numbers.map(number => ballHtml(number, 'xs')).join('')}</div>
+                        <div class="ticket-extras">${tags.length ? tags.map(tag => `<span class="extra-tag">${escapeHtml(tag)}</span>`).join('') : '<span class="card-note">Без дополнительных игр</span>'}</div>
+                        <div class="ticket-controls">
+                            <label class="auto-label"><input class="auto-check" type="checkbox"${ticket.auto ? ' checked' : ''}> Автошаг</label>
+                            <input class="step-input" value="${escapeHtml(ticket.step)}" title="Например: ×2 или +1">
+                            <button class="soft-btn qty-all" type="button">Все ×1</button>
+                            <button class="soft-btn qty-clear" type="button">Обнулить</button>
+                        </div>
+                        <details class="qty-details">
+                            <summary>Количество по тиражам</summary>
+                            <div class="qty-grid">
+                                ${Array.from({length:drawCount}, (_, drawIndex) => `
+                                    <label class="qty-box"><span>T${drawIndex+1}</span><input type="number" min="0" class="qty-input" data-draw="${drawIndex}" value="${ticket.qty[drawIndex] || 0}"${ticket.auto ? ' disabled' : ''}></label>
+                                `).join('')}
+                            </div>
+                        </details>
+                        <div class="ticket-scope">
+                            <div class="ticket-stat"><small>Затраты</small><strong id="ticket-cost-${index}">0 ₽</strong></div>
+                            <div class="ticket-stat"><small>Выигрыш</small><strong id="ticket-win-${index}">0 ₽</strong></div>
+                            <div class="ticket-stat"><small>Прибыль</small><strong id="ticket-profit-${index}">0 ₽</strong></div>
+                        </div>
+                    </article>
+                `;
+            }).join('');
+
+            $('ticket-list').querySelectorAll('.ticket').forEach(card => {
+                const index = Number(card.dataset.ticket);
+                const ticket = tickets[index];
+                card.querySelector('.remove-ticket').onclick = () => {
+                    tickets.splice(index, 1);
+                    renderTickets();
+                    renderDrawsAndTotals();
+                };
+                card.querySelector('.auto-check').onchange = event => {
+                    ticket.auto = event.target.checked;
+                    applyAuto(ticket);
+                    renderTickets();
+                    renderDrawsAndTotals();
+                };
+                card.querySelector('.step-input').onchange = event => {
+                    ticket.step = event.target.value || '×2';
+                    if (ticket.auto) applyAuto(ticket);
+                    renderTickets();
+                    renderDrawsAndTotals();
+                };
+                card.querySelector('.qty-all').onclick = () => {
+                    ticket.auto = false;
+                    ticket.qty.fill(1);
+                    renderTickets();
+                    renderDrawsAndTotals();
+                };
+                card.querySelector('.qty-clear').onclick = () => {
+                    ticket.auto = false;
+                    ticket.qty.fill(0);
+                    renderTickets();
+                    renderDrawsAndTotals();
+                };
+                card.querySelectorAll('.qty-input').forEach(input => {
+                    input.oninput = () => {
+                        ticket.qty[Number(input.dataset.draw)] = Math.max(0, Number(input.value) || 0);
+                        renderDrawsAndTotals(false);
+                    };
+                });
+            });
+        }
+
+        function mainPayout(ticket, draw) {
+            const positions = new Map(draw.numbers.map((number, index) => [number, index + 1]));
+            const sortedPositions = ticket.numbers.map(number => positions.get(number) || 49).sort((a,b) => a-b);
+            let amount = 0;
+            let winningCombinations = 0;
+            const categories = [];
+            for (let index = 5; index < sortedPositions.length; index++) {
+                const step = sortedPositions[index];
+                if (step > 35) continue;
+                const count = comb(index, 5);
+                const prize = payoutAt(step);
+                amount += count * prize;
+                winningCombinations += count;
+                categories.push({ step, count, prize });
+            }
+            return { amount, winningCombinations, categories };
+        }
+
+        function evaluateExtras(extras, draw) {
+            const firstFive = draw.numbers.slice(0, 5);
+            const first = firstFive[0];
+            if (firstFive.length < 5) return { amount:0, wins:[] };
+            const wins = [];
+            let amount = 0;
+            const simplePay = getNum('pay-simple', 150);
+            const evenCount = firstFive.filter(number => number % 2 === 0).length;
+            const sum = firstFive.reduce((total, number) => total + number, 0);
+            const hit = (condition, label, pay) => {
+                if (!condition) return;
+                amount += pay;
+                wins.push(label);
+            };
+            if (extras.firstParity) hit(
+                extras.firstParity === (first % 2 === 0 ? 'even' : 'odd'),
+                EXTRA_LABELS.firstParity[extras.firstParity], simplePay
+            );
+            if (extras.firstFiveParity) hit(
+                extras.firstFiveParity === (evenCount >= 3 ? 'even' : 'odd'),
+                EXTRA_LABELS.firstFiveParity[extras.firstFiveParity], simplePay
+            );
+            if (extras.firstHalf) hit(
+                extras.firstHalf === (first <= 24 ? 'low' : 'high'),
+                EXTRA_LABELS.firstHalf[extras.firstHalf], simplePay
+            );
+            if (extras.firstFiveSum) hit(
+                extras.firstFiveSum === (sum <= 122 ? 'low' : 'high'),
+                EXTRA_LABELS.firstFiveSum[extras.firstFiveSum], simplePay
+            );
+            if (extras.firstColor) hit(
+                colorForNumber(first).key === extras.firstColor,
+                `Первый цвет: ${COLORS.find(color => color.key === extras.firstColor).name}`,
+                getNum('pay-first-color', 600)
+            );
+            if (extras.fullColor) {
+                const group = COLORS.find(color => color.key === extras.fullColor);
+                const drawn = new Set(draw.numbers);
+                hit(group.nums.every(number => drawn.has(number)), `Полная группа: ${group.name}`, getNum('pay-full-color', 550));
+            }
+            if (extras.firstFiveNumber) hit(
+                firstFive.includes(Number(extras.firstFiveNumber)),
+                `В первых 5: ${extras.firstFiveNumber}`,
+                getNum('pay-first-five-number', 750)
+            );
+            return { amount, wins };
+        }
+
+        function evaluateTicket(ticket, draw) {
+            const main = mainPayout(ticket, draw);
+            const extras = evaluateExtras(ticket.extras, draw);
+            return { main, extras, total:main.amount + extras.amount };
+        }
+
+        function dateKey(value) {
+            if (!value) return '';
+            const text = String(value).trim();
+            let match = text.match(/^(\d{2})[./-](\d{2})[./-](\d{4})/);
+            if (match) return `${match[1]}.${match[2]}.${match[3]}`;
+            match = text.match(/^(\d{4})-(\d{2})-(\d{2})/);
+            if (match) return `${match[3]}.${match[2]}.${match[1]}`;
+            const date = new Date(text);
+            return Number.isNaN(date.getTime()) ? '' : date.toLocaleDateString('ru-RU', { timeZone:'Europe/Moscow' });
+        }
+
+        function timeKey(value) {
+            const text = String(value || '');
+            const direct = text.match(/(?:T|\s)(\d{2}):(\d{2})/);
+            if (direct) return `${direct[1]}:${direct[2]}`;
+            const plain = text.match(/^(\d{1,2}):(\d{2})/);
+            if (plain) return `${String(plain[1]).padStart(2,'0')}:${plain[2]}`;
+            const date = new Date(text);
+            return Number.isNaN(date.getTime()) ? '' : date.toLocaleTimeString('ru-RU', { timeZone:'Europe/Moscow', hour:'2-digit', minute:'2-digit' });
+        }
+
+        function normalizeNumbers(value) {
+            let source = value;
+            if (!Array.isArray(source)) source = String(source || '').match(/\d+/g) || [];
+            const result = [];
+            for (const item of source) {
+                const number = Number(typeof item === 'object' ? item.value ?? item.number : item);
+                if (Number.isInteger(number) && number >= 1 && number <= 48 && !result.includes(number)) result.push(number);
+            }
+            return result.slice(0, 35);
+        }
+
+        function findNumbers(raw) {
+            const candidates = [
+                raw?.combination?.main, raw?.main, raw?.mainNumbers, raw?.numbers,
+                raw?.winningNumbers, raw?.result?.main, raw?.data?.combination?.main,
+                raw?.digitalDetails?.numbers
+            ];
+            for (const candidate of candidates) {
+                const numbers = normalizeNumbers(candidate);
+                if (numbers.length >= 35) return numbers;
+            }
+            if (Array.isArray(raw?.digitalDetails)) {
+                for (const item of raw.digitalDetails) {
+                    const numbers = normalizeNumbers(item?.numbers || item);
+                    if (numbers.length >= 35) return numbers;
+                }
+            }
+            return [];
+        }
+
+        function normalizeJsonDraw(raw, index) {
+            const source = raw?.data || raw;
+            const numbers = findNumbers(source);
+            const drawDate = source?.drawDate || source?.date || source?.drawAt || source?.drawTime || '';
+            const date = dateKey(drawDate);
+            if (numbers.length !== 35 || !date) return null;
+            return {
+                drawNumber: String(source?.drawNumber ?? source?.drawNum ?? source?._drawNum ?? index + 1).padStart(6,'0'),
+                date,
+                time: timeKey(drawDate) || String(source?.time || ''),
+                numbers
+            };
+        }
+
+        function splitDelimited(line, delimiter) {
+            const cells = [];
+            let current = '';
+            let quoted = false;
+            for (let index = 0; index < line.length; index++) {
+                const char = line[index];
+                if (char === '"') {
+                    if (quoted && line[index + 1] === '"') { current += '"'; index++; }
+                    else quoted = !quoted;
+                } else if (char === delimiter && !quoted) {
+                    cells.push(current.trim());
+                    current = '';
+                } else current += char;
+            }
+            cells.push(current.trim());
+            return cells;
+        }
+
+        function parseTextDraws(text) {
+            const lines = text.replace(/^\uFEFF/, '').split(/\r?\n/).filter(line => line.trim());
+            const draws = [];
+            lines.forEach((line, index) => {
+                const delimiter = line.includes(';') ? ';' : line.includes('\t') ? '\t' : ',';
+                const cells = splitDelimited(line, delimiter);
+                const dateIndex = cells.findIndex(cell =>
+                    /^\d{2}[./-]\d{2}[./-]\d{4}(?:\s|$)/.test(String(cell).trim()) ||
+                    /^\d{4}-\d{2}-\d{2}(?:[T\s]|$)/.test(String(cell).trim())
+                );
+                if (dateIndex < 0) return;
+                const date = dateKey(cells[dateIndex]);
+                const timeCell = cells.slice(dateIndex + 1).find(cell => /^\d{1,2}:\d{2}/.test(cell)) || '';
+                const start = dateIndex + 1;
+                const numberTokens = [];
+                for (let cellIndex = start; cellIndex < cells.length && numberTokens.length < 35; cellIndex++) {
+                    if (/^\d{1,2}:\d{2}/.test(cells[cellIndex])) continue;
+                    const values = String(cells[cellIndex]).match(/\d+/g) || [];
+                    for (const value of values) {
+                        const number = Number(value);
+                        if (number >= 1 && number <= 48 && !numberTokens.includes(number)) numberTokens.push(number);
+                        if (numberTokens.length === 35) break;
+                    }
+                }
+                if (numberTokens.length !== 35) return;
+                const beforeDate = cells.slice(0, dateIndex).find(cell => /^\d{1,6}$/.test(cell));
+                draws.push({
+                    drawNumber: String(beforeDate || index + 1).padStart(6,'0'),
+                    date,
+                    time: timeKey(timeCell),
+                    numbers: numberTokens
+                });
+            });
+            return draws;
+        }
+
+        function parseArchive(text, fileName) {
+            if (/\.json$/i.test(fileName) || /^[\s\uFEFF]*[\[{]/.test(text)) {
+                const parsed = JSON.parse(text.replace(/^\uFEFF/, ''));
+                const rows = Array.isArray(parsed) ? parsed : parsed.draws || parsed.data || [];
+                return rows.map(normalizeJsonDraw).filter(Boolean);
+            }
+            return parseTextDraws(text);
+        }
+
+        function timeSort(draw) {
+            const match = String(draw.time || '').match(/(\d{1,2}):(\d{2})/);
+            return match ? Number(match[1]) * 60 + Number(match[2]) : Number(draw.drawNumber) || 0;
+        }
+
+        function installDraws(draws, append = false) {
+            const next = append ? {...loadedDays} : {};
+            draws.forEach(draw => {
+                if (!next[draw.date]) next[draw.date] = [];
+                const key = `${draw.drawNumber}|${draw.time}`;
+                const existingIndex = next[draw.date].findIndex(item => `${item.drawNumber}|${item.time}` === key);
+                if (existingIndex >= 0) next[draw.date][existingIndex] = draw;
+                else next[draw.date].push(draw);
+            });
+            Object.keys(next).forEach(date => next[date].sort((a,b) => timeSort(a) - timeSort(b)));
+            loadedDays = next;
+            const dates = sortedDates();
+            if (!activeDay || !loadedDays[activeDay]) activeDay = dates[0] || null;
+            openMonthKey = activeDay ? monthKey(activeDay) : null;
+            calculationMonthKey = null;
+            activeLayer().tickets.forEach(ticket => { if (ticket.auto) applyAuto(ticket); });
+            renderMonths();
+            renderTickets();
+            renderDrawsAndTotals();
+        }
+
+        function sortedDates() {
+            return Object.keys(loadedDays).sort((a,b) => {
+                const pa = a.split('.'), pb = b.split('.');
+                return Number(pa[2]+pa[1]+pa[0]) - Number(pb[2]+pb[1]+pb[0]);
+            });
+        }
+
+        function monthKey(date) {
+            const parts = String(date).split('.');
+            return parts.length === 3 ? `${parts[1]}.${parts[2]}` : '';
+        }
+
+        function monthLabel(key) {
+            const [month, year] = key.split('.');
+            return `${MONTHS[Number(month)-1] || month} ${year}`;
+        }
+
+        function renderMonths() {
+            const dates = sortedDates();
+            if (!dates.length) {
+                $('months').innerHTML = '<div class="empty-state">Архив пока пуст</div>';
+                return;
+            }
+            const grouped = {};
+            dates.forEach(date => {
+                const key = monthKey(date);
+                if (!grouped[key]) grouped[key] = [];
+                grouped[key].push(date);
+            });
+            $('months').innerHTML = Object.keys(grouped).map(key => `
+                <div class="month${key === openMonthKey ? ' open' : ''}" data-month="${key}">
+                    <div class="month-head">
+                        <span>${escapeHtml(monthLabel(key))}</span>
+                        <span class="count">${grouped[key].reduce((total,date)=>total+loadedDays[date].length,0)} тир.</span>
+                        <label class="month-calc"><input type="checkbox"${calculationMonthKey === key ? ' checked' : ''}> Рассчитать месяц</label>
+                    </div>
+                    <div class="days">
+                        ${grouped[key].map(date => `<button class="day-btn${date === activeDay ? ' active' : ''}" data-date="${date}">${date} · ${loadedDays[date].length}</button>`).join('')}
+                    </div>
+                </div>
+            `).join('');
+            $('months').querySelectorAll('.month').forEach(month => {
+                const key = month.dataset.month;
+                month.querySelector('.month-head').onclick = event => {
+                    if (event.target.closest('.month-calc')) return;
+                    openMonthKey = openMonthKey === key ? null : key;
+                    renderMonths();
+                };
+                month.querySelector('.month-calc input').onchange = event => {
+                    calculationMonthKey = event.target.checked ? key : null;
+                    renderMonths();
+                    renderDrawsAndTotals();
+                };
+                month.querySelectorAll('.day-btn').forEach(button => {
+                    button.onclick = () => {
+                        activeDay = button.dataset.date;
+                        calculationMonthKey = null;
+                        openMonthKey = monthKey(activeDay);
+                        activeLayer().tickets.forEach(ticket => { if (ticket.auto) applyAuto(ticket); });
+                        renderMonths();
+                        renderTickets();
+                        renderDrawsAndTotals();
+                    };
+                });
+            });
+        }
+
+        function drawStats(draw, drawIndex, tickets = activeLayer().tickets) {
+            let cost = 0;
+            let win = 0;
+            let winningTickets = 0;
+            tickets.forEach(ticket => {
+                ensureQty(ticket);
+                const qty = ticket.qty[drawIndex] || 0;
+                if (qty <= 0) return;
+                const result = evaluateTicket(ticket, draw);
+                cost += ticketCost(ticket) * qty;
+                win += result.total * qty;
+                if (result.total > 0) winningTickets += qty;
+            });
+            return { cost, win, profit:win-cost, winningTickets };
+        }
+
+        function renderDraws() {
+            const draws = activeDraws();
+            if (!draws.length) {
+                $('draw-list').innerHTML = '<div class="empty-state">Нет тиражей для отображения</div>';
+                $('draw-note').textContent = 'Загрузите архив или добавьте тираж вручную';
+                return;
+            }
+            $('draw-note').textContent = `Показано ${draws.length} из ${loadedDays[activeDay].length} тиражей за ${activeDay}`;
+            $('draw-list').innerHTML = draws.map((draw, index) => {
+                const stats = drawStats(draw, index);
+                const profitClass = stats.profit > 0 ? 'positive' : stats.profit < 0 ? 'negative' : '';
+                return `
+                    <article class="draw-card">
+                        <div class="draw-main">
+                            <div class="draw-id"><strong>Т${index+1} · №${escapeHtml(draw.drawNumber)}</strong><small>${escapeHtml(draw.time || '—')} · ${escapeHtml(draw.date)}</small></div>
+                            <div class="draw-first">${draw.numbers.slice(0,5).map(number => ballHtml(number,'sm')).join('')}<span class="draw-dots">…</span></div>
+                            <div class="draw-result">
+                                <div><small>Затраты</small><strong>${money(stats.cost)}</strong></div>
+                                <div><small>Выигрыш</small><strong>${money(stats.win)}</strong></div>
+                                <div><small>Итог</small><strong class="${profitClass}">${stats.profit > 0 ? '+' : ''}${money(stats.profit)}</strong></div>
+                            </div>
+                        </div>
+                        <details><summary>Показать все 35 шаров</summary><div class="all-balls">${draw.numbers.map(number => ballHtml(number,'xs')).join('')}</div></details>
+                    </article>
+                `;
+            }).join('');
+        }
+
+        function scopeDraws() {
+            if (calculationMonthKey) {
+                return sortedDates().filter(date => monthKey(date) === calculationMonthKey).map(date => ({ date, draws:loadedDays[date].slice(0,drawCount) }));
+            }
+            return activeDay && loadedDays[activeDay] ? [{ date:activeDay, draws:loadedDays[activeDay].slice(0,drawCount) }] : [];
+        }
+
+        function calculateScope() {
+            const tickets = activeLayer().tickets;
+            const groups = scopeDraws();
+            let totalCost = 0;
+            let totalWin = 0;
+            const perTicket = tickets.map(() => ({ cost:0, win:0 }));
+            groups.forEach(group => {
+                tickets.forEach((ticket, ticketIndex) => {
+                    ensureQty(ticket);
+                    let autoCurrent = 1;
+                    const rule = parseStep(ticket.step);
+                    group.draws.forEach((draw, drawIndex) => {
+                        const qty = ticket.auto ? autoCurrent : ticket.qty[drawIndex] || 0;
+                        if (qty <= 0) return;
+                        const result = evaluateTicket(ticket, draw);
+                        const cost = ticketCost(ticket) * qty;
+                        const win = result.total * qty;
+                        totalCost += cost;
+                        totalWin += win;
+                        perTicket[ticketIndex].cost += cost;
+                        perTicket[ticketIndex].win += win;
+                        if (ticket.auto) autoCurrent = result.total > 0 ? 1 : nextQty(autoCurrent, rule);
+                    });
+                });
+            });
+            return { totalCost, totalWin, perTicket };
+        }
+
+        function renderTotals() {
+            const result = calculateScope();
+            const profit = result.totalWin - result.totalCost;
+            $('total-cost').textContent = money(result.totalCost);
+            $('total-win').textContent = money(result.totalWin);
+            $('total-profit').textContent = `${profit > 0 ? '+' : ''}${money(profit)}`;
+            $('total-profit').className = profit > 0 ? 'positive' : profit < 0 ? 'negative' : '';
+            $('total-return').textContent = result.totalCost > 0 ? `${(result.totalWin / result.totalCost * 100).toFixed(2)}%` : '—';
+            result.perTicket.forEach((ticketResult, index) => {
+                const profitValue = ticketResult.win - ticketResult.cost;
+                const costEl = $(`ticket-cost-${index}`);
+                if (!costEl) return;
+                costEl.textContent = money(ticketResult.cost);
+                $(`ticket-win-${index}`).textContent = money(ticketResult.win);
+                const profitEl = $(`ticket-profit-${index}`);
+                profitEl.textContent = `${profitValue > 0 ? '+' : ''}${money(profitValue)}`;
+                profitEl.className = profitValue > 0 ? 'positive' : profitValue < 0 ? 'negative' : '';
+            });
+            const groups = scopeDraws();
+            const count = groups.reduce((total, group) => total + group.draws.length, 0);
+            $('calc-scope').textContent = calculationMonthKey
+                ? `${monthLabel(calculationMonthKey)} · ${count} тир.`
+                : activeDay ? `${activeDay} · ${count} тир.` : 'Нет данных';
+        }
+
+        function renderDrawsAndTotals(renderList = true) {
+            if (renderList) renderDraws();
+            renderTotals();
+        }
+
+        function setDrawCount(count) {
+            if (![24,48].includes(count) || count === drawCount) return;
+            drawCount = count;
+            document.querySelectorAll('.mode-btn').forEach(button => button.classList.toggle('active', Number(button.dataset.count) === drawCount));
+            layers.forEach(layer => layer.tickets.forEach(ticket => {
+                ensureQty(ticket);
+                if (ticket.auto) applyAuto(ticket);
+            }));
+            renderTickets();
+            renderDrawsAndTotals();
+        }
+
+        function isoToday() {
+            const now = new Date();
+            const local = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
+            return local.toISOString().slice(0,10);
+        }
+
+        function addManualDraw() {
+            const date = dateKey($('manual-date').value);
+            const time = $('manual-time').value;
+            const numbers = normalizeNumbers($('manual-numbers').value);
+            if (!date) return showToast('Укажите дату тиража.');
+            if (numbers.length !== 35) return showToast(`Нужно 35 уникальных чисел. Сейчас найдено: ${numbers.length}.`);
+            installDraws([{
+                drawNumber:String($('manual-number').value || 'ручной').padStart(6,'0'),
+                date, time, numbers
+            }], true);
+            $('manual-numbers').value = '';
+            showToast('Тираж добавлен.');
+        }
+
+        function loadDemo() {
+            installDraws([{
+                drawNumber:'002228',
+                date:'08.12.2024',
+                time:'16:24',
+                numbers:[48,13,38,22,27,11,47,34,42,35,17,40,32,45,41,24,4,18,30,43,7,20,12,36,39,5,28,6,9,26,46,33,19,1,3]
+            }], false);
+            $('file-name').textContent = 'Демо: официальный тираж №002228';
+            showToast('Демо-тираж загружен. Для старых периодов проверьте таблицу выплат.');
+        }
+
+        async function loadFile(file) {
+            try {
+                const text = await file.text();
+                const draws = parseArchive(text, file.name);
+                if (!draws.length) throw new Error('Не найдено строк с 35 числами');
+                installDraws(draws, false);
+                $('file-name').textContent = `${file.name} · ${draws.length} тир.`;
+                showToast(`Загружено тиражей: ${draws.length}`);
+            } catch (error) {
+                console.error(error);
+                showToast(`Не удалось прочитать архив: ${error.message}`);
+            }
+        }
+
+        function bindSettings() {
+            ['base-price','extra-price','discount','jackpot','pay-simple','pay-first-color','pay-full-color','pay-first-five-number'].forEach(id => {
+                $(id).oninput = () => {
+                    $('hero-jackpot').textContent = money(getNum('jackpot', 10000000));
+                    renderBuilder();
+                    renderTickets();
+                    renderDrawsAndTotals();
+                };
+            });
+            $('prize-grid').addEventListener('input', () => renderDrawsAndTotals());
+            document.querySelectorAll('.mode-btn').forEach(button => button.onclick = () => setDrawCount(Number(button.dataset.count)));
+        }
+
+        function init() {
+            renderPrizeEditor();
+            initExtraControls();
+            renderBuilder();
+            renderLayers();
+            renderTickets();
+            renderMonths();
+            renderDrawsAndTotals();
+            bindSettings();
+
+            $('manual-date').value = isoToday();
+            $('add-layer').onclick = addLayer;
+            $('clear-builder').onclick = resetBuilder;
+            $('add-ticket').onclick = addTicket;
+            $('delete-all-tickets').onclick = () => {
+                activeLayer().tickets = [];
+                renderTickets();
+                renderDrawsAndTotals();
+            };
+            $('file-input').onchange = event => {
+                const file = event.target.files[0];
+                if (file) loadFile(file);
+                event.target.value = '';
+            };
+            $('load-demo').onclick = loadDemo;
+            $('clear-data').onclick = () => {
+                loadedDays = {};
+                activeDay = null;
+                calculationMonthKey = null;
+                openMonthKey = null;
+                $('file-name').textContent = 'Файл не загружен';
+                renderMonths();
+                renderDrawsAndTotals();
+            };
+            $('add-manual-draw').onclick = addManualDraw;
+        }
+
+        init();
+    })();
+    </script>
+</body>
+</html>
