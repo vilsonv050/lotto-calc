@@ -415,6 +415,73 @@
         .ticket-stat small { display: block; color: var(--muted); font-size: 8px; font-weight: 800; }
         .ticket-stat strong { display: block; margin-top: 2px; font-size: 11px; }
 
+        .strategy-toolbar {
+            display: grid;
+            grid-template-columns: minmax(190px, 1fr) minmax(220px, 1.25fr) minmax(140px, .7fr);
+            gap: 10px;
+            align-items: end;
+        }
+        .strategy-enable {
+            min-height: 42px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 12px;
+            border: 1px solid rgba(35,137,245,.24);
+            border-radius: 11px;
+            background: rgba(35,137,245,.09);
+            color: #e8f3ff;
+            font-size: 10px;
+            font-weight: 950;
+            cursor: pointer;
+        }
+        .strategy-enable input, .strategy-check input { accent-color: var(--blue); }
+        .strategy-mode-switch { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+        .strategy-mode-btn {
+            min-height: 42px;
+            padding: 8px 10px;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            background: #292938;
+            color: #aaaabd;
+            cursor: pointer;
+            font-size: 9px;
+            font-weight: 950;
+        }
+        .strategy-mode-btn.active { border-color: var(--blue); background: rgba(35,137,245,.2); color: white; }
+        .strategy-mode-note {
+            margin-top: 10px;
+            padding: 9px 11px;
+            border-left: 3px solid var(--blue);
+            border-radius: 0 9px 9px 0;
+            background: rgba(35,137,245,.07);
+            color: #bfc8d8;
+            font-size: 10px;
+            line-height: 1.45;
+        }
+        .strategy-legend { display: flex; flex-wrap: wrap; gap: 6px; margin: 9px 0; }
+        .strategy-legend span { padding: 5px 8px; border: 1px solid var(--line); border-radius: 999px; color: #a9a9bb; font-size: 9px; font-weight: 850; }
+        .strategy-games { display: grid; gap: 6px; margin-top: 10px; }
+        #strategy-game-list { display: grid; gap: 6px; }
+        .strategy-game-head, .strategy-game-row {
+            display: grid;
+            grid-template-columns: minmax(180px, 1fr) 78px 78px minmax(135px, auto);
+            gap: 8px;
+            align-items: center;
+        }
+        .strategy-game-head { padding: 0 11px; color: #77778b; font-size: 8px; font-weight: 950; text-transform: uppercase; letter-spacing: .05em; }
+        .strategy-game-row { padding: 9px 11px; border: 1px solid var(--line); border-radius: 11px; background: #292938; }
+        .strategy-game-row.inactive { opacity: .58; }
+        .strategy-game-name strong { display: block; color: #ededf6; font-size: 10px; }
+        .strategy-game-name small { display: block; margin-top: 2px; color: var(--muted); font-size: 8px; }
+        .strategy-check { display: flex; align-items: center; justify-content: center; gap: 5px; color: #c9c9d7; font-size: 9px; font-weight: 900; cursor: pointer; }
+        .strategy-game-status { justify-self: end; padding: 5px 8px; border-radius: 999px; background: rgba(35,137,245,.1); color: #a9d5ff; font-size: 9px; font-weight: 950; text-align: right; }
+        .strategy-game-status.stopped { border: 1px solid rgba(255,112,126,.28); background: rgba(255,80,98,.12); color: #ffadb6; }
+        .ticket-controls :disabled { cursor: not-allowed; opacity: .52; }
+        .draw-stop-events { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 0 11px 10px; padding: 8px 9px; border: 1px solid rgba(255,112,126,.25); border-radius: 11px; background: rgba(255,80,98,.09); }
+        .draw-stop-title { color: #ffadb6; font-size: 9px; font-weight: 950; text-transform: uppercase; }
+        .stopped-game-tag { padding: 4px 7px; border-radius: 999px; background: rgba(255,80,98,.15); color: #ffd0d5; font-size: 9px; font-weight: 900; }
+
         .data-toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
         .file-input { display: none; }
         .file-name { margin-left: auto; color: var(--muted); font-size: 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 220px; }
@@ -518,6 +585,10 @@
             .draw-result { grid-column: 1 / -1; }
             .qty-grid { grid-template-columns: repeat(6,minmax(0,1fr)); }
             .ticket-controls { grid-template-columns: repeat(2,minmax(0,1fr)); }
+            .strategy-toolbar { grid-template-columns: 1fr; }
+            .strategy-game-head { display: none; }
+            .strategy-game-row { grid-template-columns: repeat(2,minmax(0,1fr)); }
+            .strategy-game-name, .strategy-game-status { grid-column: 1 / -1; justify-self: stretch; text-align: left; }
             .prize-grid { grid-template-columns: repeat(3,minmax(0,1fr)); }
             .builder-tools { grid-template-columns: repeat(2,minmax(0,1fr)); }
             .builder-side { grid-column: 1 / -1; }
@@ -596,6 +667,39 @@
                         <button class="soft-btn" id="add-layer">+ Слой</button>
                     </div>
                     <div class="layer-tabs" id="layer-tabs"></div>
+                </div>
+
+                <div class="card card-pad">
+                    <div class="card-head">
+                        <div>
+                            <h2 class="card-title">Общее управление стратегией</h2>
+                            <div class="card-note">Одно правило для всех ставок слоя, отдельный счётчик для каждой игры</div>
+                        </div>
+                    </div>
+                    <div class="strategy-toolbar">
+                        <label class="strategy-enable"><input id="common-strategy-enabled" type="checkbox"> Включить общую автостратегию</label>
+                        <div>
+                            <div class="field"><label>Режим расчёта</label></div>
+                            <div class="strategy-mode-switch">
+                                <button class="strategy-mode-btn" data-strategy-mode="independent" type="button">Независимые игры</button>
+                                <button class="strategy-mode-btn active" data-strategy-mode="real" type="button">Реальные билеты</button>
+                            </div>
+                        </div>
+                        <div class="field">
+                            <label for="common-strategy-step">Правило после проигрыша</label>
+                            <input id="common-strategy-step" type="text" value="×2" placeholder="×2 или +1">
+                        </div>
+                    </div>
+                    <div class="strategy-mode-note" id="strategy-mode-note"></div>
+                    <div class="strategy-legend">
+                        <span><b>Правило</b> — меняет количество после проигрыша</span>
+                        <span><b>Сброс</b> — возвращает только выигравшую игру к ×1</span>
+                        <span><b>Стоп</b> — после выигрыша отключает только эту игру</span>
+                    </div>
+                    <div class="strategy-games">
+                        <div class="strategy-game-head"><span>Игра</span><span>Сброс</span><span>Стоп</span><span>Состояние</span></div>
+                        <div id="strategy-game-list"></div>
+                    </div>
                 </div>
 
                 <div class="card card-pad">
@@ -781,6 +885,16 @@
             firstHalf: { low:'Первое: 1–24', high:'Первое: 25–48' },
             firstFiveSum: { low:'Сумма 5: 1–122', high:'Сумма 5: 123–230' }
         };
+        const GAME_DEFS = [
+            { key:'main', name:'Основная игра', short:'Системная ставка по выбранным шарам' },
+            { key:'firstParity', name:'Первое число', short:'Чётное или нечётное' },
+            { key:'firstFiveParity', name:'Первые пять', short:'Большинство чётных или нечётных' },
+            { key:'firstHalf', name:'Диапазон первого', short:'1–24 или 25–48' },
+            { key:'firstFiveSum', name:'Сумма первых пяти', short:'1–122 или 123–230' },
+            { key:'firstColor', name:'Цвет первого', short:'Выбранный цвет первого шара' },
+            { key:'fullColor', name:'Полная цветовая группа', short:'Все шесть шаров группы за 35 ходов' },
+            { key:'firstFiveNumber', name:'Число в первой пятёрке', short:'Выбранное число среди первых пяти' }
+        ];
         const MAX_QTY = Number.MAX_SAFE_INTEGER;
         const MAX_GENERATED_TICKETS = 500;
 
@@ -791,7 +905,7 @@
         let generationBundleAuto = false;
         let bundleCounter = 0;
         let draftExtras = emptyExtras();
-        let layers = [{ id: 1, name: 'Слой 1', tickets: [] }];
+        let layers = [{ id: 1, name: 'Слой 1', tickets: [], strategy:createDefaultStrategy() }];
         let activeLayerId = 1;
         let layerCounter = 1;
         let loadedDays = {};
@@ -823,6 +937,28 @@
 
         function emptyExtras() {
             return { firstParity:null, firstFiveParity:null, firstHalf:null, firstFiveSum:null, firstColor:null, fullColor:null, firstFiveNumber:null };
+        }
+
+        function createDefaultStrategy() {
+            return {
+                enabled:false,
+                mode:'real',
+                step:'×2',
+                games:Object.fromEntries(GAME_DEFS.map(game => [game.key, { reset:true, stop:false }]))
+            };
+        }
+
+        function ensureLayerStrategy(layer = activeLayer()) {
+            if (!layer.strategy) layer.strategy = createDefaultStrategy();
+            if (!['independent','real'].includes(layer.strategy.mode)) layer.strategy.mode = 'real';
+            if (!layer.strategy.step) layer.strategy.step = '×2';
+            if (!layer.strategy.games) layer.strategy.games = {};
+            GAME_DEFS.forEach(game => {
+                if (!layer.strategy.games[game.key]) layer.strategy.games[game.key] = { reset:true, stop:false };
+                layer.strategy.games[game.key].reset = layer.strategy.games[game.key].reset !== false;
+                layer.strategy.games[game.key].stop = Boolean(layer.strategy.games[game.key].stop);
+            });
+            return layer.strategy;
         }
 
         function comb(n, k) {
@@ -867,6 +1003,19 @@
             const combinations = comb(ticket.numbers.length, 6);
             const extras = Object.values(ticket.extras).filter(Boolean).length;
             return combinations * getNum('base-price', 100) + extras * getNum('extra-price', 100);
+        }
+
+        function discountedUnitCost(value) {
+            const discount = Math.min(100, Math.max(0, getNum('discount', 0)));
+            return Math.round(value * (1 - discount / 100));
+        }
+
+        function baseTicketCost(ticket) {
+            return discountedUnitCost(comb(ticket.numbers.length, 6) * getNum('base-price', 100));
+        }
+
+        function extraGameCost() {
+            return discountedUnitCost(getNum('extra-price', 100));
         }
 
         function ticketCost(ticket) {
@@ -1070,6 +1219,88 @@
             renderBuilder();
         }
 
+        function gameTicketCount(tickets, gameKey) {
+            if (gameKey === 'main') return tickets.length;
+            return tickets.filter(ticket => Boolean(ticket.extras?.[gameKey])).length;
+        }
+
+        function nextPhysicalQuantity(tickets, states) {
+            return tickets.reduce((maximum, ticket) => {
+                const quantities = [];
+                const mainState = states.main;
+                if (mainState && !mainState.stopped) quantities.push(mainState.current);
+                GAME_DEFS.slice(1).forEach(game => {
+                    const state = states[game.key];
+                    if (ticket.extras?.[game.key] && state && !state.stopped) quantities.push(state.current);
+                });
+                return Math.max(maximum, quantities.length ? Math.max(...quantities) : 0);
+            }, 0);
+        }
+
+        function renderStrategyControls() {
+            const list = $('strategy-game-list');
+            if (!list) return;
+            const layer = activeLayer();
+            const strategy = ensureLayerStrategy(layer);
+            const simulation = simulateCommonStrategy(layer.tickets, scopeDraws(), strategy);
+            $('common-strategy-enabled').checked = strategy.enabled;
+            $('common-strategy-step').value = strategy.step;
+            document.querySelectorAll('.strategy-mode-btn').forEach(button => {
+                button.classList.toggle('active', button.dataset.strategyMode === strategy.mode);
+            });
+            $('strategy-mode-note').textContent = strategy.mode === 'independent'
+                ? 'Независимые игры: у каждой игры свой счётчик, затраты и выигрыш. Остановленная игра больше не участвует, остальные продолжают расчёт.'
+                : 'Реальные билеты: допигры приобретаются только вместе с основной ставкой. Фактическое число базовых билетов равно наибольшему количеству среди продолжающихся игр.';
+            const realQuantity = strategy.mode === 'real' ? nextPhysicalQuantity(layer.tickets, simulation.states) : 0;
+            list.innerHTML = GAME_DEFS.map(game => {
+                const participants = gameTicketCount(layer.tickets, game.key);
+                const state = simulation.states[game.key];
+                let status = participants ? 'Старт ×1' : 'Нет ставок';
+                if (strategy.enabled && participants) {
+                    if (state.stopped) {
+                        const draw = state.stoppedAt;
+                        status = `Стоп${draw ? ` · №${draw.drawNumber}` : ''}`;
+                    } else {
+                        status = `Дальше ×${plainNumber(state.current)}`;
+                        if (game.key === 'main' && strategy.mode === 'real' && realQuantity !== state.current) status += ` · факт ×${plainNumber(realQuantity)}`;
+                    }
+                }
+                return `
+                    <div class="strategy-game-row${participants ? '' : ' inactive'}" data-strategy-game="${game.key}">
+                        <div class="strategy-game-name"><strong>${escapeHtml(game.name)}</strong><small>${escapeHtml(game.short)} · ставок: ${participants}</small></div>
+                        <label class="strategy-check" title="После выигрыша вернуть только эту игру к ×1"><input data-strategy-option="reset" type="checkbox"${strategy.games[game.key].reset ? ' checked' : ''}> Сброс</label>
+                        <label class="strategy-check" title="После выигрыша остановить только эту игру"><input data-strategy-option="stop" type="checkbox"${strategy.games[game.key].stop ? ' checked' : ''}> Стоп</label>
+                        <span class="strategy-game-status${state.stopped ? ' stopped' : ''}">${escapeHtml(status)}</span>
+                    </div>
+                `;
+            }).join('');
+
+            $('common-strategy-enabled').onchange = event => {
+                strategy.enabled = event.target.checked;
+                renderTickets();
+                renderDrawsAndTotals();
+            };
+            $('common-strategy-step').onchange = event => {
+                strategy.step = event.target.value.trim() || '×2';
+                renderTickets();
+                renderDrawsAndTotals();
+            };
+            document.querySelectorAll('.strategy-mode-btn').forEach(button => {
+                button.onclick = () => {
+                    strategy.mode = button.dataset.strategyMode;
+                    renderTickets();
+                    renderDrawsAndTotals();
+                };
+            });
+            list.querySelectorAll('[data-strategy-option]').forEach(input => {
+                input.onchange = () => {
+                    const row = input.closest('[data-strategy-game]');
+                    strategy.games[row.dataset.strategyGame][input.dataset.strategyOption] = input.checked;
+                    renderDrawsAndTotals();
+                };
+            });
+        }
+
         function renderLayers() {
             $('layer-tabs').innerHTML = layers.map(layer => `
                 <button class="layer-tab${layer.id === activeLayerId ? ' active' : ''}" data-layer="${layer.id}">
@@ -1096,7 +1327,7 @@
         function addLayer() {
             layerCounter++;
             const name = `Слой ${layerCounter}`;
-            layers.push({ id:layerCounter, name, tickets:[] });
+            layers.push({ id:layerCounter, name, tickets:[], strategy:createDefaultStrategy() });
             activeLayerId = layerCounter;
             renderLayers();
             renderTickets();
@@ -1193,19 +1424,22 @@
 
         function renderTickets() {
             const tickets = activeLayer().tickets;
+            const commonStrategy = ensureLayerStrategy();
+            const commonEnabled = commonStrategy.enabled;
             $('ticket-count').textContent = `(${tickets.length})`;
             if (!tickets.length) {
                 $('ticket-list').innerHTML = '<div class="empty-state">Соберите первую ставку выше. Она появится в активном слое.</div>';
                 return;
             }
             tickets.forEach(ensureQty);
-            applyAllAutos(tickets);
+            if (!commonEnabled) applyAllAutos(tickets);
             $('ticket-list').innerHTML = tickets.map((ticket, index) => {
                 const tags = extraTags(ticket.extras);
                 const combinations = comb(ticket.numbers.length, 6);
-                const autoEnabled = ticket.bundleAuto || ticket.auto;
-                const stepValue = ticket.bundleAuto ? ticket.bundleStep : ticket.step;
-                const autoLabel = ticket.bundleId ? 'Авто комплекта' : 'Автошаг';
+                const autoEnabled = commonEnabled || ticket.bundleAuto || ticket.auto;
+                const stepValue = commonEnabled ? commonStrategy.step : ticket.bundleAuto ? ticket.bundleStep : ticket.step;
+                const autoLabel = commonEnabled ? 'Общая стратегия' : ticket.bundleId ? 'Авто комплекта' : 'Автошаг';
+                const commonDisabled = commonEnabled ? ' disabled' : '';
                 return `
                     <article class="ticket" data-ticket="${index}">
                         <div class="ticket-top">
@@ -1218,10 +1452,10 @@
                         <div class="ticket-balls">${ticket.numbers.map(number => ballHtml(number, 'xs')).join('')}</div>
                         <div class="ticket-extras">${tags.length ? tags.map(tag => `<span class="extra-tag">${escapeHtml(tag)}</span>`).join('') : '<span class="card-note">Без дополнительных игр</span>'}</div>
                         <div class="ticket-controls">
-                            <label class="auto-label"><input class="auto-check" type="checkbox"${autoEnabled ? ' checked' : ''}> ${autoLabel}</label>
-                            <input class="step-input" value="${escapeHtml(stepValue)}" title="Например: ×2 или +1">
-                            <button class="soft-btn qty-all" type="button">Все ×1</button>
-                            <button class="soft-btn qty-clear" type="button">Обнулить</button>
+                            <label class="auto-label"><input class="auto-check" type="checkbox"${autoEnabled ? ' checked' : ''}${commonDisabled}> ${autoLabel}</label>
+                            <input class="step-input" value="${escapeHtml(stepValue)}" title="Например: ×2 или +1"${commonDisabled}>
+                            <button class="soft-btn qty-all" type="button"${commonDisabled}>Все ×1</button>
+                            <button class="soft-btn qty-clear" type="button"${commonDisabled}>Обнулить</button>
                         </div>
                         <details class="qty-details">
                             <summary>Количество по тиражам</summary>
@@ -1323,39 +1557,45 @@
             const simplePay = getNum('pay-simple', 150);
             const evenCount = firstFive.filter(number => number % 2 === 0).length;
             const sum = firstFive.reduce((total, number) => total + number, 0);
-            const hit = (condition, label, pay) => {
+            const hit = (condition, key, label, pay) => {
                 if (!condition) return;
                 amount += pay;
-                wins.push(label);
+                wins.push({ key, label, amount:pay });
             };
             if (extras.firstParity) hit(
                 extras.firstParity === (first % 2 === 0 ? 'even' : 'odd'),
+                'firstParity',
                 EXTRA_LABELS.firstParity[extras.firstParity], simplePay
             );
             if (extras.firstFiveParity) hit(
                 extras.firstFiveParity === (evenCount >= 3 ? 'even' : 'odd'),
+                'firstFiveParity',
                 EXTRA_LABELS.firstFiveParity[extras.firstFiveParity], simplePay
             );
             if (extras.firstHalf) hit(
                 extras.firstHalf === (first <= 24 ? 'low' : 'high'),
+                'firstHalf',
                 EXTRA_LABELS.firstHalf[extras.firstHalf], simplePay
             );
             if (extras.firstFiveSum) hit(
                 extras.firstFiveSum === (sum <= 122 ? 'low' : 'high'),
+                'firstFiveSum',
                 EXTRA_LABELS.firstFiveSum[extras.firstFiveSum], simplePay
             );
             if (extras.firstColor) hit(
                 colorForNumber(first).key === extras.firstColor,
+                'firstColor',
                 `Первый цвет: ${COLORS.find(color => color.key === extras.firstColor).name}`,
                 getNum('pay-first-color', 600)
             );
             if (extras.fullColor) {
                 const group = COLORS.find(color => color.key === extras.fullColor);
                 const drawn = new Set(draw.numbers);
-                hit(group.nums.every(number => drawn.has(number)), `Полная группа: ${group.name}`, getNum('pay-full-color', 550));
+                hit(group.nums.every(number => drawn.has(number)), 'fullColor', `Полная группа: ${group.name}`, getNum('pay-full-color', 550));
             }
             if (extras.firstFiveNumber) hit(
                 firstFive.includes(Number(extras.firstFiveNumber)),
+                'firstFiveNumber',
                 `В первых 5: ${extras.firstFiveNumber}`,
                 getNum('pay-first-five-number', 750)
             );
@@ -1366,6 +1606,116 @@
             const main = mainPayout(ticket, draw);
             const extras = evaluateExtras(ticket.extras, draw);
             return { main, extras, total:main.amount + extras.amount };
+        }
+
+        function initialStrategyStates(tickets) {
+            return Object.fromEntries(GAME_DEFS.map(game => [game.key, {
+                current:1,
+                active:gameTicketCount(tickets, game.key) > 0,
+                stopped:false,
+                stoppedAt:null
+            }]));
+        }
+
+        function simulateCommonStrategy(tickets, groups, strategy = ensureLayerStrategy()) {
+            const states = initialStrategyStates(tickets);
+            const perTicket = tickets.map(() => ({ cost:0, win:0 }));
+            const records = [];
+            const rule = parseStep(strategy.step);
+            let totalCost = 0;
+            let totalWin = 0;
+
+            groups.forEach(group => {
+                group.draws.forEach((draw, drawIndex) => {
+                    const evaluations = tickets.map(ticket => evaluateTicket(ticket, draw));
+                    const quantities = Object.fromEntries(GAME_DEFS.map(game => {
+                        const state = states[game.key];
+                        return [game.key, state.active && !state.stopped ? state.current : 0];
+                    }));
+                    const gameWins = Object.fromEntries(GAME_DEFS.map(game => [game.key, false]));
+                    const extraWins = [];
+                    let cost = 0;
+                    let win = 0;
+
+                    tickets.forEach((ticket, ticketIndex) => {
+                        const result = evaluations[ticketIndex];
+                        const selectedExtraQuantities = GAME_DEFS.slice(1)
+                            .filter(game => ticket.extras?.[game.key])
+                            .map(game => quantities[game.key]);
+                        const physicalQty = strategy.mode === 'real'
+                            ? Math.max(quantities.main, ...selectedExtraQuantities, 0)
+                            : quantities.main;
+                        let ticketCostValue = 0;
+                        let ticketWinValue = 0;
+
+                        if (physicalQty > 0) {
+                            ticketCostValue += baseTicketCost(ticket) * physicalQty;
+                            ticketWinValue += result.main.amount * physicalQty;
+                            if (quantities.main > 0 && result.main.amount > 0) gameWins.main = true;
+                        }
+
+                        const ticketExtraWins = [];
+                        GAME_DEFS.slice(1).forEach(game => {
+                            if (!ticket.extras?.[game.key]) return;
+                            const qty = quantities[game.key];
+                            if (qty <= 0) return;
+                            ticketCostValue += extraGameCost() * qty;
+                            const gameWin = result.extras.wins.find(item => item.key === game.key);
+                            if (!gameWin) return;
+                            gameWins[game.key] = true;
+                            const amount = gameWin.amount * qty;
+                            ticketWinValue += amount;
+                            ticketExtraWins.push({ ...gameWin, qty, amount });
+                        });
+
+                        if (ticketExtraWins.length) extraWins.push({
+                            ticketIndex,
+                            amount:ticketExtraWins.reduce((sum, item) => sum + item.amount, 0),
+                            wins:ticketExtraWins
+                        });
+                        cost += ticketCostValue;
+                        win += ticketWinValue;
+                        perTicket[ticketIndex].cost += ticketCostValue;
+                        perTicket[ticketIndex].win += ticketWinValue;
+                    });
+
+                    const stopEvents = [];
+                    GAME_DEFS.forEach(game => {
+                        const state = states[game.key];
+                        if (!state.active || state.stopped) return;
+                        if (gameWins[game.key]) {
+                            if (strategy.games[game.key].stop) {
+                                state.stopped = true;
+                                state.stoppedAt = { drawNumber:draw.drawNumber, date:draw.date, time:draw.time };
+                                stopEvents.push({ key:game.key, name:game.name });
+                            } else if (strategy.games[game.key].reset) {
+                                state.current = 1;
+                            }
+                        } else {
+                            state.current = nextQty(state.current, rule);
+                        }
+                    });
+
+                    extraWins.forEach(item => item.wins.forEach(gameWin => {
+                        gameWin.stopped = stopEvents.some(event => event.key === gameWin.key);
+                    }));
+                    totalCost += cost;
+                    totalWin += win;
+                    records.push({
+                        date:group.date,
+                        drawIndex,
+                        draw,
+                        cost,
+                        win,
+                        profit:win-cost,
+                        extraWins,
+                        stopEvents,
+                        quantities
+                    });
+                });
+            });
+
+            return { totalCost, totalWin, perTicket, records, states };
         }
 
         function dateKey(value) {
@@ -1604,12 +1954,11 @@
                 if (result.total > 0) winningTickets += qty;
                 if (result.extras.wins.length) extraWins.push({
                     ticketIndex,
-                    qty,
                     amount:result.extras.amount * qty,
-                    wins:result.extras.wins
+                    wins:result.extras.wins.map(item => ({ ...item, qty, amount:item.amount * qty }))
                 });
             });
-            return { cost, win, profit:win-cost, winningTickets, extraWins };
+            return { cost, win, profit:win-cost, winningTickets, extraWins, stopEvents:[] };
         }
 
         function renderDraws() {
@@ -1619,9 +1968,23 @@
                 $('draw-note').textContent = 'Загрузите архив или добавьте тираж вручную';
                 return;
             }
+            const strategy = ensureLayerStrategy();
+            let strategyRecords = new Map();
+            if (strategy.enabled) {
+                let groups = calculationMonthKey && monthKey(activeDay) === calculationMonthKey
+                    ? scopeDraws()
+                    : [{ date:activeDay, draws }];
+                let simulation = simulateCommonStrategy(activeLayer().tickets, groups, strategy);
+                let visibleRecords = simulation.records.filter(record => record.date === activeDay);
+                if (!visibleRecords.length) {
+                    simulation = simulateCommonStrategy(activeLayer().tickets, [{ date:activeDay, draws }], strategy);
+                    visibleRecords = simulation.records;
+                }
+                strategyRecords = new Map(visibleRecords.map(record => [record.drawIndex, record]));
+            }
             $('draw-note').textContent = `Показано ${draws.length} из ${loadedDays[activeDay].length} тиражей за ${activeDay}`;
             $('draw-list').innerHTML = draws.map((draw, index) => {
-                const stats = drawStats(draw, index);
+                const stats = strategy.enabled ? strategyRecords.get(index) || { cost:0, win:0, profit:0, extraWins:[], stopEvents:[] } : drawStats(draw, index);
                 const profitClass = stats.profit > 0 ? 'positive' : stats.profit < 0 ? 'negative' : '';
                 return `
                     <article class="draw-card">
@@ -1639,11 +2002,17 @@
                                 <div class="draw-extra-title">Выиграли дополнительные игры</div>
                                 ${stats.extraWins.map(item => `
                                     <div class="draw-extra-row">
-                                        <span class="draw-extra-ticket">Ставка ${item.ticketIndex + 1}${item.qty > 1 ? ` × ${plainNumber(item.qty)}` : ''}</span>
-                                        ${item.wins.map(label => `<span class="winning-extra-tag">${escapeHtml(label)}</span>`).join('')}
+                                        <span class="draw-extra-ticket">Ставка ${item.ticketIndex + 1}</span>
+                                        ${item.wins.map(gameWin => `<span class="winning-extra-tag">${escapeHtml(gameWin.label)}${gameWin.qty > 1 ? ` × ${plainNumber(gameWin.qty)}` : ''}${gameWin.stopped ? ' · стоп' : ''}</span>`).join('')}
                                         <em class="draw-extra-amount">+${money(item.amount)}</em>
                                     </div>
                                 `).join('')}
+                            </div>
+                        ` : ''}
+                        ${stats.stopEvents.length ? `
+                            <div class="draw-stop-events">
+                                <span class="draw-stop-title">Остановлены только эти игры:</span>
+                                ${stats.stopEvents.map(event => `<span class="stopped-game-tag">${escapeHtml(event.name)}</span>`).join('')}
                             </div>
                         ` : ''}
                         <details><summary>Показать все 35 шаров</summary><div class="all-balls">${draw.numbers.map(number => ballHtml(number,'xs')).join('')}</div></details>
@@ -1662,6 +2031,8 @@
         function calculateScope() {
             const tickets = activeLayer().tickets;
             const groups = scopeDraws();
+            const strategy = ensureLayerStrategy();
+            if (strategy.enabled) return simulateCommonStrategy(tickets, groups, strategy);
             let totalCost = 0;
             let totalWin = 0;
             const perTicket = tickets.map(() => ({ cost:0, win:0 }));
@@ -1735,6 +2106,7 @@
         function renderDrawsAndTotals(renderList = true) {
             if (renderList) renderDraws();
             renderTotals();
+            renderStrategyControls();
         }
 
         function setDrawCount(count) {
