@@ -104,6 +104,33 @@
             color: #856404;
             font-size: 13px;
         }
+        .file-status {
+            margin-top: 8px; padding: 9px 10px; border-radius: 5px;
+            background: #eef6ff; color: #31506f; font-size: 13px; display: none;
+        }
+        .file-status.error { background: #fdecec; color: #9b2c2c; }
+        .result-meta { color: #555; font-size: 13px; }
+        .keno-legend { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+        .keno-ball {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 30px; height: 30px; margin: 2px; border-radius: 50%;
+            border: 1px solid rgba(0,0,0,.18); box-shadow: inset 0 -2px 3px rgba(0,0,0,.14);
+            color: #fff; font: bold 13px/1 Arial, sans-serif;
+        }
+        .keno-color-name {
+            display: inline-flex; align-items: center; gap: 5px; padding: 4px 7px;
+            border: 1px solid #ddd; border-radius: 999px; background: #fff; font-size: 12px;
+        }
+        .keno-color-dot {
+            display: inline-block; width: 12px; height: 12px; border-radius: 50%;
+            border: 1px solid rgba(0,0,0,.2); vertical-align: -1px;
+        }
+        @media (max-width: 560px) {
+            body { padding: 10px; }
+            .container { padding: 18px; }
+            .row { flex-direction: column; gap: 0; }
+            .dup-col-counts { width: 105px; }
+        }
     </style>
 </head>
 <body>
@@ -114,7 +141,8 @@
     <div class="form-group">
         <label for="fileInput">Загрузите общий файл с тиражами (.txt):</label>
         <input type="file" id="fileInput" accept=".txt">
-        <div class="note">Числа через запятую. Лишние символы, даты и ID тиражей (числа >80) будут проигнорированы.</div>
+        <div class="note">Один тираж в строке, числа через запятую. Даты и ID лучше не включать; значения вне диапазона анализируемой лотереи будут отброшены.</div>
+        <div id="fileStatus" class="file-status" role="status" aria-live="polite"></div>
     </div>
 
     <fieldset>
@@ -292,29 +320,29 @@
         <div id="resultExact8" class="result-box"></div>
     </fieldset>
 
-    <!-- БЛОК 9: КЕНО (35 ИЗ 48) -->
+    <!-- БЛОК 9: КЕНО «ЦВЕТНЫЕ ШАРЫ» -->
     <fieldset>
-        <legend>9. Связки Кено (из 35 выпавших чисел)</legend>
+        <legend>9. Кено «Цветные шары»</legend>
         
         <div class="warning-box">
-            ⚠️ <b>Важно:</b> Чем больше чисел в связке, тем дольше будет поиск. 
-            Для 6 чисел это миллисекунды, для 10 чисел — пара секунд. 
-            Выберите нужный размер и нажмите кнопку. Не закрывайте вкладку во время расчета!
+            <b>Механика игры:</b> ставка содержит ровно 6 чисел от 1 до 48.
+            Выигрышная категория зависит от хода, на котором выпало последнее из этих шести чисел.
         </div>
 
         <div class="row">
             <div class="form-group">
-                <label>Размер связки (сколько чисел ищем вместе, от 6 до 10):</label>
-                <input type="number" id="kenoComboSize" min="6" max="10" value="6">
+                <label for="kenoMaxMove">Не позднее какого хода (6–35):</label>
+                <input type="number" id="kenoMaxMove" min="6" max="35" value="12">
             </div>
             <div class="form-group">
-                <label>Минимум "ходов" (совпадений в архиве, от 6 до 35):</label>
-                <input type="number" id="kenoMinHits" min="6" max="35" value="6">
+                <label for="kenoMinHits">Минимум тиражей с совпадением:</label>
+                <input type="number" id="kenoMinHits" min="1" value="2">
             </div>
         </div>
 
-        <div class="note">Архив Кено обычно содержит 35 чисел от 1 до 48. Скрипт найдет комбинации, которые ВМЕСТЕ встречались в одном тираже указанное минимальное количество раз.</div>
-        <button id="btnKenoScan" onclick="scanKenoCombos()">Найти повторяющиеся связки Кено</button>
+        <div class="note">Поддерживаются два формата: первые 6 шаров с сайта либо полные 35 шаров в порядке выпадения. Для архива из 6 шаров анализируется только 6-й ход.</div>
+        <div id="kenoColorLegend" class="keno-legend" aria-label="Цветовые группы"></div>
+        <button id="btnKenoScan" onclick="scanKenoCombos()">Проанализировать «Цветные шары»</button>
         <div id="resultKeno" class="result-box"></div>
     </fieldset>
 </div>
@@ -323,6 +351,33 @@
     let globalDraws = []; 
     let globalSums = [];  
     const MAX_BALL = 80;  
+    const MAX_AUTO_COMBINATIONS = 5000000;
+    const KENO_WORK_LIMIT = 3000000;
+    const KENO_MAP_LIMIT = 350000;
+    const KENO_COLORS = [
+        { name: 'Красная', color: '#d83b3b', text: '#fff', nums: [1, 9, 17, 25, 33, 41] },
+        { name: 'Зелёная', color: '#2e9f55', text: '#fff', nums: [2, 10, 18, 26, 34, 42] },
+        { name: 'Синяя', color: '#3277d5', text: '#fff', nums: [3, 11, 19, 27, 35, 43] },
+        { name: 'Фиолетовая', color: '#8353bd', text: '#fff', nums: [4, 12, 20, 28, 36, 44] },
+        { name: 'Коричневая', color: '#8a593c', text: '#fff', nums: [5, 13, 21, 29, 37, 45] },
+        { name: 'Жёлтая', color: '#f2c94c', text: '#292929', nums: [6, 14, 22, 30, 38, 46] },
+        { name: 'Оранжевая', color: '#f28b30', text: '#fff', nums: [7, 15, 23, 31, 39, 47] },
+        { name: 'Чёрная', color: '#2b2b2b', text: '#fff', nums: [8, 16, 24, 32, 40, 48] }
+    ];
+
+    const fileInputElement = document.getElementById('fileInput');
+    fileInputElement.addEventListener('change', () => {
+        const file = fileInputElement.files[0];
+        setFileStatus(file ? `Выбран файл: ${file.name}` : '', false);
+    });
+    renderKenoLegend();
+
+    function setFileStatus(message, isError = false) {
+        const status = document.getElementById('fileStatus');
+        status.textContent = message;
+        status.classList.toggle('error', isError);
+        status.style.display = message ? 'block' : 'none';
+    }
 
     function parseFile(callback) {
         const fileInput = document.getElementById('fileInput');
@@ -330,12 +385,13 @@
         
         const reader = new FileReader();
         reader.onload = function(e) {
-            const lines = e.target.result.trim().split('\n');
+            const lines = e.target.result.replace(/^\uFEFF/, '').split(/\r?\n/);
             globalDraws = [];
-            globalSums = []; // ИСПРАВЛЕНО: здесь была ошибка (было globalesums)
+            globalSums = [];
+            let ignoredLines = 0;
 
             lines.forEach(line => {
-                line = line.replace(/{|}/g, '').trim();
+                line = line.replace(/[{}\[\]]/g, '').trim();
                 if (!line) return;
                 
                 const parts = line.split(',');
@@ -343,8 +399,10 @@
                 let sum = 0;
 
                 parts.forEach(p => {
-                    const num = parseInt(p.trim());
-                    if (!isNaN(num) && num >= 1 && num <= MAX_BALL) {
+                    const token = p.trim();
+                    if (!/^\d+$/.test(token)) return;
+                    const num = Number(token);
+                    if (Number.isInteger(num) && num >= 1 && num <= MAX_BALL) {
                         validNums.push(num);
                         sum += num;
                     }
@@ -353,12 +411,49 @@
                 if (validNums.length > 0) {
                     globalDraws.push(validNums);
                     globalSums.push(sum);
-                }
+                } else ignoredLines++;
             });
-            callback();
+            if (globalDraws.length === 0) {
+                setFileStatus('В файле не найдено строк с числами через запятую.', true);
+                alert('Не удалось распознать ни одного тиража.');
+                return;
+            }
+            setFileStatus(`Загружено строк: ${globalDraws.length}${ignoredLines ? `, пропущено: ${ignoredLines}` : ''}.`, false);
+            try {
+                const result = callback();
+                if (result && typeof result.catch === 'function') result.catch(handleOperationError);
+            } catch (error) {
+                handleOperationError(error);
+            }
+        };
+        reader.onerror = function() {
+            setFileStatus('Не удалось прочитать выбранный файл.', true);
+            alert('Не удалось прочитать выбранный файл.');
         };
         reader.readAsText(fileInput.files[0]);
         return true;
+    }
+
+    function handleOperationError(error) {
+        console.error(error);
+        alert('Во время расчёта произошла ошибка. Проверьте формат архива.');
+    }
+
+    function getValidatedDraws({ min, max, exactLength = null, unique = true }) {
+        const draws = [];
+        let rejected = 0;
+        globalDraws.forEach(rawDraw => {
+            const draw = rawDraw.filter(num => num >= min && num <= max);
+            const hasValidLength = exactLength === null || draw.length === exactLength;
+            const hasUniqueNumbers = !unique || new Set(draw).size === draw.length;
+            if (hasValidLength && hasUniqueNumbers) draws.push(draw);
+            else rejected++;
+        });
+        return { draws, rejected };
+    }
+
+    function validationNote(rejected) {
+        return rejected ? `<p class="result-meta">Пропущено строк неподходящего формата: <b>${rejected}</b>.</p>` : '';
     }
 
     // --- ЛОГИКА ГЕНЕРАЦИИ ДЛЯ 6 БЛОКА ---
@@ -492,16 +587,16 @@
     }
 
     function getIntervalsHtml(info) {
-        if (info.gap === 0) return '<p><i>Выпадали без перерывов (или 1 раз).</i></p>';
+        if (info.gap === 0) return '<p><i>Выпадали без перерывов.</i></p>';
         let html = `<p class="highlight">Повторений интервала: ${info.intervals.length}</p><ul class="interval-list">`;
-        info.intervals.forEach(iv => { html += `<li>между №${iv.startIdx + 1} и №${iv.endIdx + 1}</li>`; });
+        info.intervals.forEach(iv => { html += `<li>тиражи №${iv.startIdx + 1} — №${iv.endIdx + 1}</li>`; });
         html += '</ul>';
         return html;
     }
 
     function calculateSums() {
         if(!parseFile(() => {
-            const targets = document.getElementById('sumsInput').value.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n));
+            const targets = [...new Set(document.getElementById('sumsInput').value.split(',').map(s => Number(s.trim())).filter(Number.isFinite))];
             const box = document.getElementById('resultSums');
             if(targets.length === 0) { alert("Введите суммы"); return; }
             const hits = []; globalSums.forEach((sum, idx) => { if(targets.includes(sum)) hits.push(idx); });
@@ -511,7 +606,7 @@
 
     function calculateNums() {
         if(!parseFile(() => {
-            const targets = document.getElementById('numsInput').value.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n));
+            const targets = [...new Set(document.getElementById('numsInput').value.split(',').map(s => Number(s.trim())).filter(n => Number.isInteger(n) && n >= 1 && n <= MAX_BALL))];
             const box = document.getElementById('resultNums');
             if(targets.length === 0) { alert("Введите числа"); return; }
             const hits = []; globalDraws.forEach((draw, idx) => { if (targets.every(t => draw.includes(t))) hits.push(idx); });
@@ -530,59 +625,75 @@
         }
     }
 
-    function autoScanNums() {
+    async function autoScanNums() {
         const k = parseInt(document.getElementById('numsComboCount').value);
         if (k < 2 || k > 4) { alert("От 2 до 4."); return; }
         const btn = document.getElementById('btnScanNums'); const box = document.getElementById('resultAutoNums');
-        if(!parseFile(() => {
+        if(!parseFile(async () => {
             btn.disabled = true; btn.innerText = "Сканирую..."; box.style.display = 'block'; box.innerHTML = `<p>Перебор, подождите...</p>`;
-            setTimeout(() => {
+            try {
                 const uniqueNums = [...new Set(globalDraws.flat())].sort((a,b) => a-b);
-                const combos = getCombinations(uniqueNums, k); let bestGap = Infinity, bestResults = [];
-                for (let c = 0; c < combos.length; c++) {
-                    const combo = combos[c]; const hits = [];
-                    for (let i = 0; i < globalDraws.length; i++) { if (combo.every(num => globalDraws[i].includes(num))) hits.push(i); }
-                    if (hits.length === 0) continue;
-                    const info = getMaxGapInfo(hits, globalDraws.length);
-                    if (info.gap < bestGap) { bestGap = info.gap; bestResults = [{ combo, gap: info.gap, intervals: info.intervals }]; }
-                    else if (info.gap === bestGap) { bestResults.push({ combo, gap: info.gap, intervals: info.intervals }); if(bestResults.length > 50) break; }
+                const total = combinationCount(uniqueNums.length, k);
+                if (total > MAX_AUTO_COMBINATIONS) {
+                    box.innerHTML = `<p class="highlight">Слишком широкий перебор: ${formatNumber(total)} комбинаций.</p><p>Уменьшите размер связки или диапазон чисел в архиве.</p>`;
+                    return;
                 }
-                btn.disabled = false; btn.innerText = "Найти лучшие связки чисел"; renderAutoResults(box, bestResults, 'Числа');
-            }, 50);
+                let bestGap = Infinity, bestResults = [], bestResultsTotal = 0;
+                await forEachCombinationAsync(uniqueNums, k, combo => {
+                    const hits = [];
+                    for (let i = 0; i < globalDraws.length; i++) { if (combo.every(num => globalDraws[i].includes(num))) hits.push(i); }
+                    if (hits.length === 0) return;
+                    const info = getMaxGapInfo(hits, globalDraws.length);
+                    const record = { combo, gap: info.gap, intervals: info.intervals };
+                    if (info.gap < bestGap) { bestGap = info.gap; bestResults = [record]; bestResultsTotal = 1; }
+                    else if (info.gap === bestGap) { bestResultsTotal++; if (bestResults.length < 50) bestResults.push(record); }
+                }, (done, all) => { btn.innerText = `Сканирую... ${Math.floor(done / all * 100)}%`; });
+                renderAutoResults(box, bestResults, 'Числа', bestResultsTotal);
+            } finally {
+                btn.disabled = false; btn.innerText = "Найти лучшие связки чисел";
+            }
         })){}
     }
 
-    function autoScanSums() {
+    async function autoScanSums() {
         const k = parseInt(document.getElementById('sumsComboCount').value);
         if (k < 2 || k > 3) { alert("От 2 до 3."); return; }
         const btn = document.getElementById('btnScanSums'); const box = document.getElementById('resultAutoSums');
-        if(!parseFile(() => {
+        if(!parseFile(async () => {
             btn.disabled = true; btn.innerText = "Сканирую..."; box.style.display = 'block'; box.innerHTML = `<p>Математический перебор...</p>`;
-            setTimeout(() => {
+            try {
                 const sumIndicesMap = new Map(); globalSums.forEach((sum, idx) => { if (!sumIndicesMap.has(sum)) sumIndicesMap.set(sum, []); sumIndicesMap.get(sum).push(idx); });
                 const uniqueSums = Array.from(sumIndicesMap.keys()).sort((a,b) => a-b);
-                const combos = getCombinations(uniqueSums, k); let bestGap = Infinity, bestResults = [];
-                for (let c = 0; c < combos.length; c++) {
-                    const combo = combos[c]; const indexArrays = combo.map(sum => sumIndicesMap.get(sum));
-                    const mergedIndices = mergeSortedArrays(indexArrays); const info = getMaxGapInfo(mergedIndices, globalSums.length);
-                    if (info.gap < bestGap) { bestGap = info.gap; bestResults = [{ combo, gap: info.gap, intervals: info.intervals }]; }
-                    else if (info.gap === bestGap) { bestResults.push({ combo, gap: info.gap, intervals: info.intervals }); if(bestResults.length > 50) break; }
+                const total = combinationCount(uniqueSums.length, k);
+                if (total > MAX_AUTO_COMBINATIONS) {
+                    box.innerHTML = `<p class="highlight">Слишком широкий перебор: ${formatNumber(total)} комбинаций сумм.</p><p>Выберите связку меньшего размера.</p>`;
+                    return;
                 }
-                btn.disabled = false; btn.innerText = "Найти лучшие комбинации сумм"; renderAutoResults(box, bestResults, 'Суммы');
-            }, 50);
+                let bestGap = Infinity, bestResults = [], bestResultsTotal = 0;
+                await forEachCombinationAsync(uniqueSums, k, combo => {
+                    const indexArrays = combo.map(sum => sumIndicesMap.get(sum));
+                    const mergedIndices = mergeSortedArrays(indexArrays); const info = getMaxGapInfo(mergedIndices, globalSums.length);
+                    const record = { combo, gap: info.gap, intervals: info.intervals };
+                    if (info.gap < bestGap) { bestGap = info.gap; bestResults = [record]; bestResultsTotal = 1; }
+                    else if (info.gap === bestGap) { bestResultsTotal++; if (bestResults.length < 50) bestResults.push(record); }
+                }, (done, all) => { btn.innerText = `Сканирую... ${Math.floor(done / all * 100)}%`; });
+                renderAutoResults(box, bestResults, 'Суммы', bestResultsTotal);
+            } finally {
+                btn.disabled = false; btn.innerText = "Найти лучшие комбинации сумм";
+            }
         })){}
     }
 
-    function renderAutoResults(box, bestResults, typeName) {
+    function renderAutoResults(box, bestResults, typeName, totalResults = bestResults.length) {
         if (bestResults.length === 0) { box.innerHTML = `<p class="highlight">Ни одна комбинация не найдена.</p>`; }
         else {
-            let html = `<p>Найдено с лучшим интервалом: <b>${bestResults.length}</b></p>`;
+            let html = `<p>Найдено с лучшим интервалом: <b>${totalResults}</b></p>`;
             const showCount = Math.min(bestResults.length, 10); 
             for(let i=0; i<showCount; i++) {
                 const r = bestResults[i];
                 html += `<div class="combo-item"><p><b>${typeName}: [${r.combo.join(', ')}]</b></p><p>Макс. интервал: <span class="success">${r.gap} тиражей</span></p><div style="margin-top:5px;">${getIntervalsHtml(r)}</div></div>`;
             }
-            if(bestResults.length > 10) html += `<p>...и еще ${bestResults.length - 10} комб.</p>`;
+            if(totalResults > 10) html += `<p>Показаны первые 10 из ${totalResults}.</p>`;
             box.innerHTML = html;
         }
     }
@@ -597,10 +708,14 @@
             btn.disabled = true; btn.innerText = "Анализирую частоту..."; 
             box.style.display = 'block'; box.innerHTML = `<p>Генерация всех возможных комбинаций 1-20 и подсчет...</p>`;
             setTimeout(() => {
-                const nums1to20 = Array.from({length: 20}, (_, i) => i + 1);
-                const combos = getCombinations(nums1to20, k); const counts = new Map();
-                combos.forEach(combo => counts.set(combo.join(','), 0));
-                globalDraws.forEach(draw => { combos.forEach(combo => { if (combo.every(num => draw.includes(num))) { const key = combo.join(','); counts.set(key, counts.get(key) + 1); } }); });
+                const normalizedDraws = globalDraws.map(draw => [...new Set(draw.filter(num => num >= 1 && num <= 20))]);
+                const counts = new Map();
+                normalizedDraws.forEach(draw => {
+                    getCombinations(draw.sort((a,b) => a-b), k).forEach(combo => {
+                        const key = combo.join(',');
+                        counts.set(key, (counts.get(key) || 0) + 1);
+                    });
+                });
                 let results = []; counts.forEach((count, comboStr) => { if (count >= minHits) results.push({ combo: comboStr, count: count }); });
                 results.sort((a, b) => b.count - a.count); 
                 let screenHtml = "";
@@ -608,7 +723,7 @@
                 else {
                     screenHtml = `<p>Найдено связок: <b>${results.length}</b></p>`;
                     const showLimit = Math.min(results.length, 200); let screenTextParts = [];
-                    for(let i=0; i<showLimit; i++) { screenTextParts.push(results[i].combo); }
+                    for(let i=0; i<showLimit; i++) { screenTextParts.push(`${results[i].combo} — ${results[i].count} раз`); }
                     screenHtml += `<div class="freq-list">${screenTextParts.join('\n')}</div>`;
                     if(results.length > showLimit) { screenHtml += `<p style="text-align:center; margin-top:10px;">...показано первые 200 из ${results.length}.</p>`; }
                 }
@@ -627,8 +742,9 @@
             btn.disabled = true; btn.innerText = "Ищу дубликаты и генерирую...";
             box.style.display = 'block'; box.innerHTML = `<p>Проверяю все строки на точные совпадения 8 чисел...</p>`;
             setTimeout(() => {
+                const validation = getValidatedDraws({ min: 1, max: 20, exactLength: 8, unique: true });
                 const mapCounts = new Map();
-                globalDraws.forEach(draw => {
+                validation.draws.forEach(draw => {
                     const sortedDraw = [...draw].sort((a, b) => a - b);
                     const key = sortedDraw.join(','); 
                     mapCounts.set(key, (mapCounts.get(key) || 0) + 1);
@@ -637,15 +753,16 @@
                 mapCounts.forEach((count, comboStr) => { if (count >= minHits) results.push({ combo: comboStr, count: count }); });
                 results.sort((a, b) => b.count - a.count);
                 let screenHtml = "";
-                if (results.length === 0) { screenHtml = `<p class="highlight">Тиражей, выпадающих ${minHits} и более раз в точности с одинаковыми числами, не найдено.</p>`; }
+                if (validation.draws.length === 0) { screenHtml = `<p class="highlight">Нет корректных строк: требуется ровно 8 уникальных чисел от 1 до 20.</p>`; }
+                else if (results.length === 0) { screenHtml = `<p class="highlight">Тиражей, выпадающих ${minHits} и более раз в точности с одинаковыми числами, не найдено.</p>`; }
                 else {
                     screenHtml = `<p>Найдено комбинаций: <b>${results.length}</b></p>`;
                     screenHtml += `<div class="note" style="margin-bottom:5px; font-size:13px;">Кликните 3 раза по левой колонке, чтобы выделить ставки, затем Ctrl+C:</div>`;
                     let numsText = "", countsText = "";
-                    results.forEach(r => { numsText += r.combo + getExtraNumbersString() + "\n"; countsText += "Выпало " + r.count + " раз\n"; });
+                    results.forEach(r => { numsText += r.combo + getExtraNumbersString() + "\n"; countsText += "Повторов: " + r.count + "\n"; });
                     screenHtml += `<div class="dup-container"><div class="dup-col-nums">${numsText.trim()}</div><div class="dup-col-counts">${countsText.trim()}</div></div>`;
                 }
-                box.innerHTML = screenHtml; btn.disabled = false; btn.innerText = "Найти и сгенерировать ставки";
+                box.innerHTML = validationNote(validation.rejected) + screenHtml; btn.disabled = false; btn.innerText = "Найти и сгенерировать ставки";
             }, 50);
         })){}
     }
@@ -660,8 +777,9 @@
             btn.disabled = true; btn.innerText = "Ищу дубликаты 4 чисел и генерирую...";
             box.style.display = 'block'; box.innerHTML = `<p>Проверяю все строки на точные совпадения 4 чисел (1-24)...</p>`;
             setTimeout(() => {
+                const validation = getValidatedDraws({ min: 1, max: 24, exactLength: 4, unique: true });
                 const mapCounts = new Map();
-                globalDraws.forEach(draw => {
+                validation.draws.forEach(draw => {
                     const sortedDraw = [...draw].sort((a, b) => a - b);
                     const key = sortedDraw.join(','); 
                     mapCounts.set(key, (mapCounts.get(key) || 0) + 1);
@@ -670,87 +788,290 @@
                 mapCounts.forEach((count, comboStr) => { if (count >= minHits) results.push({ combo: comboStr, count: count }); });
                 results.sort((a, b) => b.count - a.count);
                 let screenHtml = "";
-                if (results.length === 0) { screenHtml = `<p class="highlight">Тиражей, выпадающих ${minHits} и более раз в точности с одинаковыми 4 числами, не найдено.</p>`; }
+                if (validation.draws.length === 0) { screenHtml = `<p class="highlight">Нет корректных строк: требуется ровно 4 уникальных числа от 1 до 24.</p>`; }
+                else if (results.length === 0) { screenHtml = `<p class="highlight">Тиражей, выпадающих ${minHits} и более раз в точности с одинаковыми 4 числами, не найдено.</p>`; }
                 else {
                     screenHtml = `<p>Найдено комбинаций: <b>${results.length}</b></p>`;
                     screenHtml += `<div class="note" style="margin-bottom:5px; font-size:13px;">Кликните 3 раза по левой колонке, чтобы выделить ставки (4 из 24 + поля), затем Ctrl+C:</div>`;
                     let numsText = "", countsText = "";
-                    results.forEach(r => { numsText += r.combo + getExtraNumbersString24() + "\n"; countsText += "Выпало " + r.count + " раз\n"; });
-                    screenHtml += `<div class="dup-container"><div class="dup-col-counts">${countsText.trim()}</div><div class="dup-col-nums">${numsText.trim()}</div></div>`;
+                    results.forEach(r => { numsText += r.combo + getExtraNumbersString24() + "\n"; countsText += "Повторов: " + r.count + "\n"; });
+                    screenHtml += `<div class="dup-container"><div class="dup-col-nums">${numsText.trim()}</div><div class="dup-col-counts">${countsText.trim()}</div></div>`;
                 }
-                box.innerHTML = screenHtml; btn.disabled = false; btn.innerText = "Найти и сгенерировать ставки";
+                box.innerHTML = validationNote(validation.rejected) + screenHtml; btn.disabled = false; btn.innerText = "Найти и сгенерировать ставки";
             }, 50);
         })){}
     }
 
-    // --- БЛОК 9: КЕНО (35 ИЗ 48) ---
-    function scanKenoCombos() {
-        const comboSize = Math.min(parseInt(document.getElementById('kenoComboSize').value) || 6, 10);
-        const minHits = parseInt(document.getElementById('kenoMinHits').value) || 6;
-        const btn = document.getElementById("btnKenoScan");
-        const box = document.getElementById("resultKeno");
-
-        if (comboSize < 6) { alert("Размер связки от 6 до 10."); return; }
-        if (minHits < 6) { alert("Минимум ходов должно быть от 6 до 35."); return; }
+    // --- БЛОК 8 ---
+    function scanExact8Matches() {
+        const minHits = parseInt(document.getElementById('exact8MinHits').value);
+        const format = document.getElementById('exact8Format').value;
+        const btn = document.getElementById('btnExact8Scan');
+        const box = document.getElementById('resultExact8');
+        if (minHits < 2) { alert('Минимум повторов должно быть 2 или больше.'); return; }
 
         if(!parseFile(() => {
-            btn.disabled = true; btn.innerText = "Анализирую Кено (может занять пару секунд)...";
-            box.style.display = 'block'; 
-            box.innerHTML = `<p>Генерация комбинаций из 35 чисел и подсчет совпадений по архиву...</p>`;
+            btn.disabled = true;
+            btn.innerText = 'Ищу дубликаты полей...';
+            box.style.display = 'block';
+            box.innerHTML = '<p>Проверяю совпадения с сохранением границы между полями...</p>';
 
             setTimeout(() => {
-                const countsMap = new Map();
-                
-                globalDraws.forEach(draw => {
-                    // Берется 35 уникальных чисел из 48
-                    let unique48 = [...new Set(draw)].sort((a,b) => a - b);
-                    let keno35 = unique48.slice(0, 35);
-                    
-                    if (keno35.length < 35) return; 
+                const mapCounts = new Map();
+                let rejected = 0;
 
-                    // Генерируем комбинации и считаем
-                    const combos = getCombinations(keno35, comboSize);
-                    combos.forEach(combo => {
-                        const key = combo.join(',');
-                        countsMap.set(key, (countsMap.get(key) || 0) + 1);
-                    });
+                globalDraws.forEach(rawDraw => {
+                    const draw = rawDraw.filter(num => num >= 1 && num <= 20);
+                    let key = '';
+                    let display = '';
+
+                    if (format === '8nums') {
+                        if (draw.length !== 8) { rejected++; return; }
+                        const field1 = draw.slice(0, 4);
+                        const field2 = draw.slice(4, 8);
+                        if (new Set(field1).size !== 4 || new Set(field2).size !== 4) { rejected++; return; }
+                        field1.sort((a,b) => a-b);
+                        field2.sort((a,b) => a-b);
+                        key = `${field1.join(',')}|${field2.join(',')}`;
+                        display = `${field1.join(',')},${field2.join(',')}`;
+                    } else {
+                        if (draw.length !== 4 || new Set(draw).size !== 4) { rejected++; return; }
+                        const field1 = [...draw].sort((a,b) => a-b);
+                        key = field1.join(',');
+                        display = key;
+                    }
+
+                    const current = mapCounts.get(key) || { count: 0, display };
+                    current.count++;
+                    mapCounts.set(key, current);
                 });
 
-                let results = [];
-                countsMap.forEach((count, comboStr) => { 
-                    if (count >= minHits) results.push({ combo: comboStr, count: count }); 
-                });
-
-                // Сортируем по убыванию частоты
-                results.sort((a, b) => b.count - a.count);
-
-                let screenHtml = "";
-                if (results.length === 0) {
-                    screenHtml = `<p class="highlight">Связок, выпадающих ${minHits} и более раз вместе, не найдено.</p>`;
+                const results = [...mapCounts.values()].filter(item => item.count >= minHits).sort((a,b) => b.count - a.count || a.display.localeCompare(b.display));
+                let html = validationNote(rejected);
+                if (mapCounts.size === 0) {
+                    html += `<p class="highlight">Нет корректных строк: для выбранного формата требуется ${format === '8nums' ? '8 чисел (4 + 4)' : '4 числа'} от 1 до 20.</p>`;
+                } else if (results.length === 0) {
+                    html += `<p class="highlight">Полных повторений ${minHits} и более раз не найдено.</p>`;
                 } else {
-                    screenHtml = `<p>Найдено связок: <b>${results.length}</b></p>`;
-                    screenHtml += `<div class="note" style="margin-bottom:5px; font-size:13px;">Кликните 3 раза по левой колонке, чтобы выделить комбинации, затем Ctrl+C:</div>`;
-                    let numsText = "", countsText = "";
-                    
-                    results.forEach(r => { numsText += r.combo + "\n"; countsText += "Ходов: " + r.count + "\n"; });
-                    
-                    screenHtml += `
-                        <div class="dup-container">
-                            <div class="dup-col-counts">${countsText.trim()}</div>
-                            <div class="dup-col-nums">${numsText.trim()}</div>
-                        </div>
-                    `;
+                    let numsText = '', countsText = '';
+                    results.forEach(item => {
+                        numsText += item.display + (format === '4nums' ? getExtraNumbersString8() : '') + '\n';
+                        countsText += `Повторов: ${item.count}\n`;
+                    });
+                    html += `<p>Найдено комбинаций: <b>${results.length}</b></p>`;
+                    html += '<div class="note" style="margin-bottom:5px;">Левая колонка содержит готовые ставки с правильной границей полей:</div>';
+                    html += `<div class="dup-container"><div class="dup-col-nums">${numsText.trim()}</div><div class="dup-col-counts">${countsText.trim()}</div></div>`;
                 }
 
-                box.innerHTML = screenHtml;
-                btn.disabled = false; 
-                btn.innerText = "Найти повторяющиеся связки Кено";
-
+                box.innerHTML = html;
+                btn.disabled = false;
+                btn.innerText = 'Найти и сгенерировать ставки';
             }, 50);
         })){}
+    }
+
+    // --- БЛОК 9: КЕНО «ЦВЕТНЫЕ ШАРЫ» ---
+    async function scanKenoCombos() {
+        const maxMove = parseInt(document.getElementById('kenoMaxMove').value);
+        const minHits = parseInt(document.getElementById('kenoMinHits').value);
+        const btn = document.getElementById('btnKenoScan');
+        const box = document.getElementById('resultKeno');
+
+        if (maxMove < 6 || maxMove > 35) { alert('Ход должен быть от 6 до 35.'); return; }
+        if (minHits < 1) { alert('Минимум тиражей должен быть 1 или больше.'); return; }
+
+        if(!parseFile(async () => {
+            btn.disabled = true;
+            btn.innerText = 'Анализирую «Цветные шары»...';
+            box.style.display = 'block';
+            box.innerHTML = '<p>Определяю формат архива и порядок выпадения шаров...</p>';
+
+            try {
+                const archive = parseKenoArchive();
+                if (archive.full.length === 0 && archive.firstSix.length === 0) {
+                    box.innerHTML = validationNote(archive.rejected) + '<p class="highlight">Архив Кено не распознан. В каждой строке должно быть ровно 6 либо 35 уникальных чисел от 1 до 48.</p>';
+                    return;
+                }
+
+                if (archive.full.length === 0) {
+                    const shortCounts = new Map();
+                    archive.firstSix.forEach(draw => {
+                        const key = [...draw].sort((a,b) => a-b).join(',');
+                        shortCounts.set(key, (shortCounts.get(key) || 0) + 1);
+                    });
+                    const results = [...shortCounts.entries()]
+                        .filter(([, count]) => count >= minHits)
+                        .map(([combo, count]) => ({ combo, count, bestMove: 6, averageMove: 6, worstMove: 6 }))
+                        .sort((a,b) => b.count - a.count || a.combo.localeCompare(b.combo));
+
+                    let html = `<p class="result-meta"><b>Распознан архив первых 6 шаров:</b> ${archive.firstSix.length} тиражей. На сайте это сокращённый формат; для ходов 7–35 нужны полные последовательности.</p>`;
+                    html += validationNote(archive.rejected);
+                    html += renderKenoResults(results, minHits, 6);
+                    html += renderKenoColorStats([], archive.firstSix);
+                    box.innerHTML = html;
+                    return;
+                }
+
+                const analysisDraws = archive.full.map(draw => draw.slice(0, maxMove));
+                if (maxMove === 6) analysisDraws.push(...archive.firstSix);
+                const combinationsPerDraw = combinationCount(maxMove, 6);
+                const estimatedWork = archive.full.length * combinationsPerDraw + (maxMove === 6 ? archive.firstSix.length : 0);
+                const colorStatsHtml = renderKenoColorStats(archive.full, []);
+
+                if (estimatedWork > KENO_WORK_LIMIT) {
+                    box.innerHTML = `<p class="highlight">Для точного перебора потребуется ${formatNumber(estimatedWork)} операций — это слишком много для безопасной работы браузера.</p><p>Уменьшите номер хода. Например, ход 12 требует только 924 комбинации на тираж.</p>${validationNote(archive.rejected)}${colorStatsHtml}`;
+                    return;
+                }
+
+                const countsMap = new Map();
+                let processedBefore = 0;
+                let aborted = false;
+
+                for (let drawIndex = 0; drawIndex < analysisDraws.length; drawIndex++) {
+                    const draw = analysisDraws[drawIndex];
+                    const drawTotal = combinationCount(draw.length, 6);
+                    const scanInfo = await forEachCombinationAsync(draw, 6, combo => {
+                        const key = [...combo].sort((a,b) => a-b).join(',');
+                        countsMap.set(key, (countsMap.get(key) || 0) + 1);
+                        if (countsMap.size > KENO_MAP_LIMIT) return false;
+                    }, done => {
+                        const overall = processedBefore + done;
+                        btn.innerText = `Анализирую... ${Math.min(99, Math.floor(overall / estimatedWork * 100))}%`;
+                    });
+                    processedBefore += drawTotal;
+                    if (scanInfo.aborted) { aborted = true; break; }
+                }
+
+                if (aborted) {
+                    box.innerHTML = `<p class="highlight">Найдено слишком много разных комбинаций для хранения в памяти.</p><p>Уменьшите номер хода.</p>${validationNote(archive.rejected)}${colorStatsHtml}`;
+                    return;
+                }
+
+                const results = [];
+                countsMap.forEach((count, combo) => {
+                    if (count < minHits) return;
+                    const numbers = combo.split(',').map(Number);
+                    const moves = archive.full.map(draw => getKenoCompletionMove(draw, numbers)).filter(move => move !== null && move <= maxMove);
+                    if (maxMove === 6) archive.firstSix.forEach(draw => { if (numbers.every(num => draw.includes(num))) moves.push(6); });
+                    results.push({
+                        combo,
+                        count,
+                        bestMove: Math.min(...moves),
+                        averageMove: moves.reduce((sum, move) => sum + move, 0) / moves.length,
+                        worstMove: Math.max(...moves)
+                    });
+                });
+                results.sort((a,b) => b.count - a.count || a.averageMove - b.averageMove || a.combo.localeCompare(b.combo));
+
+                let html = `<p class="result-meta"><b>Полный архив:</b> ${archive.full.length} тиражей по 35 шаров${archive.firstSix.length ? `; строк только с первыми шестью: ${archive.firstSix.length}${maxMove === 6 ? ' (учтены)' : ' (не учитывались)'}` : ''}.</p>`;
+                html += validationNote(archive.rejected);
+                html += renderKenoResults(results, minHits, maxMove);
+                html += colorStatsHtml;
+                box.innerHTML = html;
+            } finally {
+                btn.disabled = false;
+                btn.innerText = 'Проанализировать «Цветные шары»';
+            }
+        })){}
+    }
+
+    function parseKenoArchive() {
+        const full = [], firstSix = [];
+        let rejected = 0;
+        globalDraws.forEach(rawDraw => {
+            const draw = rawDraw.filter(num => num >= 1 && num <= 48);
+            if (draw.length === 35 && new Set(draw).size === 35) full.push(draw);
+            else if (draw.length === 6 && new Set(draw).size === 6) firstSix.push(draw);
+            else rejected++;
+        });
+        return { full, firstSix, rejected };
+    }
+
+    function getKenoCompletionMove(draw, numbers) {
+        let lastPosition = 0;
+        for (const number of numbers) {
+            const position = draw.indexOf(number);
+            if (position === -1) return null;
+            lastPosition = Math.max(lastPosition, position + 1);
+        }
+        return lastPosition;
+    }
+
+    function renderKenoResults(results, minHits, maxMove) {
+        if (results.length === 0) return `<p class="highlight">Шестёрок, завершавшихся не позднее ${maxMove}-го хода минимум в ${minHits} тиражах, не найдено.</p>`;
+        const shown = results.slice(0, 100);
+        let html = `<p>Найдено шестёрок: <b>${results.length}</b>. ${results.length > shown.length ? `Показаны первые ${shown.length}.` : ''}</p>`;
+        shown.forEach(result => {
+            const balls = result.combo.split(',').map(Number).map(renderKenoBall).join('');
+            html += `<div class="combo-item"><div>${balls}</div><p>Совпало в тиражах: <b>${result.count}</b> | лучший ход: <b>${result.bestMove}</b> | средний: <b>${result.averageMove.toFixed(1)}</b> | самый поздний: <b>${result.worstMove}</b></p></div>`;
+        });
+        return html;
+    }
+
+    function renderKenoColorStats(fullDraws, firstSixDraws) {
+        const draws = fullDraws.length ? fullDraws : firstSixDraws;
+        if (!draws.length) return '';
+        const isFull = fullDraws.length > 0;
+        let html = `<div style="margin-top:16px; padding-top:12px; border-top:1px dashed #bbb;"><p><b>${isFull ? 'Полные цветовые группы к 35-му ходу' : 'Полная цветовая группа среди первых 6 шаров'}</b></p>`;
+        KENO_COLORS.forEach(group => {
+            const moves = draws.map(draw => getKenoCompletionMove(draw, group.nums)).filter(move => move !== null && (!isFull || move <= 35));
+            const dot = `<span class="keno-color-dot" style="background:${group.color}"></span>`;
+            html += `<p>${dot} ${group.name}: <b>${moves.length}</b> из ${draws.length}${moves.length ? `, средний ход ${(moves.reduce((a,b) => a+b, 0) / moves.length).toFixed(1)}` : ''}</p>`;
+        });
+        html += '</div>';
+        return html;
+    }
+
+    function renderKenoBall(number) {
+        const group = KENO_COLORS[(number - 1) % 8];
+        return `<span class="keno-ball" title="${group.name} группа" style="background:${group.color};color:${group.text}">${number}</span>`;
+    }
+
+    function renderKenoLegend() {
+        const legend = document.getElementById('kenoColorLegend');
+        legend.innerHTML = KENO_COLORS.map(group => `<span class="keno-color-name"><span class="keno-color-dot" style="background:${group.color}"></span>${group.name}</span>`).join('');
     }
 
     // --- ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ---
+    function combinationCount(n, k) {
+        if (k < 0 || k > n) return 0;
+        k = Math.min(k, n - k);
+        let result = 1;
+        for (let i = 1; i <= k; i++) result = result * (n - k + i) / i;
+        return Math.round(result);
+    }
+
+    function formatNumber(value) {
+        return Math.round(value).toLocaleString('ru-RU');
+    }
+
+    async function forEachCombinationAsync(arr, k, visitor, onProgress = null) {
+        const total = combinationCount(arr.length, k);
+        if (!total) return { processed: 0, aborted: false };
+        const indices = Array.from({ length: k }, (_, i) => i);
+        let processed = 0;
+
+        while (true) {
+            const combo = indices.map(index => arr[index]);
+            processed++;
+            if (visitor(combo) === false) return { processed, aborted: true };
+
+            if (processed % 2000 === 0) {
+                if (onProgress) onProgress(processed, total);
+                await new Promise(resolve => setTimeout(resolve, 0));
+            }
+
+            let position = k - 1;
+            while (position >= 0 && indices[position] === arr.length - k + position) position--;
+            if (position < 0) break;
+            indices[position]++;
+            for (let i = position + 1; i < k; i++) indices[i] = indices[i - 1] + 1;
+        }
+
+        if (onProgress) onProgress(processed, total);
+        return { processed, aborted: false };
+    }
+
     function getCombinations(arr, k) {
         const results = [];
         function combo(start, combo) {
