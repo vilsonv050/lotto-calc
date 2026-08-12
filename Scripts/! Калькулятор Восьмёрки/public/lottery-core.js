@@ -916,6 +916,15 @@ export function runStrategyBacktest(
   price,
   rawSettings = {},
 ) {
+  const trigger = [
+    "any",
+    "profit",
+    "recovery",
+    "category",
+    "exclude_winners",
+  ].includes(rawSettings.trigger)
+    ? rawSettings.trigger
+    : "any";
   const settings = {
     mode: rawSettings.mode === "independent" ? "independent" : "real",
     baseCopies: Math.max(1, Math.floor(numberOr(rawSettings.baseCopies, 1))),
@@ -923,34 +932,82 @@ export function runStrategyBacktest(
     step: Math.max(1, numberOr(rawSettings.step, 1)),
     maxCopies: Math.max(1, Math.floor(numberOr(rawSettings.maxCopies, 32))),
     resetOnWin: rawSettings.resetOnWin !== false,
-    stopOnWin: Boolean(rawSettings.stopOnWin),
-    trigger: ["any", "profit", "recovery", "category"].includes(
-      rawSettings.trigger,
-    )
-      ? rawSettings.trigger
-      : "any",
+    stopOnWin:
+      trigger === "exclude_winners" ? false : Boolean(rawSettings.stopOnWin),
+    trigger,
     categoryIndex: Math.min(
       PAYOUT_CATEGORIES.length - 1,
       Math.max(0, Math.floor(numberOr(rawSettings.categoryIndex, 4))),
     ),
     budget: Math.max(0, numberOr(rawSettings.budget, 0)),
+    discountPercent: Math.min(
+      100,
+      Math.max(0, numberOr(rawSettings.discountPercent, 0)),
+    ),
+    stopScope: rawSettings.stopScope === "day" ? "day" : "scope",
   };
+  const roundCurrency = (value) =>
+    Math.round((Number(value) + Number.EPSILON) * 100) / 100;
+  const applyPurchaseDiscount = (grossCost) =>
+    roundCurrency(grossCost * (1 - settings.discountPercent / 100));
   const orderedDraws = sortDrawsNewest(draws).reverse();
   const entries = [];
+  const dailyStops = [];
+  const stoppedDayKeys = new Set();
   let totalCost = 0;
+  let totalGrossCost = 0;
+  let totalExcludedTickets = 0;
   let totalPrize = 0;
   let balance = 0;
   let maxDrawdown = 0;
   let maxCopiesUsed = settings.baseCopies;
   let currentLossStreak = 0;
   let longestLossStreak = 0;
+  let maxExcludedTickets = 0;
   let stoppedReason = "";
+
+  const drawDayKey = (draw) =>
+    archiveDay(draw?.date)?.key || String(draw?.date || "undated");
+  const addDailyStop = (draw, reason) => {
+    const dayKey = drawDayKey(draw);
+    if (stoppedDayKeys.has(dayKey)) return;
+    stoppedDayKeys.add(dayKey);
+    dailyStops.push({
+      dayKey,
+      date: draw?.date || "",
+      drawNum: draw?.drawNum || "",
+      reason,
+    });
+  };
+  const addSkippedEntry = (draw, reason, details = {}) => {
+    entries.push({
+      drawNum: draw?.drawNum || "",
+      date: draw?.date || "",
+      drawMain: [...(draw?.main || [])],
+      drawExtra: Number(draw?.extra || 0),
+      copies: 0,
+      grossCost: 0,
+      discountAmount: 0,
+      cost: 0,
+      prize: 0,
+      profit: 0,
+      balance,
+      triggered: false,
+      activeTickets: 0,
+      skipped: true,
+      skipReason: reason,
+      ...details,
+    });
+  };
 
   if (!tickets.length || !orderedDraws.length) {
     return {
       settings,
       entries,
       totalCost,
+      totalGrossCost,
+      totalDiscount: 0,
+      totalExcludedTickets,
       totalPrize,
       profit: 0,
       roi: 0,
@@ -958,8 +1015,13 @@ export function runStrategyBacktest(
       endingBalance: 0,
       maxDrawdown,
       maxCopiesUsed,
+      maxExcludedTickets,
       longestLossStreak,
       stoppedReason: !tickets.length ? "Нет ставок" : "Нет тиражей",
+      dailyStops,
+      periodDrawCount: orderedDraws.length,
+      calculatedDrawCount: 0,
+      skippedDrawCount: 0,
       activeTickets: tickets.length,
     };
   }
@@ -967,37 +1029,135 @@ export function runStrategyBacktest(
   if (settings.mode === "real") {
     let copies = settings.baseCopies;
     let active = true;
+    let activeDayKey = "";
+    let dayCost = 0;
+    let dayBalance = 0;
+    let stopReason = "";
+    let excludedNextDraw = new Set();
     for (const draw of orderedDraws) {
-      if (!active) break;
-      const evaluation = evaluateTickets(tickets, draw, payouts, price);
-      const drawCost = evaluation.cost * copies;
-      if (settings.budget && totalCost + drawCost > settings.budget) {
-        stoppedReason = "Достигнут лимит затрат";
-        break;
+      const currentDayKey = drawDayKey(draw);
+      if (settings.stopScope === "day" && currentDayKey !== activeDayKey) {
+        activeDayKey = currentDayKey;
+        copies = settings.baseCopies;
+        active = true;
+        dayCost = 0;
+        dayBalance = 0;
+        stopReason = "";
+        currentLossStreak = 0;
+      }
+      const excludedThisDraw =
+        settings.trigger === "exclude_winners"
+          ? new Set(excludedNextDraw)
+          : new Set();
+      excludedNextDraw = new Set();
+      totalExcludedTickets += excludedThisDraw.size;
+      maxExcludedTickets = Math.max(
+        maxExcludedTickets,
+        excludedThisDraw.size,
+      );
+      if (!active) {
+        addSkippedEntry(
+          draw,
+          stopReason || stoppedReason || "Расчёт остановлен",
+          { excludedTicketIndexes: [...excludedThisDraw] },
+        );
+        continue;
+      }
+      const eligibleTickets = tickets
+        .map((ticket, index) => ({ ticket, index: index + 1 }))
+        .filter((item) => !excludedThisDraw.has(item.index));
+      if (!eligibleTickets.length) {
+        addSkippedEntry(
+          draw,
+          `Все ${excludedThisDraw.size} выигравших ставок пропускают этот тираж`,
+          {
+            excludedTicketIndexes: [...excludedThisDraw],
+            purchasedTickets: 0,
+          },
+        );
+        continue;
+      }
+      const evaluation = evaluateTickets(
+        eligibleTickets.map((item) => item.ticket),
+        draw,
+        payouts,
+        price,
+      );
+      const grossDrawCost = evaluation.cost * copies;
+      const drawCost = applyPurchaseDiscount(grossDrawCost);
+      const costBeforeDraw = settings.stopScope === "day" ? dayCost : totalCost;
+      if (settings.budget && costBeforeDraw + drawCost > settings.budget) {
+        stopReason =
+          settings.stopScope === "day"
+            ? "Достигнут дневной лимит затрат"
+            : "Достигнут лимит затрат";
+        if (settings.stopScope === "day") {
+          addDailyStop(draw, stopReason);
+        } else {
+          stoppedReason = stopReason;
+        }
+        active = false;
+        addSkippedEntry(draw, stopReason, {
+          excludedTicketIndexes: [...excludedThisDraw],
+          purchasedTickets: 0,
+        });
+        continue;
       }
       const drawPrize = evaluation.prize * copies;
       const drawProfit = drawPrize - drawCost;
+      totalGrossCost += grossDrawCost;
       totalCost += drawCost;
       totalPrize += drawPrize;
       balance += drawProfit;
+      dayCost += drawCost;
+      dayBalance += drawProfit;
       maxDrawdown = Math.min(maxDrawdown, balance);
       maxCopiesUsed = Math.max(maxCopiesUsed, copies);
       const triggered = strategyTriggered(
         { ...evaluation, profit: drawProfit, prize: drawPrize },
-        balance,
+        settings.stopScope === "day" ? dayBalance : balance,
         settings,
       );
+      const winningTickets = evaluation.results
+        .filter((row) => row.prize > 0)
+        .map((row) => ({
+          index: eligibleTickets[row.index - 1].index,
+          ticket: {
+            main: [...row.ticket.main],
+            extra: [...row.ticket.extra],
+          },
+          mainMatches: row.mainMatches,
+          extraMatched: row.extraMatched,
+          combinations: row.combinations,
+          breakdown: row.breakdown.map((item) => ({ ...item })),
+          copies,
+          prizePerCopy: row.prize,
+          totalPrize: row.prize * copies,
+        }));
+      const nextExcludedTicketIndexes =
+        settings.trigger === "exclude_winners"
+          ? winningTickets.map((ticket) => ticket.index)
+          : [];
       entries.push({
         drawNum: draw.drawNum,
         date: draw.date,
+        drawMain: [...draw.main],
+        drawExtra: Number(draw.extra),
         copies,
+        grossCost: grossDrawCost,
+        discountAmount: roundCurrency(grossDrawCost - drawCost),
         cost: drawCost,
         prize: drawPrize,
         profit: drawProfit,
         balance,
         triggered,
-        activeTickets: tickets.length,
+        activeTickets: eligibleTickets.length,
+        purchasedTickets: eligibleTickets.length,
+        excludedTicketIndexes: [...excludedThisDraw],
+        nextExcludedTicketIndexes,
+        winningTickets,
       });
+      excludedNextDraw = new Set(nextExcludedTicketIndexes);
       if (drawProfit < 0) {
         currentLossStreak += 1;
         longestLossStreak = Math.max(longestLossStreak, currentLossStreak);
@@ -1007,7 +1167,12 @@ export function runStrategyBacktest(
       if (triggered) {
         if (settings.stopOnWin) {
           active = false;
-          stoppedReason = "Стратегия остановлена по условию выигрыша";
+          stopReason = "Стратегия остановлена по условию выигрыша";
+          if (settings.stopScope === "day") {
+            addDailyStop(draw, stopReason);
+          } else {
+            stoppedReason = stopReason;
+          }
         } else if (settings.resetOnWin) {
           copies = settings.baseCopies;
         }
@@ -1016,32 +1181,113 @@ export function runStrategyBacktest(
       }
     }
   } else {
-    const ticketStates = tickets.map(() => ({
-      copies: settings.baseCopies,
-      balance: 0,
-      active: true,
-    }));
+    const initialTicketStates = () =>
+      tickets.map(() => ({
+        copies: settings.baseCopies,
+        balance: 0,
+        active: true,
+      }));
+    let ticketStates = initialTicketStates();
+    let activeDayKey = "";
+    let dayCost = 0;
+    let dayStopped = false;
+    let calculationStopped = false;
+    let stopReason = "";
+    let excludedNextDraw = new Set();
     for (const draw of orderedDraws) {
+      const currentDayKey = drawDayKey(draw);
+      if (settings.stopScope === "day" && currentDayKey !== activeDayKey) {
+        activeDayKey = currentDayKey;
+        ticketStates = initialTicketStates();
+        dayCost = 0;
+        dayStopped = false;
+        stopReason = "";
+        currentLossStreak = 0;
+      }
+      const excludedThisDraw =
+        settings.trigger === "exclude_winners"
+          ? new Set(excludedNextDraw)
+          : new Set();
+      excludedNextDraw = new Set();
+      totalExcludedTickets += excludedThisDraw.size;
+      maxExcludedTickets = Math.max(
+        maxExcludedTickets,
+        excludedThisDraw.size,
+      );
+      if (dayStopped || calculationStopped) {
+        addSkippedEntry(
+          draw,
+          stopReason || stoppedReason || "Расчёт остановлен",
+          { excludedTicketIndexes: [...excludedThisDraw] },
+        );
+        continue;
+      }
+      const eligibleActiveTicketCount = ticketStates.filter(
+        (ticketState, index) =>
+          ticketState.active && !excludedThisDraw.has(index + 1),
+      ).length;
+      if (
+        settings.trigger === "exclude_winners" &&
+        excludedThisDraw.size &&
+        !eligibleActiveTicketCount &&
+        ticketStates.some((ticketState) => ticketState.active)
+      ) {
+        addSkippedEntry(
+          draw,
+          `Все ${excludedThisDraw.size} выигравших ставок пропускают этот тираж`,
+          {
+            excludedTicketIndexes: [...excludedThisDraw],
+            purchasedTickets: 0,
+          },
+        );
+        continue;
+      }
       let drawCost = 0;
+      let grossDrawCost = 0;
       let drawPrize = 0;
       let triggeredCount = 0;
       const copiesUsed = [];
+      const winningTickets = [];
       for (let index = 0; index < tickets.length; index += 1) {
         const ticketState = ticketStates[index];
-        if (!ticketState.active) continue;
+        if (!ticketState.active || excludedThisDraw.has(index + 1)) continue;
         const evaluation = evaluateTickets([tickets[index]], draw, payouts, price);
-        const ticketCost = evaluation.cost * ticketState.copies;
-        if (settings.budget && totalCost + drawCost + ticketCost > settings.budget) {
+        const copiesForTicket = ticketState.copies;
+        const grossTicketCost = evaluation.cost * copiesForTicket;
+        const ticketCost = applyPurchaseDiscount(grossTicketCost);
+        const costBeforeDraw = settings.stopScope === "day" ? dayCost : totalCost;
+        if (
+          settings.budget &&
+          costBeforeDraw + drawCost + ticketCost > settings.budget
+        ) {
           ticketState.active = false;
           continue;
         }
-        const ticketPrize = evaluation.prize * ticketState.copies;
+        const ticketPrize = evaluation.prize * copiesForTicket;
         const ticketProfit = ticketPrize - ticketCost;
+        grossDrawCost += grossTicketCost;
         drawCost += ticketCost;
         drawPrize += ticketPrize;
         ticketState.balance += ticketProfit;
-        copiesUsed.push(ticketState.copies);
-        maxCopiesUsed = Math.max(maxCopiesUsed, ticketState.copies);
+        copiesUsed.push(copiesForTicket);
+        maxCopiesUsed = Math.max(maxCopiesUsed, copiesForTicket);
+        if (ticketPrize > 0) {
+          const row = evaluation.results[0];
+          winningTickets.push({
+            index: index + 1,
+            ticket: {
+              main: [...row.ticket.main],
+              extra: [...row.ticket.extra],
+            },
+            mainMatches: row.mainMatches,
+            extraMatched: row.extraMatched,
+            combinations: row.combinations,
+            breakdown: row.breakdown.map((item) => ({ ...item })),
+            copies: copiesForTicket,
+            prizePerCopy: row.prize,
+            totalPrize: ticketPrize,
+          });
+        }
         const triggered = strategyTriggered(
           {
             ...evaluation,
@@ -1054,21 +1300,43 @@ export function runStrategyBacktest(
         if (triggered) {
           triggeredCount += 1;
           if (settings.stopOnWin) ticketState.active = false;
-          else if (settings.resetOnWin) ticketState.copies = settings.baseCopies;
+          else if (settings.resetOnWin) {
+            ticketState.copies = settings.baseCopies;
+          }
         } else {
           ticketState.copies = nextCopies(ticketState.copies, settings);
         }
       }
       if (!copiesUsed.length) {
-        stoppedReason = settings.budget
-          ? "Достигнут лимит затрат"
+        const reason = settings.budget
+          ? settings.stopScope === "day"
+            ? "Достигнут дневной лимит затрат"
+            : "Достигнут лимит затрат"
           : "Все ставки остановлены";
-        break;
+        if (settings.stopScope === "day") {
+          addDailyStop(draw, reason);
+          dayStopped = true;
+        } else {
+          stoppedReason = reason;
+          calculationStopped = true;
+        }
+        stopReason = reason;
+        addSkippedEntry(draw, reason, {
+          excludedTicketIndexes: [...excludedThisDraw],
+          purchasedTickets: 0,
+        });
+        continue;
       }
+      const nextExcludedTicketIndexes =
+        settings.trigger === "exclude_winners"
+          ? winningTickets.map((ticket) => ticket.index)
+          : [];
       const drawProfit = drawPrize - drawCost;
+      totalGrossCost += grossDrawCost;
       totalCost += drawCost;
       totalPrize += drawPrize;
       balance += drawProfit;
+      dayCost += drawCost;
       maxDrawdown = Math.min(maxDrawdown, balance);
       if (drawProfit < 0) {
         currentLossStreak += 1;
@@ -1079,21 +1347,49 @@ export function runStrategyBacktest(
       entries.push({
         drawNum: draw.drawNum,
         date: draw.date,
+        drawMain: [...draw.main],
+        drawExtra: Number(draw.extra),
         copies:
           copiesUsed.length === 1
             ? copiesUsed[0]
             : `${Math.min(...copiesUsed)}–${Math.max(...copiesUsed)}`,
+        grossCost: grossDrawCost,
+        discountAmount: roundCurrency(grossDrawCost - drawCost),
         cost: drawCost,
         prize: drawPrize,
         profit: drawProfit,
         balance,
         triggered: triggeredCount,
         activeTickets: ticketStates.filter((item) => item.active).length,
+        purchasedTickets: copiesUsed.length,
+        excludedTicketIndexes: [...excludedThisDraw],
+        nextExcludedTicketIndexes,
+        winningTickets,
       });
+      excludedNextDraw = new Set(nextExcludedTicketIndexes);
+      if (
+        settings.stopScope === "day" &&
+        !ticketStates.some((item) => item.active)
+      ) {
+        stopReason = "Все ставки остановлены по условию выигрыша";
+        addDailyStop(draw, stopReason);
+        dayStopped = true;
+      } else if (
+        settings.stopScope === "scope" &&
+        !ticketStates.some((item) => item.active)
+      ) {
+        stopReason = "Все ставки остановлены по условию выигрыша";
+        stoppedReason = stopReason;
+        calculationStopped = true;
+      }
     }
     if (!stoppedReason && !ticketStates.some((item) => item.active)) {
       stoppedReason = "Все ставки остановлены";
     }
+  }
+
+  if (settings.stopScope === "day" && dailyStops.length) {
+    stoppedReason = `Период пройден · дневных остановок: ${dailyStops.length}`;
   }
 
   const startingBalance = totalCost;
@@ -1103,11 +1399,16 @@ export function runStrategyBacktest(
     fundedBalance += entry.profit;
     entry.balance = fundedBalance;
   });
+  const calculatedDrawCount = entries.filter((entry) => !entry.skipped).length;
+  const skippedDrawCount = entries.length - calculatedDrawCount;
 
   return {
     settings,
     entries,
     totalCost,
+    totalGrossCost,
+    totalDiscount: roundCurrency(totalGrossCost - totalCost),
+    totalExcludedTickets,
     totalPrize,
     profit: totalPrize - totalCost,
     roi: totalCost > 0 ? ((totalPrize - totalCost) / totalCost) * 100 : 0,
@@ -1115,12 +1416,81 @@ export function runStrategyBacktest(
     endingBalance: fundedBalance,
     maxDrawdown,
     maxCopiesUsed,
+    maxExcludedTickets,
     longestLossStreak,
     stoppedReason,
+    dailyStops,
+    periodDrawCount: orderedDraws.length,
+    calculatedDrawCount,
+    skippedDrawCount,
     activeTickets:
-      entries.at(-1)?.activeTickets ??
-      (settings.mode === "real" ? tickets.length : 0),
+      settings.stopScope === "day"
+        ? tickets.length
+        : entries.at(-1)?.activeTickets ??
+          (settings.mode === "real" ? tickets.length : 0),
   };
+}
+
+export function summarizeStrategyWins(entries) {
+  const statistics = Object.fromEntries(
+    PAYOUT_CATEGORIES.map((category) => [
+      category,
+      {
+        category,
+        drawCount: 0,
+        ticketCount: 0,
+        combinations: 0,
+        paidCombinations: 0,
+        prize: 0,
+        draws: [],
+      },
+    ]),
+  );
+
+  (Array.isArray(entries) ? entries : []).forEach((entry, entryIndex) => {
+    if (entry?.skipped || !Array.isArray(entry?.winningTickets)) return;
+    const drawStatistics = new Map();
+    entry.winningTickets.forEach((ticket) => {
+      const copies = Math.max(0, Number(ticket?.copies) || 0);
+      (Array.isArray(ticket?.breakdown) ? ticket.breakdown : [])
+        .filter((row) => Number(row?.total) > 0 && statistics[row.category])
+        .forEach((row) => {
+          const combinations = Math.max(0, Number(row.count) || 0);
+          const paidCombinations = combinations * copies;
+          const prize = Math.max(0, Number(row.total) || 0) * copies;
+          const category = statistics[row.category];
+          category.ticketCount += 1;
+          category.combinations += combinations;
+          category.paidCombinations += paidCombinations;
+          category.prize += prize;
+
+          if (!drawStatistics.has(row.category)) {
+            drawStatistics.set(row.category, {
+              category: row.category,
+              drawNum: entry.drawNum,
+              date: entry.date,
+              entryIndex,
+              ticketCount: 0,
+              combinations: 0,
+              paidCombinations: 0,
+              prize: 0,
+            });
+          }
+          const draw = drawStatistics.get(row.category);
+          draw.ticketCount += 1;
+          draw.combinations += combinations;
+          draw.paidCombinations += paidCombinations;
+          draw.prize += prize;
+        });
+    });
+
+    drawStatistics.forEach((draw, category) => {
+      statistics[category].drawCount += 1;
+      statistics[category].draws.push(draw);
+    });
+  });
+
+  return PAYOUT_CATEGORIES.map((category) => statistics[category]);
 }
 
 function weightedPick(candidates, weights, random) {
@@ -1512,6 +1882,78 @@ export function parseTicketLines(text) {
         });
       }
     });
+  return { tickets, errors };
+}
+
+export function parseTicketFile(text, options = {}) {
+  const tickets = [];
+  const errors = [];
+  const mainCount = Math.min(
+    20,
+    Math.max(8, Math.trunc(Number(options.mainCount) || 8)),
+  );
+  const extraCount = Math.min(
+    4,
+    Math.max(1, Math.trunc(Number(options.extraCount) || 1)),
+  );
+  const expectedValues = mainCount + extraCount;
+  String(text ?? "")
+    .replace(/^\uFEFF/, "")
+    .split(/\r?\n/)
+    .forEach((rawLine, index) => {
+      const line = rawLine.trim();
+      if (!line) return;
+      if (/(?:поле|основн|дополн|main|extra|ticket|ставк|комбинац)/i.test(line)) {
+        return;
+      }
+
+      const fields = line.split(/[,;\s]+/).filter(Boolean);
+      if (
+        fields.length !== expectedValues ||
+        fields.some((field) => !/^\d+$/.test(field))
+      ) {
+        errors.push({
+          line: index + 1,
+          message: `нужно ровно ${expectedValues} чисел: ${mainCount} поля 1 и ${extraCount} поля 2`,
+          source: line,
+        });
+        return;
+      }
+
+      const values = fields.map(Number);
+      const mainValues = values.slice(0, mainCount);
+      const extraValues = values.slice(mainCount, expectedValues);
+      const problems = [];
+      if (mainValues.some((number) => number < 1 || number > 20)) {
+        problems.push("числа поля 1 должны быть от 1 до 20");
+      }
+      if (new Set(mainValues).size !== mainCount) {
+        problems.push("в поле 1 числа не должны повторяться");
+      }
+      if (extraValues.some((number) => number < 1 || number > 4)) {
+        problems.push("числа поля 2 должны быть от 1 до 4");
+      }
+      if (new Set(extraValues).size !== extraCount) {
+        problems.push("в поле 2 числа не должны повторяться");
+      }
+
+      if (problems.length) {
+        errors.push({
+          line: index + 1,
+          message: problems.join("; "),
+          source: line,
+        });
+        return;
+      }
+
+      tickets.push({
+        main: [...mainValues].sort((left, right) => left - right),
+        extra: [...extraValues].sort((left, right) => left - right),
+        combinations: systemCombinations(mainCount, extraCount),
+        sourceLine: index + 1,
+      });
+    });
+
   return { tickets, errors };
 }
 

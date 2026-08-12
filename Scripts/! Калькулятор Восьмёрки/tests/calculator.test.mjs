@@ -18,9 +18,11 @@ import {
   normaliseHistoryResponse,
   normalisePayoutRules,
   parseTextArchive,
+  parseTicketFile,
   parseTicketLines,
   runStrategyBacktest,
   selectDrawsByArchiveScope,
+  summarizeStrategyWins,
   systemCombinations,
   validateImportedDraws,
 } from "../public/lottery-core.js";
@@ -340,6 +342,8 @@ test("runs an archive strategy with automatic add step and reset trigger", () =>
     [1, 2, 3],
   );
   assert.equal(result.totalCost, 600);
+  assert.equal(result.totalGrossCost, 600);
+  assert.equal(result.totalDiscount, 0);
   assert.equal(result.totalPrize, 3_000);
   assert.equal(result.profit, 2_400);
   assert.equal(result.startingBalance, 600);
@@ -353,6 +357,316 @@ test("runs an archive strategy with automatic add step and reset trigger", () =>
     [-100, -300, 2_400],
   );
   assert.equal(result.maxCopiesUsed, 3);
+  const winningEntry = result.entries.find((entry) => entry.prize > 0);
+  assert.deepEqual(winningEntry.drawMain, ticket.main);
+  assert.equal(winningEntry.drawExtra, 1);
+  assert.equal(winningEntry.winningTickets.length, 1);
+  assert.deepEqual(winningEntry.winningTickets[0].ticket.main, ticket.main);
+  assert.deepEqual(winningEntry.winningTickets[0].ticket.extra, ticket.extra);
+  assert.equal(winningEntry.winningTickets[0].copies, 3);
+  assert.equal(winningEntry.winningTickets[0].prizePerCopy, 1_000);
+  assert.equal(winningEntry.winningTickets[0].totalPrize, 3_000);
+  assert.equal(winningEntry.winningTickets[0].breakdown[0].category, "8 + 1");
+  assert.equal(winningEntry.winningTickets[0].breakdown[0].count, 1);
+});
+
+test("applies a purchase discount to every strategy ticket", () => {
+  const ticket = { main: [1, 2, 3, 4, 5, 6, 7, 8], extra: [1] };
+  const losingMain = [9, 10, 11, 12, 13, 14, 15, 16];
+  const draws = [
+    { drawNum: "002", date: "2026-08-01", main: ticket.main, extra: 1 },
+    { drawNum: "001", date: "2026-08-01", main: losingMain, extra: 2 },
+  ];
+  const result = runStrategyBacktest(
+    [ticket],
+    draws,
+    [1_000, 0, 0, 0, 0, 0, 0, 0, 0],
+    250,
+    {
+      mode: "real",
+      baseCopies: 1,
+      rule: "add",
+      step: 1,
+      maxCopies: 10,
+      resetOnWin: true,
+      trigger: "any",
+      discountPercent: 20,
+    },
+  );
+
+  assert.equal(result.settings.discountPercent, 20);
+  assert.deepEqual(
+    result.entries.map((entry) => entry.grossCost),
+    [250, 500],
+  );
+  assert.deepEqual(
+    result.entries.map((entry) => entry.discountAmount),
+    [50, 100],
+  );
+  assert.deepEqual(
+    result.entries.map((entry) => entry.cost),
+    [200, 400],
+  );
+  assert.equal(result.totalGrossCost, 750);
+  assert.equal(result.totalDiscount, 150);
+  assert.equal(result.totalCost, 600);
+  assert.equal(result.totalPrize, 2_000);
+  assert.equal(result.profit, 1_400);
+  assert.equal(result.startingBalance, 600);
+  assert.equal(result.endingBalance, 2_000);
+});
+
+test("summarizes winning categories and keeps every major winning draw", () => {
+  const statistics = summarizeStrategyWins([
+    {
+      drawNum: "100",
+      date: "2026-08-01",
+      winningTickets: [
+        {
+          copies: 2,
+          breakdown: [
+            { category: "8 + 1", count: 1, total: 5_000_000 },
+          ],
+        },
+        {
+          copies: 1,
+          breakdown: [
+            { category: "8 + 1", count: 1, total: 5_000_000 },
+          ],
+        },
+      ],
+    },
+    {
+      drawNum: "101",
+      date: "2026-08-02",
+      winningTickets: [
+        {
+          copies: 3,
+          breakdown: [
+            { category: "8 + 0", count: 2, total: 1_000_000 },
+          ],
+        },
+      ],
+    },
+    {
+      drawNum: "102",
+      date: "2026-08-03",
+      winningTickets: [
+        {
+          copies: 1,
+          breakdown: [
+            { category: "8 + 1", count: 1, total: 5_000_000 },
+          ],
+        },
+      ],
+    },
+  ]);
+
+  const jackpot = statistics.find((row) => row.category === "8 + 1");
+  assert.equal(jackpot.drawCount, 2);
+  assert.equal(jackpot.ticketCount, 3);
+  assert.equal(jackpot.combinations, 3);
+  assert.equal(jackpot.paidCombinations, 4);
+  assert.equal(jackpot.prize, 20_000_000);
+  assert.deepEqual(
+    jackpot.draws.map((draw) => draw.drawNum),
+    ["100", "102"],
+  );
+  assert.equal(jackpot.draws[0].ticketCount, 2);
+
+  const eightWithoutExtra = statistics.find(
+    (row) => row.category === "8 + 0",
+  );
+  assert.equal(eightWithoutExtra.drawCount, 1);
+  assert.equal(eightWithoutExtra.combinations, 2);
+  assert.equal(eightWithoutExtra.paidCombinations, 6);
+  assert.equal(eightWithoutExtra.prize, 3_000_000);
+});
+
+test("excludes winning tickets for exactly one following draw", () => {
+  const ticketA = { main: [1, 2, 3, 4, 5, 6, 7, 8], extra: [1] };
+  const ticketB = { main: [9, 10, 11, 12, 13, 14, 15, 16], extra: [2] };
+  const ticketC = { main: [13, 14, 15, 16, 17, 18, 19, 20], extra: [3] };
+  const tickets = [
+    ...Array.from({ length: 3 }, () => ({ ...ticketA })),
+    ...Array.from({ length: 5 }, () => ({ ...ticketB })),
+    ...Array.from({ length: 33 }, () => ({ ...ticketC })),
+  ];
+  const draws = [
+    { drawNum: "003", date: "2026-08-03", main: ticketA.main, extra: 1 },
+    { drawNum: "002", date: "2026-08-02", main: ticketB.main, extra: 2 },
+    { drawNum: "001", date: "2026-08-01", main: ticketA.main, extra: 1 },
+  ];
+
+  const result = runStrategyBacktest(
+    tickets,
+    draws,
+    [1_000, 0, 0, 0, 0, 0, 0, 0, 0],
+    100,
+    {
+      mode: "real",
+      baseCopies: 1,
+      rule: "add",
+      step: 1,
+      resetOnWin: true,
+      stopOnWin: true,
+      trigger: "exclude_winners",
+    },
+  );
+
+  assert.equal(result.settings.trigger, "exclude_winners");
+  assert.equal(result.settings.stopOnWin, false);
+  assert.deepEqual(
+    result.entries.map((entry) => entry.purchasedTickets),
+    [41, 38, 36],
+  );
+  assert.deepEqual(
+    result.entries.map((entry) => entry.excludedTicketIndexes),
+    [[], [1, 2, 3], [4, 5, 6, 7, 8]],
+  );
+  assert.deepEqual(
+    result.entries.map((entry) => entry.nextExcludedTicketIndexes),
+    [[1, 2, 3], [4, 5, 6, 7, 8], [1, 2, 3]],
+  );
+  assert.deepEqual(
+    result.entries.map((entry) =>
+      entry.winningTickets.map((ticket) => ticket.index),
+    ),
+    [[1, 2, 3], [4, 5, 6, 7, 8], [1, 2, 3]],
+  );
+  assert.equal(result.totalExcludedTickets, 8);
+  assert.equal(result.maxExcludedTickets, 5);
+  assert.equal(result.totalCost, 11_500);
+  assert.equal(result.totalPrize, 11_000);
+  assert.equal(result.skippedDrawCount, 0);
+});
+
+test("continues a monthly strategy after each daily stop", () => {
+  const ticket = { main: [1, 2, 3, 4, 5, 6, 7, 8], extra: [1] };
+  const losingMain = [9, 10, 11, 12, 13, 14, 15, 16];
+  const draws = [
+    { drawNum: "004", date: "2026-08-02", main: losingMain, extra: 2 },
+    { drawNum: "003", date: "2026-08-02", main: ticket.main, extra: 1 },
+    { drawNum: "002", date: "2026-08-01", main: losingMain, extra: 2 },
+    { drawNum: "001", date: "2026-08-01", main: ticket.main, extra: 1 },
+  ];
+  const result = runStrategyBacktest(
+    [ticket],
+    draws,
+    [1_000, 0, 0, 0, 0, 0, 0, 0, 0],
+    100,
+    {
+      mode: "real",
+      baseCopies: 1,
+      stopOnWin: true,
+      trigger: "any",
+      stopScope: "day",
+    },
+  );
+
+  assert.deepEqual(
+    result.entries.filter((entry) => !entry.skipped).map((entry) => entry.drawNum),
+    ["001", "003"],
+  );
+  assert.deepEqual(
+    result.entries.filter((entry) => entry.skipped).map((entry) => entry.drawNum),
+    ["002", "004"],
+  );
+  assert.equal(result.totalCost, 200);
+  assert.equal(result.totalPrize, 2_000);
+  assert.equal(result.periodDrawCount, 4);
+  assert.equal(result.calculatedDrawCount, 2);
+  assert.equal(result.skippedDrawCount, 2);
+  assert.equal(result.dailyStops.length, 2);
+  assert.deepEqual(
+    result.dailyStops.map((stop) => stop.dayKey),
+    ["2026-08-01", "2026-08-02"],
+  );
+  assert.match(result.stoppedReason, /дневных остановок: 2/);
+});
+
+test("walks all 2,964 July draws and marks rows skipped by daily stops", () => {
+  const ticket = { main: [1, 2, 3, 4, 5, 6, 7, 8], extra: [1] };
+  const losingMain = [9, 10, 11, 12, 13, 14, 15, 16];
+  let drawNumber = 1;
+  const draws = [];
+  for (let day = 1; day <= 31; day += 1) {
+    const drawsInDay = day === 31 ? 84 : 96;
+    for (let index = 0; index < drawsInDay; index += 1) {
+      const winningDraw = index === 0;
+      draws.push({
+        drawNum: String(drawNumber).padStart(5, "0"),
+        date: `2026-07-${String(day).padStart(2, "0")}`,
+        main: winningDraw ? ticket.main : losingMain,
+        extra: winningDraw ? 1 : 2,
+      });
+      drawNumber += 1;
+    }
+  }
+
+  const result = runStrategyBacktest(
+    [ticket],
+    draws,
+    [1_000, 0, 0, 0, 0, 0, 0, 0, 0],
+    100,
+    {
+      mode: "real",
+      rule: "add",
+      step: 1,
+      baseCopies: 1,
+      stopOnWin: true,
+      trigger: "any",
+      stopScope: "day",
+    },
+  );
+
+  assert.equal(draws.length, 2_964);
+  assert.equal(result.periodDrawCount, 2_964);
+  assert.equal(result.entries.length, 2_964);
+  assert.equal(result.calculatedDrawCount, 31);
+  assert.equal(result.skippedDrawCount, 2_933);
+  assert.equal(result.dailyStops.length, 31);
+  assert.equal(new Set(result.entries.map((entry) => entry.date)).size, 31);
+});
+
+test("applies +1 after each loss and restarts from one on the next day", () => {
+  const ticket = { main: [1, 2, 3, 4, 5, 6, 7, 8], extra: [1] };
+  const losingMain = [9, 10, 11, 12, 13, 14, 15, 16];
+  const draws = [
+    { drawNum: "008", date: "2026-08-03", main: losingMain, extra: 2 },
+    { drawNum: "007", date: "2026-08-02", main: losingMain, extra: 2 },
+    { drawNum: "006", date: "2026-08-02", main: ticket.main, extra: 1 },
+    { drawNum: "005", date: "2026-08-02", main: losingMain, extra: 2 },
+    { drawNum: "004", date: "2026-08-01", main: losingMain, extra: 2 },
+    { drawNum: "003", date: "2026-08-01", main: ticket.main, extra: 1 },
+    { drawNum: "002", date: "2026-08-01", main: losingMain, extra: 2 },
+    { drawNum: "001", date: "2026-08-01", main: losingMain, extra: 2 },
+  ];
+
+  const result = runStrategyBacktest(
+    [ticket],
+    draws,
+    [1_000, 0, 0, 0, 0, 0, 0, 0, 0],
+    100,
+    {
+      mode: "real",
+      rule: "add",
+      step: 1,
+      baseCopies: 1,
+      resetOnWin: true,
+      stopOnWin: true,
+      trigger: "any",
+      stopScope: "day",
+    },
+  );
+
+  assert.deepEqual(
+    result.entries.filter((entry) => !entry.skipped).map((entry) => entry.copies),
+    [1, 2, 3, 1, 2, 1],
+  );
+  assert.equal(result.entries.find((entry) => entry.drawNum === "004").skipped, true);
+  assert.equal(result.entries.find((entry) => entry.drawNum === "007").skipped, true);
+  assert.equal(result.entries.find((entry) => entry.drawNum === "008").copies, 1);
 });
 
 test("checks every simple combination inside an expanded ticket", () => {
@@ -437,6 +751,43 @@ test("parses simple, expanded and exported ticket rows", () => {
   assert.equal(parsed.tickets[0].combinations, 1);
   assert.equal(parsed.tickets[1].combinations, 18);
   assert.equal(parsed.errors.length, 1);
+});
+
+test("imports personal tickets with the ninth number as field two", () => {
+  const parsed = parseTicketFile(`
+10,15,08,20,13,19,02,06,03
+01;04;07;09;11;14;17;20;04
+1,2,3,4,5,6,7,7,2
+`);
+
+  assert.equal(parsed.tickets.length, 2);
+  assert.deepEqual(parsed.tickets[0].main, [2, 6, 8, 10, 13, 15, 19, 20]);
+  assert.deepEqual(parsed.tickets[0].extra, [3]);
+  assert.deepEqual(parsed.tickets[1].main, [1, 4, 7, 9, 11, 14, 17, 20]);
+  assert.deepEqual(parsed.tickets[1].extra, [4]);
+  assert.equal(parsed.errors.length, 1);
+  assert.match(parsed.errors[0].message, /не должны повторяться/);
+});
+
+test("imports expanded personal tickets using the selected field sizes", () => {
+  const parsed = parseTicketFile(
+    "2,3,5,6,8,9,15,20,1,2,3,4\n1,2,3,4,5,6,7,8,1,2,2,4",
+    { mainCount: 8, extraCount: 4 },
+  );
+
+  assert.equal(parsed.tickets.length, 1);
+  assert.deepEqual(parsed.tickets[0].main, [2, 3, 5, 6, 8, 9, 15, 20]);
+  assert.deepEqual(parsed.tickets[0].extra, [1, 2, 3, 4]);
+  assert.equal(parsed.tickets[0].combinations, 4);
+  assert.equal(parsed.errors.length, 1);
+  assert.match(parsed.errors[0].message, /поле 2.*не должны повторяться/);
+
+  const nineByFour = parseTicketFile(
+    "1,2,3,4,5,6,7,8,9,1,2,3,4",
+    { mainCount: 9, extraCount: 4 },
+  );
+  assert.equal(nineByFour.tickets.length, 1);
+  assert.equal(nineByFour.tickets[0].combinations, 36);
 });
 
 test("validates draw imports, duplicates, gaps and merge modes", () => {
@@ -566,7 +917,10 @@ test("build contains every version-three surface and visual asset", async () => 
   assert.match(script, /drawsAreDemo/);
   assert.match(script, /Проверка билетов/);
   assert.match(script, /Предварительный просмотр/);
-  assert.match(script, /Вернуть данные сайта/);
+  assert.match(script, /Вернуть базовые выплаты/);
+  assert.doesNotMatch(script, /data-action="update-draws"/);
+  assert.doesNotMatch(script, /data-action="update-payouts"/);
+  assert.doesNotMatch(script, /\/api\/nloto\//);
   assert.match(script, /Найдено:/);
   assert.match(script, /Простой выбор режима/);
   assert.match(script, /Дополнительные правила/);
@@ -574,6 +928,21 @@ test("build contains every version-three surface and visual asset", async () => 
   assert.match(script, /Ставки и расчёт/);
   assert.match(script, /Один экран вместо трёх вкладок/);
   assert.match(script, /Рассчитать:/);
+  assert.match(script, /Загрузить свои ставки/);
+  assert.match(script, /data-ticket-file/);
+  assert.match(script, /toggle-strategy-win/);
+  assert.match(script, /Сыгравших наших ставок/);
+  assert.match(script, /Скидка на покупку, %/);
+  assert.match(script, /data-strategy="discountPercent"/);
+  assert.match(script, /Экономия/);
+  assert.match(script, /Статистика выигрышей/);
+  assert.match(script, /Категории и количество выигравших комбинаций/);
+  assert.match(script, /open-strategy-win-draw/);
+  assert.match(script, /День и номер тиража/);
+  assert.match(script, /Исключить выигрышные на 1 тираж/);
+  assert.match(script, /exclude_winners/);
+  assert.match(script, /Временно исключено/);
+  assert.match(script, /Пропустили этот тираж/);
   assert.match(script, /Архив по годам, месяцам и дням/);
   assert.match(script, /Тиражи за/);
   assert.match(script, /select-archive-day/);
@@ -596,9 +965,27 @@ test("build contains every version-three surface and visual asset", async () => 
   assert.match(styles, /\.help-tip-text\.visible/);
   assert.match(styles, /\.strategy-period-controls/);
   assert.match(styles, /\.strategy-history-tools/);
+  assert.match(styles, /\.strategy-win-details/);
+  assert.match(styles, /\.strategy-win-statistics/);
+  assert.match(styles, /\.strategy-major-win-draws/);
+  assert.match(styles, /\.strategy-exclude-winners-note/);
+  assert.match(styles, /\.strategy-history-copies/);
   assert.match(styles, /\.generator-rules-toolbar/);
   assert.match(launcher, /Калькулятор Восьмёрки/);
-  assert.match(launcher, /\.\/! Калькулятор Восьмёрки\/public\/index\.html/);
+  assert.match(launcher, /\.\/! Калькулятор Восьмёрки\/Переносная версия\/index\.html/);
+  const portableHtml = await readFile(
+    new URL("../Переносная версия/index.html", import.meta.url),
+    "utf8",
+  );
+  const portableScript = await readFile(
+    new URL("../Переносная версия/calculator.js", import.meta.url),
+    "utf8",
+  );
+  assert.match(portableHtml, /<script defer src="\.\/calculator\.js"><\/script>/);
+  assert.doesNotMatch(portableHtml, /type="module"/);
+  assert.doesNotMatch(portableScript, /^import\s/m);
+  assert.doesNotMatch(portableScript, /^export\s/m);
+  assert.doesNotMatch(portableScript, /\/api\/nloto\//);
   await access(new URL("../dist/_worker.js", import.meta.url));
   await access(new URL("../dist/.openai/hosting.json", import.meta.url));
   await access(new URL("../dist/og-v3.png", import.meta.url));
