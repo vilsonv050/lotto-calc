@@ -6640,4 +6640,5 @@ document.addEventListener(
   true,
 );
 
+render();
 initialiseDrawArchives().finally(() => render());

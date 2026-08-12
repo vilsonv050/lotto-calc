@@ -965,6 +965,10 @@ test("build contains every version-three surface and visual asset", async () => 
   assert.match(script, /96 · весь день/);
   assert.match(script, /Рассчитать месяц/);
   assert.match(script, /activateLatestArchiveDay/);
+  assert.match(
+    script,
+    /render\(\);\s*initialiseDrawArchives\(\)\.finally\(\(\) => render\(\)\)/,
+  );
   assert.match(script, /Результат по дням/);
   assert.match(script, /Подсказка:/);
   assert.match(styles, /body\[data-theme="super8"\]/);
@@ -1004,7 +1008,7 @@ test("build contains every version-three surface and visual asset", async () => 
   );
   assert.match(
     portableHtml,
-    /<script defer src="\.\/calculator\.js\?v=20260812-1"><\/script>/,
+    /<script defer src="\.\/calculator\.js\?v=20260812-2"><\/script>/,
   );
   assert.doesNotMatch(portableHtml, /type="module"/);
   assert.doesNotMatch(portableScript, /^import\s/m);
