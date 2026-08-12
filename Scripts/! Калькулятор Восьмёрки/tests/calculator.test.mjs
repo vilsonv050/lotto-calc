@@ -886,6 +886,10 @@ test("build contains every version-three surface and visual asset", async () => 
   const html = await readFile(new URL("../dist/index.html", import.meta.url), "utf8");
   const script = await readFile(new URL("../dist/app.js", import.meta.url), "utf8");
   const styles = await readFile(new URL("../dist/styles.css", import.meta.url), "utf8");
+  const worker = await readFile(
+    new URL("../dist/server/index.js", import.meta.url),
+    "utf8",
+  );
   const launcher = await readFile(
     new URL("../../! Калькулятор Восьмерки.html", import.meta.url),
     "utf8",
@@ -972,7 +976,15 @@ test("build contains every version-three surface and visual asset", async () => 
   assert.match(styles, /\.strategy-history-copies/);
   assert.match(styles, /\.generator-rules-toolbar/);
   assert.match(launcher, /Калькулятор Восьмёрки/);
-  assert.match(launcher, /\.\/! Калькулятор Восьмёрки\/Переносная версия\/index\.html/);
+  assert.match(
+    launcher,
+    /\.\/! Калькулятор Восьмёрки\/Переносная версия\/calculator\.js/,
+  );
+  assert.match(
+    launcher,
+    /\.\/! Калькулятор Восьмёрки\/Переносная версия\/styles\.css/,
+  );
+  assert.doesNotMatch(launcher, /window\.location|about:blank/);
   const portableHtml = await readFile(
     new URL("../Переносная версия/index.html", import.meta.url),
     "utf8",
@@ -986,6 +998,8 @@ test("build contains every version-three surface and visual asset", async () => 
   assert.doesNotMatch(portableScript, /^import\s/m);
   assert.doesNotMatch(portableScript, /^export\s/m);
   assert.doesNotMatch(portableScript, /\/api\/nloto\//);
+  assert.match(worker, /url\.pathname === "\/"/);
+  assert.match(worker, /url\.pathname = "\/index\.html"/);
   await access(new URL("../dist/_worker.js", import.meta.url));
   await access(new URL("../dist/.openai/hosting.json", import.meta.url));
   await access(new URL("../dist/og-v3.png", import.meta.url));

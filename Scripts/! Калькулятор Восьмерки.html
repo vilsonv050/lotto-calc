@@ -1,92 +1,27 @@
 <!doctype html>
 <html lang="ru">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="robots" content="noindex">
-  <title>Калькулятор Восьмёрки</title>
-  <style>
-    :root {
-      color-scheme: dark;
-      font-family: Inter, "Segoe UI", system-ui, sans-serif;
-    }
-
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-      display: grid;
-      min-height: 100vh;
-      margin: 0;
-      place-items: center;
-      background:
-        radial-gradient(circle at 25% 20%, rgba(32, 214, 139, 0.22), transparent 34%),
-        radial-gradient(circle at 80% 75%, rgba(247, 186, 38, 0.2), transparent 32%),
-        #07120d;
-      color: #f7fff9;
-    }
-
-    main {
-      width: min(520px, calc(100vw - 32px));
-      padding: 32px;
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      border-radius: 24px;
-      background: rgba(9, 26, 18, 0.9);
-      box-shadow: 0 24px 70px rgba(0, 0, 0, 0.34);
-      text-align: center;
-    }
-
-    b {
-      display: grid;
-      width: 70px;
-      height: 70px;
-      margin: 0 auto 18px;
-      place-items: center;
-      border-radius: 50%;
-      background: linear-gradient(145deg, #23d78d, #f2ba2e);
-      color: #06120c;
-      font-size: 40px;
-    }
-
-    h1 {
-      margin: 0 0 10px;
-      font-size: clamp(25px, 6vw, 38px);
-    }
-
-    p {
-      margin: 0 0 22px;
-      color: #a9bdb1;
-      line-height: 1.55;
-    }
-
-    a {
-      display: inline-flex;
-      min-height: 46px;
-      padding: 0 20px;
-      align-items: center;
-      justify-content: center;
-      border-radius: 13px;
-      background: #25d68e;
-      color: #06120c;
-      font-weight: 800;
-      text-decoration: none;
-    }
-  </style>
-  <script>
-    const calculatorUrl = new URL(
-      "./! Калькулятор Восьмёрки/Переносная версия/index.html",
-      window.location.href,
-    );
-    window.location.replace(calculatorUrl.href);
-  </script>
-</head>
-<body>
-  <main>
-    <b>8</b>
-    <h1>Калькулятор Восьмёрки</h1>
-    <p>Открываем программу. Если переход не начался автоматически, нажмите кнопку.</p>
-    <a href="./! Калькулятор Восьмёрки/Переносная версия/index.html">Открыть калькулятор</a>
-  </main>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Калькулятор, комбогенератор, аналитика, стратегии и архивы лотерей Большая 8, Супер 8 и Великолепная 8."
+    />
+    <meta name="theme-color" content="#0f172a" />
+    <title>Калькулятор Восьмёрки</title>
+    <link
+      rel="stylesheet"
+      href="./! Калькулятор Восьмёрки/Переносная версия/styles.css"
+    />
+    <script
+      defer
+      src="./! Калькулятор Восьмёрки/Переносная версия/calculator.js"
+    ></script>
+  </head>
+  <body>
+    <div id="app">
+      <div class="boot">Загружаем анализ и стратегии…</div>
+    </div>
+    <noscript>Для работы калькулятора необходимо включить JavaScript.</noscript>
+  </body>
 </html>
