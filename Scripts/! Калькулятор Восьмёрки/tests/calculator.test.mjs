@@ -883,9 +883,18 @@ test("imports the requested column format from a TXT archive", async () => {
 });
 
 test("build contains every version-three surface and visual asset", async () => {
-  const html = await readFile(new URL("../dist/index.html", import.meta.url), "utf8");
-  const script = await readFile(new URL("../dist/app.js", import.meta.url), "utf8");
-  const styles = await readFile(new URL("../dist/styles.css", import.meta.url), "utf8");
+  const html = await readFile(
+    new URL("../dist/client/index.html", import.meta.url),
+    "utf8",
+  );
+  const script = await readFile(
+    new URL("../dist/client/app.js", import.meta.url),
+    "utf8",
+  );
+  const styles = await readFile(
+    new URL("../dist/client/styles.css", import.meta.url),
+    "utf8",
+  );
   const worker = await readFile(
     new URL("../dist/server/index.js", import.meta.url),
     "utf8",
@@ -1002,8 +1011,8 @@ test("build contains every version-three surface and visual asset", async () => 
   assert.match(worker, /url\.pathname = "\/index\.html"/);
   await access(new URL("../dist/_worker.js", import.meta.url));
   await access(new URL("../dist/.openai/hosting.json", import.meta.url));
-  await access(new URL("../dist/og-v3.png", import.meta.url));
-  await access(new URL("../dist/assets/hero-big8.png", import.meta.url));
-  await access(new URL("../dist/assets/hero-super8.png", import.meta.url));
-  await access(new URL("../dist/assets/hero-v8.png", import.meta.url));
+  await access(new URL("../dist/client/og-v3.png", import.meta.url));
+  await access(new URL("../dist/client/assets/hero-big8.png", import.meta.url));
+  await access(new URL("../dist/client/assets/hero-super8.png", import.meta.url));
+  await access(new URL("../dist/client/assets/hero-v8.png", import.meta.url));
 });

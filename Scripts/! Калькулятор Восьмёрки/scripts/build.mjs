@@ -2,6 +2,7 @@ import { cp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 
 const source = new URL("../public/", import.meta.url);
 const output = new URL("../dist/", import.meta.url);
+const outputClient = new URL("client/", output);
 const outputMetadata = new URL(".openai/", output);
 const outputServer = new URL("server/", output);
 const workerSource = new URL("../worker/static-worker.js", import.meta.url);
@@ -9,7 +10,8 @@ const portable = new URL("../Переносная версия/", import.meta.ur
 
 await rm(output, { recursive: true, force: true });
 await mkdir(output, { recursive: true });
-await cp(source, output, { recursive: true });
+await mkdir(outputClient, { recursive: true });
+await cp(source, outputClient, { recursive: true });
 await mkdir(outputMetadata, { recursive: true });
 await mkdir(outputServer, { recursive: true });
 await cp(
