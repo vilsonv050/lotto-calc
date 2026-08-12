@@ -35,7 +35,7 @@ const coreSource = await readFile(
 );
 const appSource = await readFile(new URL("../public/app.js", import.meta.url), "utf8");
 const portableScript = `${coreSource.replace(/^export\s+/gm, "")}\n${appSource.replace(
-  /^import\s*\{[\s\S]*?\}\s*from\s*["']\.\/lottery-core\.js["'];\s*/,
+  /^import\s*\{[\s\S]*?\}\s*from\s*["']\.\/lottery-core\.js(?:\?[^"']+)?["'];\s*/,
   "",
 )}`;
 await writeFile(new URL("calculator.js", portable), portableScript, "utf8");
@@ -49,8 +49,8 @@ await writeFile(new URL("styles.css", portable), portableStyles, "utf8");
 const publicHtml = await readFile(new URL("../public/index.html", import.meta.url), "utf8");
 const portableHtml = publicHtml
   .replace(
-    '<script type="module" src="./app.js"></script>',
-    '<script defer src="./calculator.js"></script>',
+    '<script type="module" src="./app.js?v=20260812-1"></script>',
+    '<script defer src="./calculator.js?v=20260812-1"></script>',
   )
   .replaceAll('content="/og-v3.png"', 'content="./og-v3.png"');
 await writeFile(new URL("index.html", portable), portableHtml, "utf8");

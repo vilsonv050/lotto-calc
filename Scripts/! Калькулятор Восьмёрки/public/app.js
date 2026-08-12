@@ -20,7 +20,7 @@ import {
   summarizeStrategyWins,
   systemCombinations,
   validateImportedDraws,
-} from "./lottery-core.js";
+} from "./lottery-core.js?v=20260812-1";
 
 const STORAGE_KEY = "eight-lab-v3-final-state";
 const ARCHIVE_DB_NAME = "eight-lab-v3-archives";

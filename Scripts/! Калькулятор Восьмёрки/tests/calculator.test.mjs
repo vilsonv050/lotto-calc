@@ -1002,13 +1002,17 @@ test("build contains every version-three surface and visual asset", async () => 
     new URL("../Переносная версия/calculator.js", import.meta.url),
     "utf8",
   );
-  assert.match(portableHtml, /<script defer src="\.\/calculator\.js"><\/script>/);
+  assert.match(
+    portableHtml,
+    /<script defer src="\.\/calculator\.js\?v=20260812-1"><\/script>/,
+  );
   assert.doesNotMatch(portableHtml, /type="module"/);
   assert.doesNotMatch(portableScript, /^import\s/m);
   assert.doesNotMatch(portableScript, /^export\s/m);
   assert.doesNotMatch(portableScript, /\/api\/nloto\//);
   assert.match(worker, /url\.pathname === "\/"/);
   assert.match(worker, /url\.pathname = "\/index\.html"/);
+  assert.match(worker, /cache-control", "no-store"/);
   await access(new URL("../dist/_worker.js", import.meta.url));
   await access(new URL("../dist/.openai/hosting.json", import.meta.url));
   await access(new URL("../dist/client/og-v3.png", import.meta.url));
