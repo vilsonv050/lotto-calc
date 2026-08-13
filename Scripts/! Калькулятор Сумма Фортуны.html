@@ -801,10 +801,10 @@
         updateDrawModeUI();
         for (let idx = 1; idx <= drawCount; idx++) {
             let d = document.createElement('div'); d.className = 'di'; d.id = 'sfd' + idx;
-            d.innerHTML = '<div class="dn">T' + idx + '</div><input type="number" min="6" max="36" id="sfi' + idx + '"><div class="dr" id="sfr' + idx + '"><span class="draw-result-text" id="sfrt' + idx + '"></span><button type="button" class="draw-clear" title="Очистить все тиражи" aria-label="Очистить все тиражи">Очистить</button></div>';
+            d.innerHTML = '<div class="dn">T' + idx + '</div><input type="number" min="6" max="36" id="sfi' + idx + '"><div class="dr" id="sfr' + idx + '"><span class="draw-result-text" id="sfrt' + idx + '"></span><button type="button" class="draw-clear" title="Очистить тиражи после T' + idx + '" aria-label="Очистить тиражи после T' + idx + '">Очистить</button></div>';
             dg.appendChild(d);
             let input = document.getElementById('sfi' + idx);
-            d.querySelector('.draw-clear').addEventListener('click', clearAllDraws);
+            d.querySelector('.draw-clear').addEventListener('click', function() { clearDrawsAfter(idx); });
             input.value = drawValues[idx - 1];
             input.addEventListener('input', function() {
                 drawValues[idx - 1] = this.value;
@@ -840,15 +840,16 @@
 
     document.getElementById('sftd').onclick = function() { getActiveLayer().tickets = []; renderTk(); fullRecalc(); };
 
-    function clearAllDraws() {
-        setDrawValues([]);
-        document.getElementById('af-input').value = '';
-        renderDrawGrid();
+    function clearDrawsAfter(drawIndex) {
+        captureDrawValues();
+        for (let i = drawIndex; i < MAX_DRAW_COUNT; i++) drawValues[i] = '';
+        document.getElementById('af-input').value = drawValues.slice(0, drawIndex).join(',');
         activeDay = null;
         openMonthKey = null;
         calculationMonthKey = null;
         renderDayTabs();
-        updateSumOfNums(); recalc();
+        renderDrawGrid();
+        fullRecalc();
     }
 
     function updateTicketCosts() { let cost = getBaseCost(1); layers.forEach(l => { l.tickets.forEach(t => { t.cost = t.nums.length * cost; }); }); }
