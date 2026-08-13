@@ -1,0 +1,1017 @@
+(function () {
+    'use strict';
+
+    const VERSION = '1.0';
+    const ROOT_ID = 'colored-balls-buyer';
+    const STYLE_ID = 'colored-balls-buyer-style';
+    const PRODUCT_ID = '104021';
+    const COLOR_OPTIONS = [
+        ['Красный', '#f92f22'],
+        ['Зелёный', '#449900'],
+        ['Синий', '#458af2'],
+        ['Фиолетовый', '#db4df2'],
+        ['Коричневый', '#82390e'],
+        ['Жёлтый', '#ffc907'],
+        ['Оранжевый', '#ff6711'],
+        ['Чёрный', '#05031e']
+    ];
+
+    const oldPanel = document.getElementById(ROOT_ID);
+    if (oldPanel) {
+        oldPanel.scrollIntoView({ block: 'center' });
+        return;
+    }
+
+    const state = { running: false, stopped: false, drawOptions: [], selectedDrawIds: [], drawLoading: false };
+    const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+    const normalize = (value) => String(value || '')
+        .replace(/\u00a0/g, ' ')
+        .replace(/[–—−]/g, '-')
+        .replace(/ё/g, 'е')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .toLowerCase();
+    const isVisible = (element) => Boolean(element && element.isConnected && element.getClientRects().length);
+    const panelContains = (element) => Boolean(element && element.closest && element.closest('#' + ROOT_ID));
+    const pageElements = (selector, root) => Array.from((root || document).querySelectorAll(selector))
+        .filter((element) => isVisible(element) && !panelContains(element));
+
+    function assertRunning() {
+        if (state.stopped) {
+            const error = new Error('Остановлено пользователем');
+            error.code = 'CBB_STOP';
+            throw error;
+        }
+    }
+
+    async function waitFor(check, timeout, interval) {
+        const end = Date.now() + (timeout || 6000);
+        let lastError = null;
+        while (Date.now() < end) {
+            assertRunning();
+            try {
+                const result = check();
+                if (result) return result;
+            } catch (error) {
+                lastError = error;
+            }
+            await sleep(interval || 100);
+        }
+        if (lastError) throw lastError;
+        throw new Error('Касса не успела обновить страницу');
+    }
+
+    function exactButton(texts, root) {
+        const wanted = (Array.isArray(texts) ? texts : [texts]).map(normalize);
+        return pageElements('button', root).find((button) => wanted.includes(normalize(button.textContent))) || null;
+    }
+
+    async function clickAndWait(element, delay) {
+        assertRunning();
+        if (!element || !isVisible(element)) throw new Error('Элемент кассы не найден');
+        if (element.disabled) throw new Error('Кнопка кассы пока недоступна');
+        element.click();
+        await sleep(delay);
+        assertRunning();
+    }
+
+    function clickImmediately(element) {
+        assertRunning();
+        if (!element || !isVisible(element)) throw new Error('Элемент кассы не найден');
+        if (element.disabled) throw new Error('Кнопка кассы пока недоступна');
+        element.click();
+    }
+
+    function ticketEntries() {
+        const candidates = pageElements('label,[role="tab"],[role="radio"]');
+        const result = new Map();
+        candidates.forEach((element) => {
+            const text = String(element.innerText || element.textContent || '').replace(/\s+/g, ' ').trim();
+            const match = text.match(/^Билет\s+(\d+)(?:\s|$)/i);
+            if (!match || text.length > 100) return;
+            const number = Number(match[1]);
+            const previous = result.get(number);
+            if (!previous || text.length < previous.text.length || element.tagName === 'LABEL') {
+                result.set(number, { number, element, text });
+            }
+        });
+        return result;
+    }
+
+    function ticketCount() {
+        return ticketEntries().size;
+    }
+
+    function ticketFilled(number) {
+        const entry = ticketEntries().get(number);
+        if (!entry) return false;
+        const text = normalize(entry.text);
+        return text.includes('заполнено!') && !text.includes('не заполнено!');
+    }
+
+    async function activateTicket(number, delay) {
+        const entry = await waitFor(() => ticketEntries().get(number), 4000);
+        const clickable = entry.element.tagName === 'INPUT'
+            ? (entry.element.closest('label') || entry.element)
+            : entry.element;
+        await clickAndWait(clickable, delay);
+    }
+
+    async function normalizeTicketCount(target, delay) {
+        let count = ticketCount();
+        if (!count) throw new Error('Не найдены вкладки билетов');
+
+        while (count > target) {
+            assertRunning();
+            const numbers = Array.from(ticketEntries().keys()).sort((a, b) => b - a);
+            await activateTicket(numbers[0], delay);
+            const removeButton = document.getElementById('on-remove-ticket-click');
+            await clickAndWait(removeButton, delay);
+            const previous = count;
+            count = await waitFor(() => {
+                const current = ticketCount();
+                return current < previous ? current : 0;
+            }, 4000);
+        }
+
+        while (count < target) {
+            assertRunning();
+            const addButton = document.getElementById('on-add-ticket-click');
+            await clickAndWait(addButton, delay);
+            const previous = count;
+            count = await waitFor(() => {
+                const current = ticketCount();
+                return current > previous ? current : 0;
+            }, 4000);
+        }
+    }
+
+    function mainNumberButtons() {
+        const numericButtons = pageElements('button').filter((button) => {
+            if (button.closest('[id^="additional-game-"]')) return false;
+            return /^(?:[1-9]|[1-4]\d)$/.test(String(button.textContent || '').trim());
+        });
+
+        const ancestors = new Set();
+        numericButtons.forEach((button) => {
+            let parent = button.parentElement;
+            for (let level = 0; parent && level < 5; level += 1, parent = parent.parentElement) {
+                if (!panelContains(parent)) ancestors.add(parent);
+            }
+        });
+
+        const scored = [];
+        ancestors.forEach((container) => {
+            if (!isVisible(container) || container.closest('[id^="additional-game-"]')) return;
+            const buttons = Array.from(container.querySelectorAll('button')).filter((button) => {
+                if (!isVisible(button) || panelContains(button) || button.closest('[id^="additional-game-"]')) return false;
+                return /^(?:[1-9]|[1-4]\d)$/.test(String(button.textContent || '').trim());
+            });
+            const byNumber = new Map();
+            buttons.forEach((button) => {
+                const number = Number(button.textContent.trim());
+                if (number >= 1 && number <= 48 && !byNumber.has(number)) byNumber.set(number, button);
+            });
+            if (byNumber.size === 48 && buttons.length <= 52) {
+                const rect = container.getBoundingClientRect();
+                scored.push({ byNumber, count: buttons.length, area: rect.width * rect.height });
+            }
+        });
+
+        scored.sort((a, b) => a.count - b.count || a.area - b.area);
+        return scored.length ? scored[0].byNumber : new Map();
+    }
+
+    function selectedSlotCount() {
+        let maximum = 0;
+        pageElements('div,section,fieldset').forEach((container) => {
+            if (container.closest('[id^="additional-game-"]')) return;
+            const directButtons = Array.from(container.children).filter((child) => child.tagName === 'BUTTON');
+            if (directButtons.length !== 6) return;
+            const filled = directButtons.filter((button) => /^(?:[1-9]|[1-4]\d)$/.test(String(button.textContent || '').trim())).length;
+            maximum = Math.max(maximum, filled);
+        });
+        return maximum;
+    }
+
+    async function clearActiveTicket(delay) {
+        const clearButton = document.getElementById('clear') || exactButton('Очистить');
+        if (clearButton && !clearButton.disabled) await clickAndWait(clearButton, delay);
+    }
+
+    async function fillMainNumbers(ticketNumber, fixedNumbers, delay) {
+        for (const number of fixedNumbers) {
+            assertRunning();
+            const buttons = mainNumberButtons();
+            const button = buttons.get(number);
+            if (!button) throw new Error('Не найден шар ' + number + ' в основной сетке');
+            await clickAndWait(button, delay);
+        }
+
+        if (fixedNumbers.length < 6) {
+            const autoButton = exactButton('Заполнить автоматически');
+            if (!autoButton) throw new Error('Не найдена кнопка «Заполнить автоматически»');
+            await clickAndWait(autoButton, Math.max(delay, 250));
+        }
+
+        await waitFor(() => ticketFilled(ticketNumber) || selectedSlotCount() === 6, 5000);
+    }
+
+    function extraContainer(id) {
+        const container = document.getElementById('additional-game-' + id);
+        if (!container || !isVisible(container)) throw new Error('Не найдена допигра №' + id);
+        return container;
+    }
+
+    function chooseExtraText(id, values) {
+        const container = extraContainer(id);
+        const button = exactButton(values, container);
+        if (!button) throw new Error('Не найден вариант допигры: ' + values[0]);
+        clickImmediately(button);
+    }
+
+    function chooseExtraNumber(value) {
+        const container = extraContainer(8);
+        const button = pageElements('button', container).find((item) => Number(String(item.textContent || '').trim()) === value);
+        if (!button) throw new Error('Не найден номер ' + value + ' в допигре');
+        clickImmediately(button);
+    }
+
+    function colorDistance(rgb, target) {
+        return Math.sqrt(
+            Math.pow(rgb[0] - target[0], 2) +
+            Math.pow(rgb[1] - target[1], 2) +
+            Math.pow(rgb[2] - target[2], 2)
+        );
+    }
+
+    function parseRgb(value) {
+        const match = String(value || '').match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/i);
+        return match ? [Number(match[1]), Number(match[2]), Number(match[3])] : null;
+    }
+
+    function colorButtons(container) {
+        const expected = [
+            [249, 47, 34], [68, 153, 0], [69, 138, 242], [219, 77, 242],
+            [130, 57, 14], [255, 201, 7], [255, 103, 17], [5, 3, 30]
+        ];
+        const buttons = pageElements('button', container).filter((button) => !normalize(button.textContent));
+        const matched = new Array(8).fill(null);
+
+        buttons.forEach((button) => {
+            const style = getComputedStyle(button);
+            const candidates = [style.backgroundColor, style.borderColor, style.color].map(parseRgb).filter(Boolean);
+            let best = { index: -1, distance: Infinity };
+            candidates.forEach((rgb) => expected.forEach((target, index) => {
+                const distance = colorDistance(rgb, target);
+                if (distance < best.distance) best = { index, distance };
+            }));
+            if (best.index >= 0 && best.distance < 45 && !matched[best.index]) matched[best.index] = button;
+        });
+
+        if (matched.every(Boolean)) return matched;
+        return buttons.slice(0, 8);
+    }
+
+    function chooseColor(id, index) {
+        const container = extraContainer(id);
+        const buttons = colorButtons(container);
+        const button = buttons[index];
+        if (!button) throw new Error('Не найдена цветная кнопка «' + COLOR_OPTIONS[index][0] + '»');
+        clickImmediately(button);
+    }
+
+    async function applyExtras(extras, delay) {
+        let count = 0;
+        if (extras.firstFiveNumber) {
+            chooseExtraNumber(extras.firstFiveNumber);
+            count += 1;
+        }
+        if (extras.firstParity) {
+            chooseExtraText(4, extras.firstParity === 'even' ? ['Четное', 'Чётное'] : ['Нечетное', 'Нечётное']);
+            count += 1;
+        }
+        if (extras.firstFiveParity) {
+            chooseExtraText(3, extras.firstFiveParity === 'even' ? ['Четных', 'Чётных'] : ['Нечетных', 'Нечётных']);
+            count += 1;
+        }
+        if (extras.firstHalf) {
+            chooseExtraText(6, extras.firstHalf === 'low' ? ['1 - 24', '1–24', '1-24'] : ['25 - 48', '25–48', '25-48']);
+            count += 1;
+        }
+        if (extras.firstFiveSum) {
+            chooseExtraText(5, extras.firstFiveSum === 'low' ? ['1 - 122', '1–122', '1-122'] : ['123 - 230', '123–230', '123-230']);
+            count += 1;
+        }
+        if (extras.firstColor !== '') {
+            chooseColor(7, Number(extras.firstColor));
+            count += 1;
+        }
+        if (extras.fullColor !== '') {
+            chooseColor(2, Number(extras.fullColor));
+            count += 1;
+        }
+        if (count) await sleep(Math.max(60, Math.min(delay, 140)));
+        return count;
+    }
+
+    function normalizePhone(value) {
+        let digits = String(value || '').replace(/\D/g, '');
+        if (digits.length === 11 && (digits[0] === '7' || digits[0] === '8')) digits = digits.slice(1);
+        return digits;
+    }
+
+    function phoneGroup() {
+        return pageElements('div[role="group"]').find((group) => {
+            const digits = pageElements('button', group).filter((button) => /^\d$/.test(String(button.textContent || '').trim()));
+            return new Set(digits.map((button) => button.textContent.trim())).size === 10;
+        }) || null;
+    }
+
+    async function dialPhone(phone, delay) {
+        for (const digit of phone) {
+            assertRunning();
+            const group = await waitFor(phoneGroup, 5000);
+            const button = pageElements('button', group).find((item) => String(item.textContent || '').trim() === digit);
+            if (!button) throw new Error('Не найдена цифра ' + digit + ' на клавиатуре');
+            clickImmediately(button);
+            await sleep(15);
+        }
+    }
+
+    function readTotal() {
+        const candidates = pageElements('div,span,p,strong').map((element) => ({
+            element,
+            text: String(element.innerText || element.textContent || '').replace(/\u00a0/g, ' ').replace(/\s+/g, ' ').trim()
+        })).filter((item) => /итого/i.test(item.text) && /₽/.test(item.text) && item.text.length < 100);
+        candidates.sort((a, b) => a.text.length - b.text.length);
+        for (const item of candidates) {
+            const match = item.text.match(/итого[^\d]*(\d[\d\s]*)\s*₽/i);
+            if (match) return Number(match[1].replace(/\s/g, ''));
+        }
+        return null;
+    }
+
+    function getConfig(requirePhone) {
+        const quantity = Math.floor(Number(document.getElementById('cbb-quantity').value));
+        const delay = Math.floor(Number(document.getElementById('cbb-delay').value));
+        if (!Number.isFinite(quantity) || quantity < 1 || quantity > 50) throw new Error('Общее количество билетов: от 1 до 50');
+        if (!Number.isFinite(delay) || delay < 80 || delay > 3000) throw new Error('Задержка: от 80 до 3000 мс');
+
+        const fixedNumbers = String(document.getElementById('cbb-fixed').value || '')
+            .split(/[\s,;]+/)
+            .filter(Boolean)
+            .map(Number);
+        if (fixedNumbers.some((number) => !Number.isInteger(number) || number < 1 || number > 48)) {
+            throw new Error('Шары должны быть целыми числами от 1 до 48');
+        }
+        if (new Set(fixedNumbers).size !== fixedNumbers.length) throw new Error('Закреплённые шары не должны повторяться');
+        if (fixedNumbers.length > 6) throw new Error('Можно закрепить не больше 6 шаров');
+
+        const phone = normalizePhone(document.getElementById('cbb-phone').value);
+        if (requirePhone && phone.length !== 10) throw new Error('Введите 10 цифр телефона после +7');
+
+        const firstFiveNumberRaw = document.getElementById('cbb-extra-number').value;
+        const extras = {
+            firstFiveNumber: firstFiveNumberRaw ? Number(firstFiveNumberRaw) : null,
+            firstParity: document.getElementById('cbb-extra-parity').value,
+            firstFiveParity: document.getElementById('cbb-extra-majority').value,
+            firstHalf: document.getElementById('cbb-extra-half').value,
+            firstFiveSum: document.getElementById('cbb-extra-sum').value,
+            firstColor: document.getElementById('cbb-extra-first-color').value,
+            fullColor: document.getElementById('cbb-extra-full-color').value
+        };
+        if (state.drawLoading) throw new Error('Подождите окончания загрузки тиражей');
+        if (!state.selectedDrawIds.length) throw new Error('Выберите хотя бы один тираж');
+        return { quantity, delay, fixedNumbers, phone, extras, drawIds: state.selectedDrawIds.slice() };
+    }
+
+    function extraCount(extras) {
+        return Object.values(extras).filter((value) => value !== null && value !== '').length;
+    }
+
+    function setStatus(text, tone) {
+        const status = document.getElementById('cbb-status');
+        if (!status) return;
+        status.textContent = text;
+        status.dataset.tone = tone || 'normal';
+    }
+
+    function setRunning(running) {
+        state.running = running;
+        const controls = {
+            check: document.getElementById('cbb-check'),
+            fill: document.getElementById('cbb-fill'),
+            cart: document.getElementById('cbb-cart'),
+            stop: document.getElementById('cbb-stop'),
+            refreshDraws: document.getElementById('cbb-refresh-draws')
+        };
+        if (controls.check) controls.check.disabled = running;
+        if (controls.fill) controls.fill.disabled = running;
+        if (controls.cart) controls.cart.disabled = running;
+        if (controls.stop) controls.stop.disabled = !running;
+        if (controls.refreshDraws) controls.refreshDraws.disabled = running;
+        const drawChecks = document.querySelectorAll('#cbb-draw-list input[type="checkbox"]');
+        drawChecks.forEach((checkbox) => { checkbox.disabled = running; });
+    }
+
+    function currentDrawIdsFromButton() {
+        const button = document.getElementById('button-select-draw');
+        const text = String(button && button.innerText || '').replace(/\s+/g, ' ').trim();
+        const match = text.match(/№\s*(\d+)/);
+        return match ? [match[1]] : [];
+    }
+
+    function drawLabel(id) {
+        const option = state.drawOptions.find((item) => item.id === id);
+        return option ? option.label : '№ ' + id;
+    }
+
+    function drawCountText(count) {
+        const mod100 = count % 100;
+        const mod10 = count % 10;
+        const word = mod100 >= 11 && mod100 <= 14
+            ? 'тиражей'
+            : mod10 === 1
+                ? 'тираж'
+                : mod10 >= 2 && mod10 <= 4
+                    ? 'тиража'
+                    : 'тиражей';
+        return count + ' ' + word;
+    }
+
+    function refreshDrawSummary() {
+        const summary = document.getElementById('cbb-draw-summary');
+        if (!summary) return;
+        if (!state.selectedDrawIds.length) {
+            summary.textContent = 'Ни одного тиража не выбрано';
+            return;
+        }
+        if (state.selectedDrawIds.length === 1) {
+            summary.textContent = '1 тираж · ' + drawLabel(state.selectedDrawIds[0]);
+            return;
+        }
+        summary.textContent = drawCountText(state.selectedDrawIds.length) + ' · № ' + state.selectedDrawIds.join(', ');
+    }
+
+    function renderDrawChecklist(message) {
+        const list = document.getElementById('cbb-draw-list');
+        if (!list) return;
+        list.innerHTML = '';
+        if (message) {
+            const note = document.createElement('div');
+            note.className = 'cbb-draw-message';
+            note.textContent = message;
+            list.appendChild(note);
+            refreshDrawSummary();
+            return;
+        }
+
+        state.drawOptions.forEach((option) => {
+            const label = document.createElement('label');
+            label.className = 'cbb-draw-option';
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.dataset.drawId = option.id;
+            checkbox.checked = state.selectedDrawIds.includes(option.id);
+            checkbox.disabled = state.running;
+            const text = document.createElement('span');
+            text.textContent = option.label;
+            label.append(checkbox, text);
+            list.appendChild(label);
+        });
+
+        list.querySelectorAll('input[type="checkbox"]').forEach((checkbox) => {
+            checkbox.addEventListener('change', () => {
+                state.selectedDrawIds = Array.from(list.querySelectorAll('input[type="checkbox"]:checked'))
+                    .map((input) => input.dataset.drawId);
+                refreshDrawSummary();
+            });
+        });
+        refreshDrawSummary();
+    }
+
+    function readDrawDialog(dialog) {
+        const inputs = Array.from(dialog.querySelectorAll('input[type="checkbox"]'));
+        return {
+            options: inputs.map((input) => {
+                const label = dialog.querySelector('label[for="' + input.id + '"]');
+                return {
+                    id: input.id,
+                    label: String(label && label.innerText || '№ ' + input.id).replace(/\s+/g, ' ').trim()
+                };
+            }),
+            checkedIds: inputs.filter((input) => input.checked).map((input) => input.id)
+        };
+    }
+
+    function captureDrawDialog(dialog, preferredIds) {
+        const data = readDrawDialog(dialog);
+        state.drawOptions = data.options;
+        const validPreferred = Array.isArray(preferredIds)
+            ? preferredIds.filter((id) => data.options.some((option) => option.id === id))
+            : [];
+        state.selectedDrawIds = validPreferred.length ? validPreferred : data.checkedIds;
+        renderDrawChecklist();
+    }
+
+    async function withHiddenDrawDialog(action) {
+        document.documentElement.classList.add('cbb-native-draw-hidden');
+        try {
+            return await action();
+        } finally {
+            document.documentElement.classList.remove('cbb-native-draw-hidden');
+        }
+    }
+
+    async function openHiddenDrawDialog() {
+        const openButton = document.getElementById('button-select-draw');
+        if (!openButton) throw new Error('Не найдена кнопка выбора тиражей');
+        clickImmediately(openButton);
+        return waitFor(() => {
+            const item = document.querySelector('[role="dialog"]');
+            return item && item.querySelector('input[type="checkbox"]') ? item : null;
+        }, 4000);
+    }
+
+    async function closeHiddenDrawDialog(delay) {
+        const dialog = document.querySelector('[role="dialog"]');
+        if (!dialog) return;
+        const confirmButton = exactButton('Выбрать', dialog);
+        if (!confirmButton) throw new Error('Не найдена кнопка подтверждения тиражей');
+        clickImmediately(confirmButton);
+        await sleep(Math.max(80, Math.min(delay || 120, 180)));
+        await waitFor(() => !document.querySelector('[role="dialog"]'), 4000);
+    }
+
+    async function scanDrawsInBackground(preserveSelection) {
+        if (state.running) return;
+        state.stopped = false;
+        state.drawLoading = true;
+        setRunning(true);
+        renderDrawChecklist('Считываю доступные тиражи с кассы…');
+        const previous = preserveSelection ? state.selectedDrawIds.slice() : [];
+        try {
+            const delay = Math.floor(Number(document.getElementById('cbb-delay').value)) || 180;
+            await ensureTicketStep(delay);
+            await withHiddenDrawDialog(async () => {
+                const dialog = await openHiddenDrawDialog();
+                captureDrawDialog(dialog, previous);
+                await closeHiddenDrawDialog(delay);
+            });
+            setStatus('Доступно ' + drawCountText(state.drawOptions.length) + '. Отметьте нужные галочками.', 'ok');
+        } catch (error) {
+            console.error('[Цветные шары: тиражи]', error);
+            renderDrawChecklist('Не удалось считать тиражи. Нажмите «Обновить».');
+            setStatus('Ошибка загрузки тиражей: ' + (error && error.message ? error.message : String(error)), 'error');
+        } finally {
+            state.drawLoading = false;
+            setRunning(false);
+        }
+    }
+
+    async function applyDrawSelection(drawIds, delay) {
+        const currentIds = currentDrawIdsFromButton();
+        if (drawIds.length === 1 && currentIds.length === 1 && drawIds[0] === currentIds[0]) return;
+
+        await withHiddenDrawDialog(async () => {
+            let dialog = null;
+            try {
+                dialog = await openHiddenDrawDialog();
+                const availableIds = Array.from(dialog.querySelectorAll('input[type="checkbox"]')).map((input) => input.id);
+                const missing = drawIds.filter((id) => !availableIds.includes(id));
+                if (missing.length) throw new Error('Тиражи уже недоступны: № ' + missing.join(', '));
+
+                for (const id of availableIds) {
+                    const freshDialog = document.querySelector('[role="dialog"]');
+                    const input = freshDialog && freshDialog.querySelector('input[id="' + id + '"]');
+                    if (!input || input.checked === drawIds.includes(id)) continue;
+                    const label = freshDialog.querySelector('label[for="' + id + '"]');
+                    if (!label) throw new Error('Не найден переключатель тиража № ' + id);
+                    clickImmediately(label);
+                }
+
+                await sleep(40);
+                const freshDialog = document.querySelector('[role="dialog"]');
+                const selectedNow = Array.from(freshDialog.querySelectorAll('input[type="checkbox"]'))
+                    .filter((input) => input.checked)
+                    .map((input) => input.id);
+                if (selectedNow.length !== drawIds.length || drawIds.some((id) => !selectedNow.includes(id))) {
+                    throw new Error('Касса не приняла выбранные тиражи');
+                }
+                await closeHiddenDrawDialog(delay);
+                dialog = null;
+            } finally {
+                if (dialog && document.querySelector('[role="dialog"]')) {
+                    try { await closeHiddenDrawDialog(delay); } catch (_) {}
+                }
+            }
+        });
+    }
+
+    function findCartButton(enabledOnly) {
+        const candidates = [];
+        const byId = document.getElementById('add-to-cart-button');
+        if (byId) candidates.push(byId);
+        const legacy = document.getElementById('btn-buy');
+        if (legacy && normalize(legacy.textContent) === normalize('Добавить в корзину')) candidates.push(legacy);
+        const byText = exactButton('Добавить в корзину');
+        if (byText) candidates.push(byText);
+        return candidates.find((button) => isVisible(button) && !panelContains(button) && (!enabledOnly || !button.disabled)) || null;
+    }
+
+    function ticketStepReady() {
+        if (mainNumberButtons().size !== 48) return false;
+        const nextButton = document.getElementById('to-add-phone');
+        return Boolean((nextButton && isVisible(nextButton)) || findCartButton(false));
+    }
+
+    function phoneStepReady() {
+        if (mainNumberButtons().size === 48) return false;
+        return Boolean(findCartButton(false) || phoneGroup());
+    }
+
+    function previousPhoneButton(phone) {
+        const wanted = '7' + phone;
+        return pageElements('button').find((button) => {
+            const digits = String(button.textContent || '').replace(/\D/g, '');
+            return digits === wanted;
+        }) || null;
+    }
+
+    function backToTicketsButton() {
+        const byId = document.getElementById('back-button');
+        if (byId && isVisible(byId) && !panelContains(byId)) return byId;
+
+        const buttons = pageElements('button');
+        const byMeaning = buttons.find((button) => {
+            const signature = normalize([
+                button.getAttribute('aria-label'),
+                button.getAttribute('title'),
+                button.textContent
+            ].join(' '));
+            return signature.includes('цветные шары') &&
+                (signature.includes('продажа лотерейных билетов') || signature.includes('назад'));
+        });
+        if (byMeaning) return byMeaning;
+
+        const byText = exactButton('Назад');
+        if (byText) return byText;
+
+        return buttons.find((button) => {
+            const rect = button.getBoundingClientRect();
+            return rect.left >= 0 && rect.left < 120 && rect.top >= 0 && rect.top < 140 &&
+                rect.width <= 90 && rect.height <= 90 && Boolean(button.querySelector('svg'));
+        }) || null;
+    }
+
+    async function ensureTicketStep(delay) {
+        if (!location.href.includes('/product/multigame/' + PRODUCT_ID)) {
+            throw new Error('Откройте лотерею «Цветные шары»');
+        }
+
+        const currentStep = await waitFor(() => {
+            if (ticketStepReady()) return 'tickets';
+            if (phoneStepReady()) return 'phone';
+            return null;
+        }, 5000);
+        if (currentStep === 'tickets') return;
+
+        setStatus('Возвращаюсь от телефона к билетам. Корзина сохраняется…');
+        const backButton = backToTicketsButton();
+        if (!backButton) throw new Error('Не найдена кнопка возврата к билетам');
+        await clickAndWait(backButton, Math.max(delay, 300));
+        await waitFor(ticketStepReady, 7000);
+    }
+
+    function validatePage() {
+        const errors = [];
+        const onProduct = location.href.includes('/product/multigame/' + PRODUCT_ID);
+        if (!onProduct) errors.push('откройте лотерею «Цветные шары»');
+        if (mainNumberButtons().size !== 48) errors.push('основная сетка 1–48');
+        [8, 4, 3, 6, 5, 7, 2].forEach((id) => {
+            if (!document.getElementById('additional-game-' + id)) errors.push('допигра №' + id);
+        });
+        if (!document.getElementById('on-add-ticket-click')) errors.push('добавление билета');
+        if (!document.getElementById('button-select-draw')) errors.push('выбор тиражей');
+        const nextButton = document.getElementById('to-add-phone');
+        if (!(nextButton && isVisible(nextButton)) && !findCartButton(false)) {
+            errors.push('кнопка продолжения или корзины');
+        }
+        return errors;
+    }
+
+    async function fillTickets(config) {
+        setStatus('Подготавливаю ' + config.quantity + ' билетов…');
+        await normalizeTicketCount(config.quantity, config.delay);
+
+        for (let number = 1; number <= config.quantity; number += 1) {
+            assertRunning();
+            setStatus('Билет ' + number + ' из ' + config.quantity + ': заполняю шары…');
+            await activateTicket(number, config.delay);
+            await clearActiveTicket(config.delay);
+            setStatus('Билет ' + number + ' из ' + config.quantity + ': ' + drawCountText(config.drawIds.length) + '…');
+            await applyDrawSelection(config.drawIds, config.delay);
+            await fillMainNumbers(number, config.fixedNumbers, config.delay);
+            const count = extraCount(config.extras);
+            if (count) {
+                setStatus('Билет ' + number + ' из ' + config.quantity + ': допигры ' + count + '…');
+                await applyExtras(config.extras, config.delay);
+            }
+        }
+
+        await waitFor(() => {
+            const cartButton = findCartButton(true);
+            if (cartButton) return cartButton;
+            const nextButton = document.getElementById('to-add-phone');
+            return nextButton && isVisible(nextButton) && !nextButton.disabled ? nextButton : null;
+        }, 5000);
+        return readTotal();
+    }
+
+    async function addBatchToCart(config, batchNumber, batchCount) {
+        let cartButton = findCartButton(true);
+
+        if (batchNumber === 1) {
+            if (!cartButton) {
+                setStatus('Партия 1 из ' + batchCount + ': перехожу к телефону…');
+                const nextButton = document.getElementById('to-add-phone');
+                await clickAndWait(nextButton, Math.max(config.delay, 300));
+                await waitFor(phoneStepReady, 6000);
+                setStatus('Партия 1 из ' + batchCount + ': ввожу телефон один раз…');
+                await dialPhone(config.phone, config.delay);
+                cartButton = await waitFor(() => findCartButton(true), 6000);
+            }
+        } else if (!cartButton) {
+            setStatus('Партия ' + batchNumber + ' из ' + batchCount + ': использую сохранённый телефон…');
+            const nextButton = document.getElementById('to-add-phone');
+            await clickAndWait(nextButton, Math.max(config.delay, 300));
+            await waitFor(phoneStepReady, 6000);
+            cartButton = findCartButton(true);
+            if (!cartButton) {
+                const savedPhone = previousPhoneButton(config.phone);
+                if (!savedPhone) throw new Error('Касса не предложила сохранённый телефон первой партии');
+                await clickAndWait(savedPhone, Math.max(80, Math.min(config.delay, 180)));
+                cartButton = await waitFor(() => findCartButton(true), 6000);
+            }
+        }
+
+        if (!cartButton) throw new Error('Не найдена активная кнопка «Добавить в корзину»');
+        setStatus('Партия ' + batchNumber + ' из ' + batchCount + ': добавляю в корзину…');
+        await clickAndWait(cartButton, Math.max(config.delay, 700));
+    }
+
+    async function waitForNextBatchScreen(delay, completed, total) {
+        setStatus('В корзине ' + completed + ' из ' + total + ' билетов. Жду новый экран кассы…');
+        const end = Date.now() + 12000;
+        while (Date.now() < end) {
+            assertRunning();
+            if (ticketStepReady()) return;
+            await sleep(120);
+        }
+        await ensureTicketStep(delay);
+    }
+
+    async function run(mode) {
+        if (state.running) return;
+        state.stopped = false;
+        setRunning(true);
+        try {
+            const config = getConfig(mode === 'cart');
+            await ensureTicketStep(config.delay);
+            const errors = validatePage();
+            if (errors.length) throw new Error('Не найдено: ' + errors.join(', '));
+
+            const extras = extraCount(config.extras);
+            if (mode === 'fill') {
+                const testQuantity = Math.min(5, config.quantity);
+                const testConfig = { ...config, quantity: testQuantity };
+                setStatus('Тест: заполняю первые ' + testQuantity + ' из ' + config.quantity + ' билетов…');
+                const testTotal = await fillTickets(testConfig);
+                const remainder = config.quantity - testQuantity;
+                setStatus('Тест готов: заполнено ' + testQuantity + ' билетов × ' + drawCountText(config.drawIds.length) +
+                    (testTotal === null ? '' : ', итого на экране ' + testTotal + ' ₽') +
+                    (remainder > 0 ? '. Остальные ' + remainder + ' появятся только после добавления первой партии в корзину.' : ''), 'ok');
+                return;
+            }
+
+            const batchCount = Math.ceil(config.quantity / 5);
+            let completed = 0;
+            let knownTotal = 0;
+            let totalKnown = true;
+
+            for (let batchNumber = 1; batchNumber <= batchCount; batchNumber += 1) {
+                assertRunning();
+                await ensureTicketStep(config.delay);
+                const batchSize = Math.min(5, config.quantity - completed);
+                const batchConfig = { ...config, quantity: batchSize };
+                setStatus('Партия ' + batchNumber + ' из ' + batchCount + ': ' + batchSize + ' билетов × ' +
+                    drawCountText(config.drawIds.length) + ', допигр в каждом — ' + extras);
+                const batchTotal = await fillTickets(batchConfig);
+                if (batchTotal === null) totalKnown = false;
+                else knownTotal += batchTotal;
+                await addBatchToCart(batchConfig, batchNumber, batchCount);
+                completed += batchSize;
+
+                if (completed < config.quantity) {
+                    await waitForNextBatchScreen(config.delay, completed, config.quantity);
+                    const nextErrors = validatePage();
+                    if (nextErrors.length) throw new Error('Новый экран кассы не готов: ' + nextErrors.join(', '));
+                }
+            }
+
+            setStatus('Готово: все ' + config.quantity + ' билетов × ' + drawCountText(config.drawIds.length) +
+                ' добавлены в корзину' + (totalKnown ? ' на ' + knownTotal + ' ₽' : '') + '. Оплата не запускалась.', 'ok');
+        } catch (error) {
+            console.error('[Цветные шары v' + VERSION + ']', error);
+            if (error && error.code === 'CBB_STOP') setStatus('Остановлено пользователем', 'warn');
+            else setStatus('Ошибка: ' + (error && error.message ? error.message : String(error)), 'error');
+        } finally {
+            setRunning(false);
+        }
+    }
+
+    const style = document.createElement('style');
+    style.id = STYLE_ID;
+    style.textContent = `
+        #${ROOT_ID}{position:fixed;z-index:2147483646;left:50%;bottom:14px;transform:translateX(-50%);width:min(680px,calc(100vw - 20px));max-height:calc(100vh - 28px);overflow:auto;box-sizing:border-box;padding:14px;border:2px solid #ff6b1a;border-radius:16px;background:#111827;color:#f8fafc;box-shadow:0 18px 60px rgba(0,0,0,.55);font:13px/1.35 Inter,system-ui,sans-serif}
+        #${ROOT_ID} *{box-sizing:border-box}
+        #${ROOT_ID} .cbb-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:11px;cursor:grab;touch-action:none;user-select:none}
+        #${ROOT_ID} .cbb-head:active{cursor:grabbing}
+        #${ROOT_ID} .cbb-title{font-size:17px;font-weight:900;color:#fff}
+        #${ROOT_ID} .cbb-title small{display:block;margin-top:2px;color:#fb923c;font-size:10px;letter-spacing:.05em}
+        #${ROOT_ID} .cbb-close{width:34px;height:34px;padding:0;border:1px solid #475569;border-radius:9px;background:#1f2937;color:#fca5a5;font-size:20px;cursor:pointer}
+        #${ROOT_ID} .cbb-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+        #${ROOT_ID} .cbb-field{display:grid;gap:4px;min-width:0}
+        #${ROOT_ID} .cbb-field.wide{grid-column:span 2}
+        #${ROOT_ID} .cbb-field.full{grid-column:1/-1}
+        #${ROOT_ID} label{color:#cbd5e1;font-size:10px;font-weight:800}
+        #${ROOT_ID} input,#${ROOT_ID} select{width:100%;min-width:0;padding:8px;border:1px solid #475569;border-radius:8px;background:#1f2937;color:#fff;font:700 12px system-ui,sans-serif;outline:none}
+        #${ROOT_ID} input:focus,#${ROOT_ID} select:focus{border-color:#fb923c;box-shadow:0 0 0 3px rgba(251,146,60,.15)}
+        #${ROOT_ID} .cbb-section{margin-top:10px;padding-top:10px;border-top:1px solid #334155}
+        #${ROOT_ID} .cbb-section-title{margin-bottom:7px;color:#fdba74;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.04em}
+        #${ROOT_ID} .cbb-actions{display:flex;flex-wrap:wrap;gap:7px;margin-top:11px}
+        #${ROOT_ID} button{border:0;border-radius:9px;padding:9px 12px;font:900 11px system-ui,sans-serif;cursor:pointer}
+        #${ROOT_ID} button:disabled{cursor:not-allowed;opacity:.45}
+        #${ROOT_ID} .cbb-check{background:#475569;color:#fff}
+        #${ROOT_ID} .cbb-fill{background:#2563eb;color:#fff}
+        #${ROOT_ID} .cbb-cart{background:#16a34a;color:#fff}
+        #${ROOT_ID} .cbb-stop{margin-left:auto;background:#dc2626;color:#fff}
+        #${ROOT_ID} .cbb-draw-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+        #${ROOT_ID} .cbb-draw-head button{padding:5px 9px;background:#475569;color:#fff;font-size:9px}
+        #${ROOT_ID} .cbb-draw-summary{padding:7px 9px;border:1px solid #475569;border-radius:8px;background:#1f2937;color:#fdba74;font-size:10px;font-weight:900}
+        #${ROOT_ID} .cbb-draw-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px;max-height:130px;overflow:auto;padding:6px;border:1px solid #334155;border-radius:9px;background:#0f172a}
+        #${ROOT_ID} .cbb-draw-option{display:flex;align-items:flex-start;gap:6px;padding:6px;border:1px solid #334155;border-radius:7px;background:#1e293b;color:#e2e8f0;font-size:9px;line-height:1.25;cursor:pointer}
+        #${ROOT_ID} .cbb-draw-option input{width:auto;margin:1px 0 0;padding:0;accent-color:#fb923c}
+        #${ROOT_ID} .cbb-draw-message{grid-column:1/-1;padding:8px;color:#94a3b8;text-align:center;font-size:10px}
+        #${ROOT_ID} .cbb-status{margin-top:10px;padding:9px 11px;border:1px solid #334155;border-radius:10px;background:#1e293b;color:#cbd5e1;font-weight:700;min-height:38px}
+        #${ROOT_ID} .cbb-status[data-tone="ok"]{border-color:#15803d;color:#bbf7d0}
+        #${ROOT_ID} .cbb-status[data-tone="warn"]{border-color:#d97706;color:#fde68a}
+        #${ROOT_ID} .cbb-status[data-tone="error"]{border-color:#dc2626;color:#fecaca}
+        #${ROOT_ID} .cbb-note{margin-top:7px;color:#94a3b8;font-size:10px}
+        #${ROOT_ID} .cbb-swatch{display:inline-block;width:9px;height:9px;margin-right:5px;border-radius:50%;vertical-align:-1px;border:1px solid rgba(255,255,255,.35)}
+        html.cbb-native-draw-hidden .MuiBackdrop-root,html.cbb-native-draw-hidden [role="dialog"]{visibility:hidden!important;opacity:0!important;pointer-events:none!important}
+        @media(max-width:620px){#${ROOT_ID}{bottom:6px;max-height:calc(100vh - 12px);padding:11px}#${ROOT_ID} .cbb-grid{grid-template-columns:repeat(2,minmax(0,1fr))}#${ROOT_ID} .cbb-field.wide{grid-column:span 2}#${ROOT_ID} .cbb-draw-list{grid-template-columns:1fr}#${ROOT_ID} .cbb-stop{margin-left:0}}
+    `;
+    document.head.appendChild(style);
+
+    const colorOptionsHtml = '<option value="">Не играть</option>' + COLOR_OPTIONS.map((color, index) =>
+        '<option value="' + index + '">' + color[0] + '</option>'
+    ).join('');
+    const numberOptionsHtml = '<option value="">Не играть</option>' + Array.from({ length: 48 }, (_, index) =>
+        '<option value="' + (index + 1) + '">' + (index + 1) + '</option>'
+    ).join('');
+
+    const panel = document.createElement('div');
+    panel.id = ROOT_ID;
+    panel.innerHTML = `
+        <div class="cbb-head">
+            <div class="cbb-title">Покупатель «Цветные шары»<small>v${VERSION} · тяните за шапку · только добавление в корзину</small></div>
+            <button class="cbb-close" id="cbb-close" title="Закрыть">×</button>
+        </div>
+        <div class="cbb-grid">
+            <div class="cbb-field"><label for="cbb-quantity">Всего билетов — партиями по 5</label><input id="cbb-quantity" type="number" min="1" max="50" value="10"></div>
+            <div class="cbb-field"><label for="cbb-delay">Задержка, мс</label><input id="cbb-delay" type="number" min="80" max="3000" step="20" value="180"></div>
+            <div class="cbb-field wide"><label for="cbb-fixed">Закреплённые шары — до 6</label><input id="cbb-fixed" type="text" inputmode="numeric" placeholder="Например: 6 или 6 12 25"></div>
+            <div class="cbb-field wide"><label for="cbb-phone">Телефон — 10 цифр после +7</label><input id="cbb-phone" type="tel" inputmode="numeric" autocomplete="off" placeholder="9001234567"></div>
+            <div class="cbb-field full">
+                <div class="cbb-draw-head"><label>Тиражи — применяются ко всем билетам</label><button id="cbb-refresh-draws" type="button">ОБНОВИТЬ</button></div>
+                <div class="cbb-draw-summary" id="cbb-draw-summary">Считываю тиражи…</div>
+                <div class="cbb-draw-list" id="cbb-draw-list"><div class="cbb-draw-message">Считываю доступные тиражи с кассы…</div></div>
+            </div>
+        </div>
+        <div class="cbb-section">
+            <div class="cbb-section-title">Дополнительные игры — одинаковые для всех билетов</div>
+            <div class="cbb-grid">
+                <div class="cbb-field"><label for="cbb-extra-number">Число в первой пятёрке</label><select id="cbb-extra-number">${numberOptionsHtml}</select></div>
+                <div class="cbb-field"><label for="cbb-extra-parity">Первое число</label><select id="cbb-extra-parity"><option value="">Не играть</option><option value="even">Чётное</option><option value="odd">Нечётное</option></select></div>
+                <div class="cbb-field"><label for="cbb-extra-majority">Большинство первых пяти</label><select id="cbb-extra-majority"><option value="">Не играть</option><option value="even">Чётных</option><option value="odd">Нечётных</option></select></div>
+                <div class="cbb-field"><label for="cbb-extra-half">Диапазон первого</label><select id="cbb-extra-half"><option value="">Не играть</option><option value="low">1–24</option><option value="high">25–48</option></select></div>
+                <div class="cbb-field"><label for="cbb-extra-sum">Сумма первых пяти</label><select id="cbb-extra-sum"><option value="">Не играть</option><option value="low">1–122</option><option value="high">123–230</option></select></div>
+                <div class="cbb-field"><label for="cbb-extra-first-color">Цвет первого шара</label><select id="cbb-extra-first-color">${colorOptionsHtml}</select></div>
+                <div class="cbb-field wide"><label for="cbb-extra-full-color">Полная цветовая группа</label><select id="cbb-extra-full-color">${colorOptionsHtml}</select></div>
+            </div>
+        </div>
+        <div class="cbb-actions">
+            <button class="cbb-check" id="cbb-check">ПРОВЕРИТЬ КАССУ</button>
+            <button class="cbb-fill" id="cbb-fill">ТЕСТ — ЗАПОЛНИТЬ</button>
+            <button class="cbb-cart" id="cbb-cart">ДОБАВИТЬ В КОРЗИНУ</button>
+            <button class="cbb-stop" id="cbb-stop" disabled>СТОП</button>
+        </div>
+        <div class="cbb-status" id="cbb-status">Готов. Для первой проверки используйте «ТЕСТ — ЗАПОЛНИТЬ».</div>
+        <div class="cbb-note">Количество автоматически делится на партии по 5. Телефон вводится только для первой партии; следующие партии используют сохранённый номер и сразу добавляются в корзину. Тиражи считываются и применяются в фоне; родное окно выбора не показывается.</div>
+    `;
+    document.body.appendChild(panel);
+
+    const initialDrawIds = currentDrawIdsFromButton();
+    state.selectedDrawIds = initialDrawIds;
+    refreshDrawSummary();
+
+    function enablePanelDrag() {
+        const handle = panel.querySelector('.cbb-head');
+        let drag = null;
+
+        function clampPosition(left, top) {
+            const maxLeft = Math.max(0, window.innerWidth - panel.offsetWidth);
+            const maxTop = Math.max(0, window.innerHeight - Math.min(panel.offsetHeight, window.innerHeight));
+            return {
+                left: Math.min(Math.max(0, left), maxLeft),
+                top: Math.min(Math.max(0, top), maxTop)
+            };
+        }
+
+        function onPointerDown(event) {
+            if (event.button !== 0 || event.target.closest('button,input,select,a')) return;
+            const rect = panel.getBoundingClientRect();
+            panel.style.left = rect.left + 'px';
+            panel.style.top = rect.top + 'px';
+            panel.style.right = 'auto';
+            panel.style.bottom = 'auto';
+            panel.style.transform = 'none';
+            drag = { pointerId: event.pointerId, offsetX: event.clientX - rect.left, offsetY: event.clientY - rect.top };
+            if (handle.setPointerCapture) handle.setPointerCapture(event.pointerId);
+            event.preventDefault();
+        }
+
+        function onPointerMove(event) {
+            if (!drag || event.pointerId !== drag.pointerId) return;
+            const position = clampPosition(event.clientX - drag.offsetX, event.clientY - drag.offsetY);
+            panel.style.left = position.left + 'px';
+            panel.style.top = position.top + 'px';
+            event.preventDefault();
+        }
+
+        function onPointerUp(event) {
+            if (!drag || event.pointerId !== drag.pointerId) return;
+            if (handle.releasePointerCapture && handle.hasPointerCapture && handle.hasPointerCapture(event.pointerId)) {
+                handle.releasePointerCapture(event.pointerId);
+            }
+            drag = null;
+        }
+
+        function resetPosition() {
+            panel.style.left = '50%';
+            panel.style.top = 'auto';
+            panel.style.right = 'auto';
+            panel.style.bottom = window.innerWidth <= 620 ? '6px' : '14px';
+            panel.style.transform = 'translateX(-50%)';
+        }
+
+        handle.addEventListener('pointerdown', onPointerDown);
+        handle.addEventListener('pointermove', onPointerMove);
+        handle.addEventListener('pointerup', onPointerUp);
+        handle.addEventListener('pointercancel', onPointerUp);
+        handle.addEventListener('dblclick', resetPosition);
+
+        return () => {
+            handle.removeEventListener('pointerdown', onPointerDown);
+            handle.removeEventListener('pointermove', onPointerMove);
+            handle.removeEventListener('pointerup', onPointerUp);
+            handle.removeEventListener('pointercancel', onPointerUp);
+            handle.removeEventListener('dblclick', resetPosition);
+        };
+    }
+
+    const disablePanelDrag = enablePanelDrag();
+
+    document.getElementById('cbb-close').addEventListener('click', () => {
+        state.stopped = true;
+        disablePanelDrag();
+        document.documentElement.classList.remove('cbb-native-draw-hidden');
+        panel.remove();
+        style.remove();
+    });
+    document.getElementById('cbb-stop').addEventListener('click', () => {
+        state.stopped = true;
+        setStatus('Останавливаю после текущего действия…', 'warn');
+    });
+    document.getElementById('cbb-check').addEventListener('click', () => {
+        const errors = validatePage();
+        if (errors.length) setStatus('Не найдено: ' + errors.join(', '), 'error');
+        else setStatus('Касса готова: основная сетка, 7 допигр и управление билетами найдены.', 'ok');
+    });
+    document.getElementById('cbb-refresh-draws').addEventListener('click', () => scanDrawsInBackground(true));
+    document.getElementById('cbb-fill').addEventListener('click', () => run('fill'));
+    document.getElementById('cbb-cart').addEventListener('click', () => run('cart'));
+    setTimeout(() => scanDrawsInBackground(false), 0);
+})();

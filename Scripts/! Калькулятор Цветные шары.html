@@ -436,6 +436,8 @@
             cursor: pointer;
         }
         .strategy-enable input, .strategy-check input { accent-color: var(--blue); }
+        .strategy-rule-all { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 5px; }
+        .strategy-rule-all .soft-btn { white-space: nowrap; }
         .strategy-mode-switch { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
         .strategy-mode-btn {
             min-height: 42px;
@@ -461,11 +463,40 @@
         }
         .strategy-legend { display: flex; flex-wrap: wrap; gap: 6px; margin: 9px 0; }
         .strategy-legend span { padding: 5px 8px; border: 1px solid var(--line); border-radius: 999px; color: #a9a9bb; font-size: 9px; font-weight: 850; }
+        .stop-balls-option {
+            display: grid;
+            grid-template-columns: auto minmax(0,1fr) auto;
+            gap: 9px;
+            align-items: center;
+            margin-top: 10px;
+            padding: 10px 12px;
+            border: 1px solid rgba(255,112,126,.3);
+            border-radius: 11px;
+            background: linear-gradient(135deg, rgba(255,80,98,.12), rgba(130,87,255,.07));
+            cursor: pointer;
+        }
+        .stop-balls-option input { accent-color: #ff6677; }
+        .stop-balls-option strong { display: block; color: #ffd7dc; font-size: 11px; letter-spacing: .04em; }
+        .stop-balls-option small { display: block; margin-top: 2px; color: #bfaeb5; font-size: 9px; line-height: 1.35; }
+        .stop-balls-status { padding: 5px 8px; border-radius: 999px; background: rgba(255,255,255,.05); color: #b9b9c8; font-size: 9px; font-weight: 950; white-space: nowrap; }
+        .stop-balls-status.done { background: rgba(255,80,98,.17); color: #ffb7c0; }
+        .profit-stop-option {
+            grid-template-columns: auto minmax(0,1fr) minmax(112px, auto) auto;
+            border-color: rgba(71,211,143,.3);
+            background: linear-gradient(135deg, rgba(36,190,116,.12), rgba(35,137,245,.07));
+            cursor: default;
+        }
+        .profit-stop-option > input { accent-color: #47d38f; }
+        .profit-stop-option > label[for="stop-profit"] { cursor: pointer; }
+        .profit-stop-option strong { color: #caffdf; }
+        .profit-stop-threshold { display: grid; grid-template-columns: auto 70px; gap: 6px; align-items: center; color: #b9cfc3; font-size: 9px; font-weight: 900; white-space: nowrap; }
+        .profit-stop-threshold input { width: 70px; padding: 6px; border: 1px solid rgba(71,211,143,.25); border-radius: 8px; background: #20202c; color: white; text-align: center; font-weight: 950; }
+        .profit-stop-option .stop-balls-status.done { background: rgba(36,190,116,.17); color: #9ff2c8; }
         .strategy-games { display: grid; gap: 6px; margin-top: 10px; }
         #strategy-game-list { display: grid; gap: 6px; }
         .strategy-game-head, .strategy-game-row {
             display: grid;
-            grid-template-columns: minmax(180px, 1fr) 78px 78px minmax(135px, auto);
+            grid-template-columns: minmax(160px, 1fr) 105px 72px 72px minmax(125px, auto);
             gap: 8px;
             align-items: center;
         }
@@ -474,6 +505,8 @@
         .strategy-game-row.inactive { opacity: .58; }
         .strategy-game-name strong { display: block; color: #ededf6; font-size: 10px; }
         .strategy-game-name small { display: block; margin-top: 2px; color: var(--muted); font-size: 8px; }
+        .strategy-game-step { width: 100%; min-width: 0; padding: 7px 6px; border: 1px solid var(--line); border-radius: 8px; background: #20202c; color: white; text-align: center; font-size: 9px; font-weight: 950; }
+        .strategy-game-step:focus { outline: 0; border-color: var(--blue); box-shadow: 0 0 0 3px rgba(35,137,245,.1); }
         .strategy-check { display: flex; align-items: center; justify-content: center; gap: 5px; color: #c9c9d7; font-size: 9px; font-weight: 900; cursor: pointer; }
         .strategy-game-status { justify-self: end; padding: 5px 8px; border-radius: 999px; background: rgba(35,137,245,.1); color: #a9d5ff; font-size: 9px; font-weight: 950; text-align: right; }
         .strategy-game-status.stopped { border: 1px solid rgba(255,112,126,.28); background: rgba(255,80,98,.12); color: #ffadb6; }
@@ -481,6 +514,9 @@
         .draw-stop-events { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 0 11px 10px; padding: 8px 9px; border: 1px solid rgba(255,112,126,.25); border-radius: 11px; background: rgba(255,80,98,.09); }
         .draw-stop-title { color: #ffadb6; font-size: 9px; font-weight: 950; text-transform: uppercase; }
         .stopped-game-tag { padding: 4px 7px; border-radius: 999px; background: rgba(255,80,98,.15); color: #ffd0d5; font-size: 9px; font-weight: 900; }
+        .draw-card.calculation-stopped { opacity: .68; }
+        .draw-stopped-result { grid-column: 1 / -1; border: 1px solid rgba(255,112,126,.22); background: rgba(255,80,98,.09) !important; }
+        .draw-stopped-result strong { color: #ffadb6; }
 
         .data-toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
         .file-input { display: none; }
@@ -589,6 +625,10 @@
             .strategy-game-head { display: none; }
             .strategy-game-row { grid-template-columns: repeat(2,minmax(0,1fr)); }
             .strategy-game-name, .strategy-game-status { grid-column: 1 / -1; justify-self: stretch; text-align: left; }
+            .stop-balls-option { grid-template-columns: auto 1fr; }
+            .stop-balls-status { grid-column: 1 / -1; justify-self: stretch; text-align: center; }
+            .profit-stop-threshold { grid-column: 1 / -1; grid-template-columns: 1fr 84px; white-space: normal; }
+            .profit-stop-threshold input { width: 84px; }
             .prize-grid { grid-template-columns: repeat(3,minmax(0,1fr)); }
             .builder-tools { grid-template-columns: repeat(2,minmax(0,1fr)); }
             .builder-side { grid-column: 1 / -1; }
@@ -673,7 +713,7 @@
                     <div class="card-head">
                         <div>
                             <h2 class="card-title">Общее управление стратегией</h2>
-                            <div class="card-note">Одно правило для всех ставок слоя, отдельный счётчик для каждой игры</div>
+                            <div class="card-note">Отдельные правила, счётчики, сброс и стоп для каждой игры</div>
                         </div>
                     </div>
                     <div class="strategy-toolbar">
@@ -686,18 +726,41 @@
                             </div>
                         </div>
                         <div class="field">
-                            <label for="common-strategy-step">Правило после проигрыша</label>
-                            <input id="common-strategy-step" type="text" value="×2" placeholder="×2 или +1">
+                            <label for="common-strategy-step">Назначить правило всем</label>
+                            <div class="strategy-rule-all">
+                                <input id="common-strategy-step" type="text" value="×2" placeholder="×2 или +1">
+                                <button class="soft-btn" id="apply-rule-all" type="button">Применить</button>
+                            </div>
                         </div>
                     </div>
                     <div class="strategy-mode-note" id="strategy-mode-note"></div>
+                    <label class="stop-balls-option">
+                        <input id="stop-balls" type="checkbox">
+                        <span>
+                            <strong>СТОП ШАРЫ</strong>
+                            <small>Когда сработают все отмеченные «Стоп», текущий тираж учитывается и расчёт дня прекращается. В режиме месяца следующий день стартует с ×1</small>
+                        </span>
+                        <span class="stop-balls-status" id="stop-balls-status">Выключен</span>
+                    </label>
+                    <div class="stop-balls-option profit-stop-option">
+                        <input id="stop-profit" type="checkbox">
+                        <label for="stop-profit">
+                            <strong>СТОП ШАРЫ ПО ПРИБЫЛИ</strong>
+                            <small>Сравнивает возврат текущего дня с порогом и прекращает его дальнейшие покупки. В режиме месяца следующий день стартует с ×1</small>
+                        </label>
+                        <label class="profit-stop-threshold" for="stop-profit-percent">
+                            <span>Возврат выше, %</span>
+                            <input id="stop-profit-percent" type="number" min="0" max="100000" step="0.01" value="100" inputmode="decimal">
+                        </label>
+                        <span class="stop-balls-status" id="stop-profit-status">Выключен</span>
+                    </div>
                     <div class="strategy-legend">
                         <span><b>Правило</b> — меняет количество после проигрыша</span>
                         <span><b>Сброс</b> — возвращает только выигравшую игру к ×1</span>
                         <span><b>Стоп</b> — после выигрыша отключает только эту игру</span>
                     </div>
                     <div class="strategy-games">
-                        <div class="strategy-game-head"><span>Игра</span><span>Сброс</span><span>Стоп</span><span>Состояние</span></div>
+                        <div class="strategy-game-head"><span>Игра</span><span>Правило</span><span>Сброс</span><span>Стоп</span><span>Состояние</span></div>
                         <div id="strategy-game-list"></div>
                     </div>
                 </div>
@@ -944,7 +1007,10 @@
                 enabled:false,
                 mode:'real',
                 step:'×2',
-                games:Object.fromEntries(GAME_DEFS.map(game => [game.key, { reset:true, stop:false }]))
+                stopBalls:false,
+                profitStop:false,
+                profitStopPercent:100,
+                games:Object.fromEntries(GAME_DEFS.map(game => [game.key, { step:'×2', reset:true, stop:false }]))
             };
         }
 
@@ -952,9 +1018,14 @@
             if (!layer.strategy) layer.strategy = createDefaultStrategy();
             if (!['independent','real'].includes(layer.strategy.mode)) layer.strategy.mode = 'real';
             if (!layer.strategy.step) layer.strategy.step = '×2';
+            layer.strategy.stopBalls = Boolean(layer.strategy.stopBalls);
+            layer.strategy.profitStop = Boolean(layer.strategy.profitStop);
+            const profitStopPercent = Number(layer.strategy.profitStopPercent);
+            layer.strategy.profitStopPercent = Number.isFinite(profitStopPercent) && profitStopPercent >= 0 ? profitStopPercent : 100;
             if (!layer.strategy.games) layer.strategy.games = {};
             GAME_DEFS.forEach(game => {
-                if (!layer.strategy.games[game.key]) layer.strategy.games[game.key] = { reset:true, stop:false };
+                if (!layer.strategy.games[game.key]) layer.strategy.games[game.key] = { step:layer.strategy.step, reset:true, stop:false };
+                if (!layer.strategy.games[game.key].step) layer.strategy.games[game.key].step = layer.strategy.step;
                 layer.strategy.games[game.key].reset = layer.strategy.games[game.key].reset !== false;
                 layer.strategy.games[game.key].stop = Boolean(layer.strategy.games[game.key].stop);
             });
@@ -1242,16 +1313,59 @@
             if (!list) return;
             const layer = activeLayer();
             const strategy = ensureLayerStrategy(layer);
-            const simulation = simulateCommonStrategy(layer.tickets, scopeDraws(), strategy);
+            const simulation = simulateCommonStrategy(layer.tickets, scopeDraws(), strategy, commonStrategyOptions());
             $('common-strategy-enabled').checked = strategy.enabled;
             $('common-strategy-step').value = strategy.step;
+            $('stop-balls').checked = strategy.stopBalls;
+            $('stop-profit').checked = strategy.profitStop;
+            $('stop-profit-percent').value = strategy.profitStopPercent;
             document.querySelectorAll('.strategy-mode-btn').forEach(button => {
                 button.classList.toggle('active', button.dataset.strategyMode === strategy.mode);
             });
             $('strategy-mode-note').textContent = strategy.mode === 'independent'
                 ? 'Независимые игры: у каждой игры свой счётчик, затраты и выигрыш. Остановленная игра больше не участвует, остальные продолжают расчёт.'
                 : 'Реальные билеты: допигры приобретаются только вместе с основной ставкой. Фактическое число базовых билетов равно наибольшему количеству среди продолжающихся игр.';
-            const realQuantity = strategy.mode === 'real' ? nextPhysicalQuantity(layer.tickets, simulation.states) : 0;
+            const stopTargets = GAME_DEFS.filter(game => simulation.states[game.key].active && strategy.games[game.key].stop);
+            const stoppedTargets = stopTargets.filter(game => simulation.states[game.key].stopped).length;
+            const dailyStopMode = simulation.stopScope === 'day';
+            const stopBallsHits = simulation.globalStops.filter(stop => stop.stopBallsTriggered);
+            const profitStopHits = simulation.globalStops.filter(stop => stop.profitStopTriggered);
+            const latestStopBalls = stopBallsHits[stopBallsHits.length - 1];
+            const latestProfitStop = profitStopHits[profitStopHits.length - 1];
+            const stopBallsStatus = $('stop-balls-status');
+            stopBallsStatus.classList.toggle('done', Boolean(strategy.enabled && latestStopBalls));
+            stopBallsStatus.textContent = !strategy.enabled
+                ? 'Включите стратегию'
+                : !strategy.stopBalls
+                ? 'Выключен'
+                : !stopTargets.length
+                    ? 'Отметьте «Стоп»'
+                    : dailyStopMode && stopBallsHits.length
+                        ? `Дневных стопов ${stopBallsHits.length} · №${latestStopBalls.drawNumber}`
+                    : simulation.globalStop?.stopBallsTriggered
+                        ? `Расчёт завершён · №${simulation.globalStop.drawNumber}`
+                        : simulation.globalStop
+                            ? 'Расчёт уже завершён'
+                        : `Сработало ${stoppedTargets} из ${stopTargets.length}`;
+            const profitStopStatus = $('stop-profit-status');
+            const returnCost = dailyStopMode ? simulation.periodCost : simulation.totalCost;
+            const returnWin = dailyStopMode ? simulation.periodWin : simulation.totalWin;
+            const currentReturn = returnCost > 0 ? returnWin / returnCost * 100 : 0;
+            profitStopStatus.classList.toggle('done', Boolean(strategy.enabled && latestProfitStop));
+            profitStopStatus.textContent = !strategy.enabled
+                ? 'Включите стратегию'
+                : !strategy.profitStop
+                    ? 'Выключен'
+                    : dailyStopMode && profitStopHits.length
+                        ? `Дневных стопов ${profitStopHits.length} · последний ${latestProfitStop.returnPercent.toFixed(2)}%`
+                    : simulation.globalStop?.profitStopTriggered
+                        ? `Стоп · ${simulation.globalStop.returnPercent.toFixed(2)}%`
+                        : simulation.globalStop
+                            ? 'Расчёт уже завершён'
+                            : returnCost > 0
+                                ? `${dailyStopMode ? 'Текущий день' : 'Сейчас'} ${currentReturn.toFixed(2)}%`
+                                : `Порог > ${plainNumber(strategy.profitStopPercent)}%`;
+            const realQuantity = strategy.mode === 'real' && !simulation.globalStop ? nextPhysicalQuantity(layer.tickets, simulation.states) : 0;
             list.innerHTML = GAME_DEFS.map(game => {
                 const participants = gameTicketCount(layer.tickets, game.key);
                 const state = simulation.states[game.key];
@@ -1260,6 +1374,8 @@
                     if (state.stopped) {
                         const draw = state.stoppedAt;
                         status = `Стоп${draw ? ` · №${draw.drawNumber}` : ''}`;
+                    } else if (simulation.globalStop) {
+                        status = 'Общий стоп';
                     } else {
                         status = `Дальше ×${plainNumber(state.current)}`;
                         if (game.key === 'main' && strategy.mode === 'real' && realQuantity !== state.current) status += ` · факт ×${plainNumber(realQuantity)}`;
@@ -1268,6 +1384,7 @@
                 return `
                     <div class="strategy-game-row${participants ? '' : ' inactive'}" data-strategy-game="${game.key}">
                         <div class="strategy-game-name"><strong>${escapeHtml(game.name)}</strong><small>${escapeHtml(game.short)} · ставок: ${participants}</small></div>
+                        <input class="strategy-game-step" data-strategy-step type="text" value="${escapeHtml(strategy.games[game.key].step)}" title="Правило после проигрыша: ×2 или +1">
                         <label class="strategy-check" title="После выигрыша вернуть только эту игру к ×1"><input data-strategy-option="reset" type="checkbox"${strategy.games[game.key].reset ? ' checked' : ''}> Сброс</label>
                         <label class="strategy-check" title="После выигрыша остановить только эту игру"><input data-strategy-option="stop" type="checkbox"${strategy.games[game.key].stop ? ' checked' : ''}> Стоп</label>
                         <span class="strategy-game-status${state.stopped ? ' stopped' : ''}">${escapeHtml(status)}</span>
@@ -1282,12 +1399,38 @@
             };
             $('common-strategy-step').onchange = event => {
                 strategy.step = event.target.value.trim() || '×2';
+            };
+            $('apply-rule-all').onclick = () => {
+                const value = $('common-strategy-step').value.trim() || '×2';
+                strategy.step = value;
+                GAME_DEFS.forEach(game => { strategy.games[game.key].step = value; });
                 renderTickets();
+                renderDrawsAndTotals();
+            };
+            $('stop-balls').onchange = event => {
+                strategy.stopBalls = event.target.checked;
+                renderDrawsAndTotals();
+            };
+            $('stop-profit').onchange = event => {
+                strategy.profitStop = event.target.checked;
+                renderDrawsAndTotals();
+            };
+            $('stop-profit-percent').onchange = event => {
+                const value = Number(event.target.value);
+                strategy.profitStopPercent = Number.isFinite(value) && value >= 0 ? value : 100;
                 renderDrawsAndTotals();
             };
             document.querySelectorAll('.strategy-mode-btn').forEach(button => {
                 button.onclick = () => {
                     strategy.mode = button.dataset.strategyMode;
+                    renderTickets();
+                    renderDrawsAndTotals();
+                };
+            });
+            list.querySelectorAll('[data-strategy-step]').forEach(input => {
+                input.onchange = () => {
+                    const row = input.closest('[data-strategy-game]');
+                    strategy.games[row.dataset.strategyGame].step = input.value.trim() || '×2';
                     renderTickets();
                     renderDrawsAndTotals();
                 };
@@ -1617,16 +1760,37 @@
             }]));
         }
 
-        function simulateCommonStrategy(tickets, groups, strategy = ensureLayerStrategy()) {
-            const states = initialStrategyStates(tickets);
+        function commonStrategyOptions() {
+            return { stopScope:calculationMonthKey ? 'day' : 'scope' };
+        }
+
+        function commonStopTitle(stop) {
+            if (!stop) return '';
+            if (stop.stopBallsTriggered && stop.profitStopTriggered) return 'СТОП ШАРЫ + СТОП ПО ПРИБЫЛИ';
+            return stop.profitStopTriggered ? 'СТОП ШАРЫ ПО ПРИБЫЛИ' : 'СТОП ШАРЫ';
+        }
+
+        function simulateCommonStrategy(tickets, groups, strategy = ensureLayerStrategy(), options = {}) {
+            const stopScope = options.stopScope === 'day' ? 'day' : 'scope';
+            let states = initialStrategyStates(tickets);
             const perTicket = tickets.map(() => ({ cost:0, win:0 }));
             const records = [];
-            const rule = parseStep(strategy.step);
+            const rules = Object.fromEntries(GAME_DEFS.map(game => [game.key, parseStep(strategy.games[game.key].step)]));
+            const globalStops = [];
             let totalCost = 0;
             let totalWin = 0;
+            let periodCost = 0;
+            let periodWin = 0;
+            let globalStop = null;
+            let calculationStopped = false;
 
             groups.forEach(group => {
+                if (calculationStopped) return;
+                let groupStopped = false;
+                periodCost = 0;
+                periodWin = 0;
                 group.draws.forEach((draw, drawIndex) => {
+                    if (calculationStopped || groupStopped) return;
                     const evaluations = tickets.map(ticket => evaluateTicket(ticket, draw));
                     const quantities = Object.fromEntries(GAME_DEFS.map(game => {
                         const state = states[game.key];
@@ -1692,15 +1856,46 @@
                                 state.current = 1;
                             }
                         } else {
-                            state.current = nextQty(state.current, rule);
+                            state.current = nextQty(state.current, rules[game.key]);
                         }
                     });
 
                     extraWins.forEach(item => item.wins.forEach(gameWin => {
                         gameWin.stopped = stopEvents.some(event => event.key === gameWin.key);
                     }));
-                    totalCost += cost;
-                    totalWin += win;
+                    const stopTargets = GAME_DEFS.filter(game => states[game.key].active && strategy.games[game.key].stop);
+                    const stopBallsTriggered = strategy.stopBalls
+                        && stopTargets.length > 0
+                        && stopTargets.every(game => states[game.key].stopped);
+                    const nextTotalCost = totalCost + cost;
+                    const nextTotalWin = totalWin + win;
+                    const nextPeriodCost = periodCost + cost;
+                    const nextPeriodWin = periodWin + win;
+                    const stopCost = stopScope === 'day' ? nextPeriodCost : nextTotalCost;
+                    const stopWin = stopScope === 'day' ? nextPeriodWin : nextTotalWin;
+                    const returnPercent = stopCost > 0 ? stopWin / stopCost * 100 : 0;
+                    const profitStopTriggered = strategy.profitStop
+                        && stopCost > 0
+                        && returnPercent > strategy.profitStopPercent;
+                    if (stopBallsTriggered || profitStopTriggered) {
+                        const stop = {
+                            drawNumber:draw.drawNumber,
+                            date:group.date,
+                            time:draw.time,
+                            games:stopTargets.map(game => ({ key:game.key, name:game.name })),
+                            stopBallsTriggered,
+                            profitStopTriggered,
+                            returnPercent,
+                            returnThreshold:strategy.profitStopPercent
+                        };
+                        globalStops.push(stop);
+                        if (stopScope === 'day') groupStopped = true;
+                        else globalStop = stop;
+                    }
+                    totalCost = nextTotalCost;
+                    totalWin = nextTotalWin;
+                    periodCost = nextPeriodCost;
+                    periodWin = nextPeriodWin;
                     records.push({
                         date:group.date,
                         drawIndex,
@@ -1710,12 +1905,18 @@
                         profit:win-cost,
                         extraWins,
                         stopEvents,
-                        quantities
+                        quantities,
+                        stopBallsTriggered,
+                        profitStopTriggered,
+                        returnPercent,
+                        returnThreshold:strategy.profitStopPercent
                     });
+                    if (globalStop) calculationStopped = true;
                 });
+                if (stopScope === 'day' && groupStopped) states = initialStrategyStates(tickets);
             });
 
-            return { totalCost, totalWin, perTicket, records, states };
+            return { totalCost, totalWin, periodCost, periodWin, perTicket, records, states, globalStop, globalStops, stopScope };
         }
 
         function dateKey(value) {
@@ -1962,39 +2163,62 @@
         }
 
         function renderDraws() {
-            const draws = activeDraws();
-            if (!draws.length) {
+            const displayGroups = calculationMonthKey
+                ? scopeDraws()
+                : activeDay && loadedDays[activeDay]
+                    ? [{ date:activeDay, draws:activeDraws() }]
+                    : [];
+            const drawEntries = displayGroups.flatMap(group =>
+                group.draws.map((draw, drawIndex) => ({ date:group.date, drawIndex, draw }))
+            );
+            if (!drawEntries.length) {
                 $('draw-list').innerHTML = '<div class="empty-state">Нет тиражей для отображения</div>';
                 $('draw-note').textContent = 'Загрузите архив или добавьте тираж вручную';
                 return;
             }
             const strategy = ensureLayerStrategy();
             let strategyRecords = new Map();
+            let strategySimulation = null;
             if (strategy.enabled) {
-                let groups = calculationMonthKey && monthKey(activeDay) === calculationMonthKey
-                    ? scopeDraws()
-                    : [{ date:activeDay, draws }];
-                let simulation = simulateCommonStrategy(activeLayer().tickets, groups, strategy);
-                let visibleRecords = simulation.records.filter(record => record.date === activeDay);
-                if (!visibleRecords.length) {
-                    simulation = simulateCommonStrategy(activeLayer().tickets, [{ date:activeDay, draws }], strategy);
-                    visibleRecords = simulation.records;
-                }
-                strategyRecords = new Map(visibleRecords.map(record => [record.drawIndex, record]));
+                strategySimulation = simulateCommonStrategy(activeLayer().tickets, displayGroups, strategy, commonStrategyOptions());
+                strategyRecords = new Map(strategySimulation.records.map(record => [`${record.date}::${record.drawIndex}`, record]));
             }
-            $('draw-note').textContent = `Показано ${draws.length} из ${loadedDays[activeDay].length} тиражей за ${activeDay}`;
-            $('draw-list').innerHTML = draws.map((draw, index) => {
-                const stats = strategy.enabled ? strategyRecords.get(index) || { cost:0, win:0, profit:0, extraWins:[], stopEvents:[] } : drawStats(draw, index);
+            const globalStopTitle = commonStopTitle(strategySimulation?.globalStop);
+            const dailyStops = strategySimulation?.stopScope === 'day' ? strategySimulation.globalStops : [];
+            const dailyStopsByDate = new Map(dailyStops.map(stop => [stop.date, stop]));
+            $('draw-note').textContent = strategySimulation?.globalStop
+                ? `${globalStopTitle} · обработано ${strategySimulation.records.length} из ${drawEntries.length} тиражей · стоп на №${strategySimulation.globalStop.drawNumber}`
+                : calculationMonthKey
+                    ? `Показаны все ${drawEntries.length} тиражей за ${monthLabel(calculationMonthKey)}${dailyStops.length ? ` · рассчитано ${strategySimulation.records.length} · дневных стопов ${dailyStops.length}` : ''}`
+                    : `Показано ${drawEntries.length} из ${loadedDays[activeDay].length} тиражей за ${activeDay}`;
+            $('draw-list').innerHTML = drawEntries.map((entry, index) => {
+                const { draw, drawIndex, date } = entry;
+                const stopForDate = dailyStopsByDate.get(date) || strategySimulation?.globalStop;
+                const stats = strategy.enabled
+                    ? strategyRecords.get(`${date}::${drawIndex}`) || {
+                        cost:0,
+                        win:0,
+                        profit:0,
+                        extraWins:[],
+                        stopEvents:[],
+                        calculationStopped:Boolean(stopForDate),
+                        stopTitle:commonStopTitle(stopForDate)
+                    }
+                    : drawStats(draw, drawIndex);
                 const profitClass = stats.profit > 0 ? 'positive' : stats.profit < 0 ? 'negative' : '';
                 return `
-                    <article class="draw-card">
+                    <article class="draw-card${stats.calculationStopped ? ' calculation-stopped' : ''}">
                         <div class="draw-main">
-                            <div class="draw-id"><strong>Т${index+1} · №${escapeHtml(draw.drawNumber)}</strong><small>${escapeHtml(draw.time || '—')} · ${escapeHtml(draw.date)}</small></div>
+                            <div class="draw-id"><strong>Т${index+1} · №${escapeHtml(draw.drawNumber)}</strong><small>${escapeHtml(draw.time || '—')} · ${escapeHtml(date || draw.date)}</small></div>
                             <div class="draw-first">${draw.numbers.slice(0,5).map(number => ballHtml(number,'sm')).join('')}<span class="draw-dots">…</span></div>
                             <div class="draw-result">
-                                <div><small>Затраты</small><strong>${money(stats.cost)}</strong></div>
-                                <div><small>Выигрыш</small><strong>${money(stats.win)}</strong></div>
-                                <div><small>Итог</small><strong class="${profitClass}">${stats.profit > 0 ? '+' : ''}${money(stats.profit)}</strong></div>
+                                ${stats.calculationStopped ? `
+                                    <div class="draw-stopped-result"><small>${escapeHtml(stats.stopTitle || globalStopTitle || 'РАСЧЁТ ОСТАНОВЛЕН')}</small><strong>Тираж не рассчитывался</strong></div>
+                                ` : `
+                                    <div><small>Затраты</small><strong>${money(stats.cost)}</strong></div>
+                                    <div><small>Выигрыш</small><strong>${money(stats.win)}</strong></div>
+                                    <div><small>Итог</small><strong class="${profitClass}">${stats.profit > 0 ? '+' : ''}${money(stats.profit)}</strong></div>
+                                `}
                             </div>
                         </div>
                         ${stats.extraWins.length ? `
@@ -2015,6 +2239,18 @@
                                 ${stats.stopEvents.map(event => `<span class="stopped-game-tag">${escapeHtml(event.name)}</span>`).join('')}
                             </div>
                         ` : ''}
+                        ${stats.stopBallsTriggered ? `
+                            <div class="draw-stop-events">
+                                <span class="draw-stop-title">СТОП ШАРЫ:</span>
+                                <span class="stopped-game-tag">Все выбранные стопы сработали — дальнейший расчёт завершён</span>
+                            </div>
+                        ` : ''}
+                        ${stats.profitStopTriggered ? `
+                            <div class="draw-stop-events">
+                                <span class="draw-stop-title">СТОП ШАРЫ ПО ПРИБЫЛИ:</span>
+                                <span class="stopped-game-tag">Возврат ${stats.returnPercent.toFixed(2)}% превысил порог ${plainNumber(stats.returnThreshold)}% — дальнейший расчёт завершён</span>
+                            </div>
+                        ` : ''}
                         <details><summary>Показать все 35 шаров</summary><div class="all-balls">${draw.numbers.map(number => ballHtml(number,'xs')).join('')}</div></details>
                     </article>
                 `;
@@ -2032,7 +2268,7 @@
             const tickets = activeLayer().tickets;
             const groups = scopeDraws();
             const strategy = ensureLayerStrategy();
-            if (strategy.enabled) return simulateCommonStrategy(tickets, groups, strategy);
+            if (strategy.enabled) return simulateCommonStrategy(tickets, groups, strategy, commonStrategyOptions());
             let totalCost = 0;
             let totalWin = 0;
             const perTicket = tickets.map(() => ({ cost:0, win:0 }));
@@ -2098,9 +2334,18 @@
             });
             const groups = scopeDraws();
             const count = groups.reduce((total, group) => total + group.draws.length, 0);
-            $('calc-scope').textContent = calculationMonthKey
-                ? `${monthLabel(calculationMonthKey)} · ${count} тир.`
-                : activeDay ? `${activeDay} · ${count} тир.` : 'Нет данных';
+            const scopeLabel = calculationMonthKey
+                ? monthLabel(calculationMonthKey)
+                : activeDay || 'Нет данных';
+            const stopScopeLabel = result.globalStop
+                ? commonStopTitle(result.globalStop)
+                : '';
+            const dailyStops = result.stopScope === 'day' ? result.globalStops || [] : [];
+            $('calc-scope').textContent = result.globalStop
+                ? `${scopeLabel} · ${result.records.length} тир. · ${stopScopeLabel} №${result.globalStop.drawNumber}`
+                : dailyStops.length
+                    ? `${scopeLabel} · рассчитано ${result.records.length} из ${count} тир. · дневных стопов ${dailyStops.length}`
+                : activeDay || calculationMonthKey ? `${scopeLabel} · ${count} тир.` : 'Нет данных';
         }
 
         function renderDrawsAndTotals(renderList = true) {
