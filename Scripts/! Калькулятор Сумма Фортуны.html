@@ -138,6 +138,43 @@
         .qi:disabled { opacity: 0.4; cursor: not-allowed; background: #0a0202; }
 
         .right-panel { display: flex; flex-direction: column; height: 100%; min-height: 0; gap: 10px; }
+
+        .extra-games-panel {
+            background: linear-gradient(180deg, #211008, #170706); border: 1px solid #5a2a1a; border-radius: 9px;
+            padding: 9px 11px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); flex: 0 1 auto;
+            max-height: 34vh; overflow-y: auto;
+        }
+        .extra-games-panel::-webkit-scrollbar { width: 6px; }
+        .extra-games-panel::-webkit-scrollbar-track { background: #150606; border-radius: 3px; }
+        .extra-games-panel::-webkit-scrollbar-thumb { background: #8a6a2a; border-radius: 3px; }
+        .eg-header { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+        .eg-title { color: #d4af37; font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: 1.4px; }
+        .eg-summary { color: #8a6a5a; font-size: 10px; font-weight: 700; }
+        .eg-reset { margin-left: auto; background: transparent; border: 0; color: #8a6a5a; font-size: 10px; text-decoration: underline; cursor: pointer; padding: 2px 0; }
+        .eg-reset:hover { color: #f5c518; }
+        .eg-grid { display: grid; grid-template-columns: minmax(150px, .75fr) minmax(260px, 1.35fr) minmax(310px, 1.45fr); gap: 8px; }
+        .eg-section { background: #140606; border: 1px solid #3a1508; border-radius: 7px; padding: 6px; min-width: 0; }
+        .eg-section h4 { color: #b69245; font-size: 9px; text-transform: uppercase; letter-spacing: 1px; margin: 0 0 6px; display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+        .eg-section h4 span { color: #5f4936; font-size: 8px; text-transform: none; letter-spacing: 0; font-weight: 600; }
+        .eg-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 3px; }
+        .eg-options.specific { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+        .eg-btn {
+            background: #2a0808; border: 1px solid #4a1a0a; color: #aaa; border-radius: 5px; padding: 4px 6px;
+            cursor: pointer; font-size: 9px; font-weight: 800; line-height: 1.15; min-height: 27px; transition: .18s; text-align: left;
+        }
+        .eg-btn:hover { border-color: #d4af37; color: #d4af37; }
+        .eg-btn.on { color: #1a0505; background: linear-gradient(180deg, #f5c518, #c8920a); border-color: #fff2a6; box-shadow: 0 0 8px rgba(245,197,24,.25); }
+        .eg-btn .eg-cf { display: block; color: #735a2c; font-size: 8px; margin-top: 2px; }
+        .eg-btn.on .eg-cf { color: #5b3100; }
+        .position-grid { display: grid; grid-template-columns: repeat(6, minmax(38px, 1fr)); gap: 4px; }
+        .position-col { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+        .position-col-title { color: #7a6251; font-size: 8px; font-weight: 800; text-align: center; white-space: nowrap; }
+        .position-face { min-height: 21px; padding: 2px; text-align: center; font-size: 10px; }
+        .position-payouts { color: #6f5945; font-size: 8px; line-height: 1.3; margin-top: 4px; }
+        .position-payouts b { color: #b69245; }
+        .eg-data-status { color: #6f5945; font-size: 9px; margin-top: 7px; line-height: 1.25; }
+        .eg-data-status.ready { color: #62b97b; }
+        .eg-data-status.warn { color: #d19452; }
         
         .days-bar {
             background: #1f0a05; border: 1px solid #3a1508; border-radius: 8px; padding: 8px 12px;
@@ -232,10 +269,11 @@
         .dg::-webkit-scrollbar { width: 6px; }
         .dg::-webkit-scrollbar-track { background: #1a0808; border-radius: 3px; }
         .dg::-webkit-scrollbar-thumb { background: #8a6a2a; border-radius: 3px; }
-        .di { background: #1a0808; border: 1px solid #3a1508; border-radius: 8px; padding: 6px; display: flex; align-items: center; gap: 4px; min-width: 0; transition: 0.3s; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        .di { background: #1a0808; border: 1px solid #3a1508; border-radius: 8px; padding: 6px; display: grid; grid-template-columns: auto 42px minmax(0, 1fr); grid-template-rows: auto auto; align-items: center; gap: 2px 4px; min-width: 0; transition: 0.3s; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
         .di.win { border-color: #d4af37; background: #2a1a05; box-shadow: 0 0 20px rgba(212, 175, 55, 0.2); }
         .di.miss { border-color: #5a2020; }
-        .dn { color: #6a4a3a; font-size: 11px; font-weight: 800; min-width: 22px; font-style: italic; }
+        .di.unknown { border-color: #7a542a; background: #211208; }
+        .dn { color: #6a4a3a; font-size: 11px; font-weight: 800; min-width: 22px; font-style: italic; grid-row: 1 / span 2; }
         .di input { background: #0d0404; border: 1px solid #4a1a0a; color: #fff; font-size: 15px; padding: 5px; border-radius: 4px; width: 36px; text-align: center; outline: 0; font-weight: 800; -moz-appearance: textfield; box-shadow: inset 0 1px 3px rgba(0,0,0,0.5); }
         .di input::-webkit-inner-spin-button, .di input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
         .di input:focus { border-color: #d4af37; }
@@ -243,8 +281,11 @@
         .draw-result-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
         .draw-clear { flex: 0 0 auto; background: #2a0808; border: 1px solid #5a1a0a; color: #a77b68; padding: 2px 4px; border-radius: 3px; font-size: 7px; line-height: 1; cursor: pointer; text-transform: uppercase; transition: 0.2s; }
         .draw-clear:hover, .draw-clear:focus { border-color: #d4af37; color: #f5c518; outline: 0; }
+        .draw-dice { grid-column: 2 / 4; color: #8b7056; font-size: 8px; font-weight: 700; min-height: 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .draw-dice.empty { color: #493629; font-weight: 500; }
         .dr.w { color: #f5c518; font-weight: 900; text-shadow: 0 0 10px rgba(245, 197, 24, 0.7); font-size: 16px; }
         .dr.m { color: #cc4444; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;}
+        .dr.u { color: #d19452; font-weight: 700; font-size: 9px; }
 
         .sf { 
             background: linear-gradient(180deg, #1f0a05, #140606); border-top: 2px solid #8a6a2a; 
@@ -262,6 +303,23 @@
         
         .rb { background: #2a0808; border: 1px solid #5a1a0a; color: #8a6a5a; padding: 4px 10px; border-radius: 4px; font-size: 9px; cursor: pointer; transition: 0.2s; font-weight: 700; text-transform: uppercase; }
         .rb:hover { border-color: #ff4444; color: #ff4444; background: #3a0a0a; }
+
+        .ticket-games { color: #d8c7b4; font-size: 10px; line-height: 1.3; word-break: break-word; }
+        .ticket-games b { color: #f5c518; }
+
+        @media (max-width: 1250px) {
+            .eg-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .eg-position { grid-column: 1 / -1; }
+        }
+        @media (max-width: 900px) {
+            body { overflow: auto; height: auto; min-height: 100vh; }
+            .sp { min-height: calc(100vh - 20px); height: auto; }
+            .sb { grid-template-columns: 1fr; overflow: visible; }
+            .left-panel { overflow: visible; padding-right: 0; }
+            .right-panel { min-height: 700px; }
+            .eg-grid { grid-template-columns: 1fr; }
+            .eg-position { grid-column: auto; }
+        }
     </style>
 </head>
 <body>
@@ -321,12 +379,36 @@
                 <div class="days-tabs" id="days-tabs"></div>
             </div>
 
+            <div class="extra-games-panel" id="extra-games-panel">
+                <div class="eg-header">
+                    <div class="eg-title">Дополнительные игры</div>
+                    <div class="eg-summary" id="extra-summary">Не выбраны</div>
+                    <button type="button" class="eg-reset" id="extra-reset">Очистить доп. игры</button>
+                </div>
+                <div class="eg-grid">
+                    <div class="eg-section">
+                        <h4>Все шесть <span>конкретное число</span></h4>
+                        <div class="eg-options specific" id="specific-games"></div>
+                    </div>
+                    <div class="eg-section">
+                        <h4>Комбинации <span>выигрыши суммируются</span></h4>
+                        <div class="eg-options" id="combo-games"></div>
+                    </div>
+                    <div class="eg-section eg-position">
+                        <h4>Позиция <span>минимум 1 число в каждом ходе</span></h4>
+                        <div class="position-grid" id="position-games"></div>
+                        <div class="position-payouts"><b>За одну позиционную комбинацию:</b> 2 совп. — 750 ₽ · 3 — 2 100 ₽ · 4 — 7 500 ₽ · 5 — 70 000 ₽ · 6 — 1 500 000 ₽ при базовом выигрыше 700 ₽.</div>
+                    </div>
+                </div>
+                <div class="eg-data-status" id="extra-data-status">Для расчёта дополнительных игр загрузите TXT с шестью выпавшими числами.</div>
+            </div>
+
             <div class="autofill-box">
                 <input type="text" id="af-input" placeholder="Вставь сюда числа (через запятую) или Ctrl+V">
                 <button class="btn-fill" id="af-btn">Заполнить</button>
             </div>
             
-            <div class="ss" style="margin-bottom: 0; height: 100%; min-height: 0; display: flex; flex-direction: column;">
+            <div class="ss" style="margin-bottom: 0; flex: 1; min-height: 130px; display: flex; flex-direction: column;">
                 <h3>Тиражи (<span id="draw-count">24</span>) <span class="calc-scope" id="calc-scope">День</span></h3>
                 <div class="dg" id="sfdg"></div>
             </div>
@@ -348,6 +430,23 @@
         29:30, 30:55, 31:70, 32:140, 33:250, 34:4000, 35:6000, 36:8000
     };
 
+    const OFFICIAL_BASE_WIN = 700;
+    const SPECIFIC_SIX_CF = 4000;
+    const POSITION_PRIZES = { 2:750, 3:2100, 4:7500, 5:70000, 6:1500000 };
+    const COMBO_RULES = [
+        { id:'sixEqual', label:'6 одинаковых', short:'6 одинаковых', cf:2000, title:'Все шесть чисел одинаковые' },
+        { id:'fiveEqual', label:'5 или 6 одинаковых', short:'≥5 одинаковых', cf:140, title:'Пять или шесть одинаковых чисел' },
+        { id:'fourEqual', label:'4–6 одинаковых', short:'≥4 одинаковых', cf:12, title:'От четырёх до шести одинаковых чисел' },
+        { id:'twoTriples', label:'Две тройки', short:'две тройки', cf:50, title:'Два разных числа выпали по три раза: AAA BBB' },
+        { id:'threePairs', label:'Три пары', short:'три пары', cf:14, title:'Три разных числа выпали по два раза: AA BB CC' },
+        { id:'onlyEven', label:'Только чётные', short:'только чётные', cf:30, title:'Все числа только из набора 2, 4, 6' },
+        { id:'onlyOdd', label:'Только нечётные', short:'только нечётные', cf:30, title:'Все числа только из набора 1, 3, 5' },
+        { id:'onlyLow', label:'Только 1–3', short:'только 1–3', cf:30, title:'Все числа только из набора 1, 2, 3' },
+        { id:'onlyHigh', label:'Только 4–6', short:'только 4–6', cf:30, title:'Все числа только из набора 4, 5, 6' },
+        { id:'allDifferent', label:'Все числа 1–6', short:'все 1–6', cf:30, title:'Каждое число от 1 до 6 выпало ровно один раз' }
+    ];
+    const COMBO_BY_ID = Object.fromEntries(COMBO_RULES.map(rule => [rule.id, rule]));
+
     const MONTH_NAMES = {
         '01':'Январь','02':'Февраль','03':'Март','04':'Апрель','05':'Май','06':'Июнь',
         '07':'Июль','08':'Август','09':'Сентябрь','10':'Октябрь','11':'Ноябрь','12':'Декабрь'
@@ -360,9 +459,15 @@
     let layers = [{ id: 1, name: 'Слой 1', tickets: [] }];
     let activeLayerId = 1;
     let layerCounter = 1;
-    let sn = new Set(); 
+    let sn = new Set();
     let drawCount = 24;
     let drawValues = new Array(MAX_DRAW_COUNT).fill('');
+    let drawDice = new Array(MAX_DRAW_COUNT).fill(null);
+    let extraSelection = {
+        specific: new Set(),
+        combos: new Set(),
+        positions: Array.from({ length: 6 }, () => new Set())
+    };
 
     let loadedDays = {};
     let activeDay = null;
@@ -415,8 +520,66 @@
     }
 
     function ensureTicketQty(ticket) {
+        ensureTicketShape(ticket);
         if (!Array.isArray(ticket.qty)) ticket.qty = [];
         while (ticket.qty.length < drawCount) ticket.qty.push(0);
+    }
+
+    function ensureTicketShape(ticket) {
+        if (!Array.isArray(ticket.nums)) ticket.nums = [];
+        if (!Array.isArray(ticket.specific)) ticket.specific = [];
+        if (!Array.isArray(ticket.combos)) ticket.combos = [];
+        if (!Array.isArray(ticket.positions) || ticket.positions.length !== 6) {
+            ticket.positions = Array.from({ length: 6 }, () => []);
+        }
+        ticket.positions = ticket.positions.map(values => Array.isArray(values) ? values : []);
+        return ticket;
+    }
+
+    function hasAnyPosition(positions) {
+        return positions.some(values => values.length > 0);
+    }
+
+    function isPositionComplete(positions) {
+        return positions.length === 6 && positions.every(values => values.length > 0);
+    }
+
+    function getPositionVariantCount(positions) {
+        if (!isPositionComplete(positions)) return 0;
+        return positions.reduce((total, values) => total * values.length, 1);
+    }
+
+    function getTicketVariantCount(ticket) {
+        ensureTicketShape(ticket);
+        return ticket.nums.length + ticket.specific.length + ticket.combos.length + getPositionVariantCount(ticket.positions);
+    }
+
+    function getSelectionVariantCount() {
+        let positions = extraSelection.positions.map(values => Array.from(values));
+        return sn.size + extraSelection.specific.size + extraSelection.combos.size + getPositionVariantCount(positions);
+    }
+
+    function getMinWin() {
+        return parseInt(document.getElementById('sfm').value) || 550;
+    }
+
+    function getDrawResult(index) {
+        let input = document.getElementById('sfi' + index);
+        let sum = parseInt(input ? input.value : drawValues[index - 1]);
+        return {
+            sum: !isNaN(sum) && sum >= 6 && sum <= 36 ? sum : null,
+            dice: Array.isArray(drawDice[index - 1]) ? drawDice[index - 1].slice(0, 6) : null
+        };
+    }
+
+    function normalizeLoadedRecord(record) {
+        if (record && typeof record === 'object') {
+            return {
+                sum: parseInt(record.sum),
+                dice: Array.isArray(record.dice) ? record.dice.slice(0, 6) : null
+            };
+        }
+        return { sum: parseInt(record), dice: null };
     }
 
     function captureDrawValues() {
@@ -428,7 +591,18 @@
 
     function setDrawValues(values) {
         drawValues.fill('');
+        drawDice.fill(null);
         values.slice(0, MAX_DRAW_COUNT).forEach((value, i) => { drawValues[i] = value; });
+    }
+
+    function setDrawResults(records) {
+        drawValues.fill('');
+        drawDice.fill(null);
+        records.slice(0, MAX_DRAW_COUNT).forEach((record, i) => {
+            let normalized = normalizeLoadedRecord(record);
+            drawValues[i] = Number.isFinite(normalized.sum) ? normalized.sum : '';
+            drawDice[i] = normalized.dice;
+        });
     }
 
     function updateDrawModeUI() {
@@ -475,6 +649,105 @@
         return { type: 'add', value: 1, display: '+1' };
     }
 
+    function hasTicketDiceGames(ticket) {
+        ensureTicketShape(ticket);
+        return ticket.specific.length > 0 || ticket.combos.length > 0 || isPositionComplete(ticket.positions);
+    }
+
+    function isValidDice(dice) {
+        return Array.isArray(dice) && dice.length === 6 && dice.every(value => Number.isInteger(value) && value >= 1 && value <= 6);
+    }
+
+    function isComboMatch(ruleId, dice) {
+        if (!isValidDice(dice)) return false;
+        let counts = {};
+        dice.forEach(value => { counts[value] = (counts[value] || 0) + 1; });
+        let frequencies = Object.values(counts).sort((a, b) => b - a);
+        let maxFrequency = frequencies[0] || 0;
+        if (ruleId === 'sixEqual') return maxFrequency === 6;
+        if (ruleId === 'fiveEqual') return maxFrequency >= 5;
+        if (ruleId === 'fourEqual') return maxFrequency >= 4;
+        if (ruleId === 'twoTriples') return frequencies.length === 2 && frequencies[0] === 3 && frequencies[1] === 3;
+        if (ruleId === 'threePairs') return frequencies.length === 3 && frequencies.every(value => value === 2);
+        if (ruleId === 'onlyEven') return dice.every(value => value % 2 === 0);
+        if (ruleId === 'onlyOdd') return dice.every(value => value % 2 === 1);
+        if (ruleId === 'onlyLow') return dice.every(value => value >= 1 && value <= 3);
+        if (ruleId === 'onlyHigh') return dice.every(value => value >= 4 && value <= 6);
+        if (ruleId === 'allDifferent') return new Set(dice).size === 6;
+        return false;
+    }
+
+    function getPositionMatchDistribution(positions, dice) {
+        if (!isPositionComplete(positions) || !isValidDice(dice)) return new Array(7).fill(0);
+        let distribution = new Array(7).fill(0);
+        distribution[0] = 1;
+        positions.forEach((choices, position) => {
+            let next = new Array(7).fill(0);
+            let matchingChoices = choices.indexOf(dice[position]) !== -1 ? 1 : 0;
+            let missingChoices = choices.length - matchingChoices;
+            for (let matched = 0; matched <= 6; matched++) {
+                if (!distribution[matched]) continue;
+                next[matched] += distribution[matched] * missingChoices;
+                if (matchingChoices && matched < 6) next[matched + 1] += distribution[matched];
+            }
+            distribution = next;
+        });
+        return distribution;
+    }
+
+    function getTicketOutcome(ticket, draw) {
+        ensureTicketShape(ticket);
+        let minWin = getMinWin();
+        let win = 0;
+        let payoutEvents = 0;
+        let hits = [];
+        let diceReady = isValidDice(draw.dice);
+
+        if (draw.sum !== null && ticket.nums.indexOf(draw.sum) !== -1) {
+            win += minWin * CF[draw.sum];
+            payoutEvents++;
+            hits.push('Сумма ' + draw.sum);
+        }
+
+        if (diceReady) {
+            ticket.specific.forEach(face => {
+                if (draw.dice.every(value => value === face)) {
+                    win += minWin * SPECIFIC_SIX_CF;
+                    payoutEvents++;
+                    hits.push('Все шесть = ' + face);
+                }
+            });
+
+            ticket.combos.forEach(ruleId => {
+                let rule = COMBO_BY_ID[ruleId];
+                if (rule && isComboMatch(ruleId, draw.dice)) {
+                    win += minWin * rule.cf;
+                    payoutEvents++;
+                    hits.push(rule.short);
+                }
+            });
+
+            if (isPositionComplete(ticket.positions)) {
+                let distribution = getPositionMatchDistribution(ticket.positions, draw.dice);
+                for (let matched = 2; matched <= 6; matched++) {
+                    let count = distribution[matched] || 0;
+                    if (!count) continue;
+                    let scaledPrize = Math.round(POSITION_PRIZES[matched] * minWin / OFFICIAL_BASE_WIN);
+                    win += scaledPrize * count;
+                    payoutEvents += count;
+                    hits.push('Позиция ' + matched + '/6 ×' + count);
+                }
+            }
+        }
+
+        return {
+            win: win,
+            payoutEvents: payoutEvents,
+            hits: hits,
+            complete: !hasTicketDiceGames(ticket) || diceReady
+        };
+    }
+
     function applyAutoCalc(ticket) {
         if (!ticket.auto) return;
         ensureTicketQty(ticket);
@@ -483,10 +756,11 @@
         ticket.autoLimited = false;
         for (let i = 1; i <= drawCount; i++) {
             ticket.qty[i - 1] = currentQty;
-            let drawnVal = parseInt(document.getElementById('sfi' + i).value);
-            if (!isNaN(drawnVal) && drawnVal >= 6 && drawnVal <= 36 && ticket.nums.includes(drawnVal)) {
+            let draw = getDrawResult(i);
+            let outcome = draw.sum === null ? null : getTicketOutcome(ticket, draw);
+            if (outcome && outcome.win > 0) {
                 currentQty = 1;
-            } else {
+            } else if (outcome && outcome.complete) {
                 if (rule.type === 'mul') {
                     currentQty = Math.round(currentQty * rule.value);
                 } else {
@@ -506,17 +780,19 @@
         let lines = text.split(/\r?\n/).filter(l => l.trim());
         if (lines.length < 1) return {};
 
-        // Определяем формат по первому разделителю в первой строке данных
-        let firstLine = lines[0].trim();
-
-        // Проверяем заголовок: если есть ; — это CSV с суммами
-        if (firstLine.indexOf(';') !== -1) {
+        // CSV с суммами: Дата;Час;Сумма (заголовок допустим)
+        if (lines.some(line => line.indexOf(';') !== -1)) {
             return parseCSV_Sums(lines);
         }
 
-        // TXT: Номер,Дата,ч1..ч6 или Дата,ч1..ч6
-        if (firstLine.indexOf(',') !== -1) {
-            let testParts = firstLine.split(',').map(s => s.trim());
+        // TXT: Номер,Дата,ч1..ч6 или Дата,ч1..ч6 (заголовок допустим)
+        let txtLine = lines.find(line => {
+            if (line.indexOf(',') === -1) return false;
+            let parts = line.split(',').map(s => s.trim());
+            return /^\d{2}\.\d{2}\.\d{4}$/.test(parts[0] || '') || /^\d{2}\.\d{2}\.\d{4}$/.test(parts[1] || '');
+        });
+        if (txtLine) {
+            let testParts = txtLine.split(',').map(s => s.trim());
             let firstIsDate = /^\d{2}\.\d{2}\.\d{4}$/.test(testParts[0] || '');
             let secondIsDate = /^\d{2}\.\d{2}\.\d{4}$/.test(testParts[1] || '');
             if ((firstIsDate && testParts.length >= 7) || (secondIsDate && testParts.length >= 8)) {
@@ -543,7 +819,10 @@
                 if (a.order !== null && b.order !== null && a.order !== b.order) return a.order - b.order;
                 return a.seq - b.seq;
             });
-            days[date] = days[date].map(item => item.sum);
+            days[date] = days[date].map(item => ({
+                sum: item.sum,
+                dice: Array.isArray(item.dice) ? item.dice.slice(0, 6) : null
+            }));
         });
         return days;
     }
@@ -558,7 +837,7 @@
             let sum = parseInt(parts[2]);
             if (isNaN(sum)) continue;
             if (!days[date]) days[date] = [];
-            days[date].push({ sum: sum, order: parseTimeOrder(parts[1]), seq: i });
+            days[date].push({ sum: sum, dice: null, order: parseTimeOrder(parts[1]), seq: i });
         }
         return finalizeParsedDays(days);
     }
@@ -574,16 +853,18 @@
             if (!/^\d{2}\.\d{2}\.\d{4}$/.test(date || '') || parts.length < numberStart + 6) continue;
             // Суммируем ровно 6 чисел после даты
             let sum = 0;
+            let dice = [];
             let valid = true;
             for (let j = numberStart; j < numberStart + 6; j++) {
                 let n = parseInt(parts[j]);
-                if (isNaN(n)) { valid = false; break; }
+                if (isNaN(n) || n < 1 || n > 6) { valid = false; break; }
+                dice.push(n);
                 sum += n;
             }
             if (!valid) continue;
             if (!days[date]) days[date] = [];
             let drawNumber = dateIndex === 1 ? parseInt(parts[0]) : null;
-            days[date].push({ sum: sum, order: isNaN(drawNumber) ? null : drawNumber, seq: i });
+            days[date].push({ sum: sum, dice: dice, order: isNaN(drawNumber) ? null : drawNumber, seq: i });
         }
         return finalizeParsedDays(days);
     }
@@ -620,7 +901,7 @@
         activeDay = date;
         if (values.length > 24 && drawCount !== 96) setDrawMode(96);
         if (values.length > MAX_DRAW_COUNT) alert('В выбранном дне найдено ' + values.length + ' тиражей. Будут использованы первые ' + MAX_DRAW_COUNT + '.');
-        setDrawValues(values);
+        setDrawResults(values);
         renderDrawGrid();
         renderDayTabs();
         fullRecalc();
@@ -789,25 +1070,190 @@
             let b = document.createElement('div'); b.className = 'nb'; b.textContent = n;
             b.onclick = function() {
                 if (sn.has(n)) { sn.delete(n); b.classList.remove('on'); } else { sn.add(n); b.classList.add('on'); }
-                document.getElementById('sfsc').textContent = sn.size;
-                document.getElementById('sfscc').textContent = fm(getBaseCost(sn.size)) + ' \u20bd';
+                updateSelectionSummary();
             }; ng.appendChild(b);
         })(i);
     }
 
+    function getExtraSelectionSnapshot() {
+        return {
+            specific: Array.from(extraSelection.specific).sort((a, b) => a - b),
+            combos: COMBO_RULES.map(rule => rule.id).filter(id => extraSelection.combos.has(id)),
+            positions: extraSelection.positions.map(values => Array.from(values).sort((a, b) => a - b))
+        };
+    }
+
+    function updateSelectionSummary() {
+        let snapshot = getExtraSelectionSnapshot();
+        let positionVariants = getPositionVariantCount(snapshot.positions);
+        let totalVariants = sn.size + snapshot.specific.length + snapshot.combos.length + positionVariants;
+        let partialPosition = hasAnyPosition(snapshot.positions) && !isPositionComplete(snapshot.positions);
+        let extraVariants = snapshot.specific.length + snapshot.combos.length + positionVariants;
+        let extraSummary = document.getElementById('extra-summary');
+        if (partialPosition) {
+            let filled = snapshot.positions.filter(values => values.length > 0).length;
+            extraSummary.textContent = 'Позиция: заполнено ' + filled + ' из 6 ходов';
+        } else if (extraVariants > 0) {
+            extraSummary.textContent = 'Платных вариантов: ' + extraVariants + ' · ' + fm(getBaseCost(extraVariants)) + ' ₽';
+        } else {
+            extraSummary.textContent = 'Не выбраны';
+        }
+        document.getElementById('sfsc').textContent = totalVariants;
+        document.getElementById('sfscc').textContent = fm(getBaseCost(totalVariants)) + ' ₽';
+    }
+
+    function renderExtraGames() {
+        let specificCont = document.getElementById('specific-games');
+        specificCont.innerHTML = '';
+        for (let face = 1; face <= 6; face++) {
+            let button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'eg-btn' + (extraSelection.specific.has(face) ? ' on' : '');
+            button.innerHTML = 'Все ' + face + '<span class="eg-cf">×' + fc(SPECIFIC_SIX_CF) + '</span>';
+            button.title = 'Все шесть выпавших чисел равны ' + face;
+            button.onclick = function() {
+                if (extraSelection.specific.has(face)) extraSelection.specific.delete(face);
+                else extraSelection.specific.add(face);
+                renderExtraGames();
+                updateSelectionSummary();
+            };
+            specificCont.appendChild(button);
+        }
+
+        let comboCont = document.getElementById('combo-games');
+        comboCont.innerHTML = '';
+        COMBO_RULES.forEach(rule => {
+            let button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'eg-btn' + (extraSelection.combos.has(rule.id) ? ' on' : '');
+            button.innerHTML = rule.label + '<span class="eg-cf">×' + fc(rule.cf) + '</span>';
+            button.title = rule.title;
+            button.onclick = function() {
+                if (extraSelection.combos.has(rule.id)) extraSelection.combos.delete(rule.id);
+                else extraSelection.combos.add(rule.id);
+                renderExtraGames();
+                updateSelectionSummary();
+            };
+            comboCont.appendChild(button);
+        });
+
+        let positionCont = document.getElementById('position-games');
+        positionCont.innerHTML = '';
+        for (let position = 0; position < 6; position++) {
+            let col = document.createElement('div');
+            col.className = 'position-col';
+            let title = document.createElement('div');
+            title.className = 'position-col-title';
+            title.textContent = 'Ход ' + (position + 1);
+            col.appendChild(title);
+            for (let face = 1; face <= 6; face++) {
+                let button = document.createElement('button');
+                button.type = 'button';
+                button.className = 'eg-btn position-face' + (extraSelection.positions[position].has(face) ? ' on' : '');
+                button.textContent = face;
+                button.title = 'Ход ' + (position + 1) + ': число ' + face;
+                button.onclick = function() {
+                    let set = extraSelection.positions[position];
+                    if (set.has(face)) set.delete(face); else set.add(face);
+                    renderExtraGames();
+                    updateSelectionSummary();
+                };
+                col.appendChild(button);
+            }
+            positionCont.appendChild(col);
+        }
+    }
+
+    function resetBuilderSelection() {
+        sn.clear();
+        extraSelection.specific.clear();
+        extraSelection.combos.clear();
+        extraSelection.positions.forEach(values => values.clear());
+        ng.querySelectorAll('.nb').forEach(button => button.classList.remove('on'));
+        renderExtraGames();
+        updateSelectionSummary();
+    }
+
+    document.getElementById('extra-reset').onclick = function() {
+        extraSelection.specific.clear();
+        extraSelection.combos.clear();
+        extraSelection.positions.forEach(values => values.clear());
+        renderExtraGames();
+        updateSelectionSummary();
+    };
+
     const dg = document.getElementById('sfdg');
+
+    function updateDrawDiceDisplay(index) {
+        let el = document.getElementById('sfdi' + index);
+        if (!el) return;
+        let dice = drawDice[index - 1];
+        if (Array.isArray(dice) && dice.length === 6) {
+            el.textContent = 'Кости: ' + dice.join(' · ');
+            el.className = 'draw-dice';
+        } else {
+            el.textContent = 'Только сумма';
+            el.className = 'draw-dice empty';
+        }
+    }
+
+    function getDrawDataStats() {
+        let total = 0, withDice = 0;
+        if (calculationMonthKey) {
+            getMonthDates(calculationMonthKey).forEach(date => {
+                loadedDays[date].slice(0, drawCount).forEach(record => {
+                    let normalized = normalizeLoadedRecord(record);
+                    if (!isNaN(normalized.sum) && normalized.sum >= 6 && normalized.sum <= 36) {
+                        total++;
+                        if (Array.isArray(normalized.dice) && normalized.dice.length === 6) withDice++;
+                    }
+                });
+            });
+        } else {
+            for (let i = 1; i <= drawCount; i++) {
+                let draw = getDrawResult(i);
+                if (draw.sum !== null) {
+                    total++;
+                    if (draw.dice) withDice++;
+                }
+            }
+        }
+        return { total: total, withDice: withDice };
+    }
+
+    function updateExtraDataStatus() {
+        let status = document.getElementById('extra-data-status');
+        let stats = getDrawDataStats();
+        if (!stats.total) {
+            status.textContent = 'Для расчёта дополнительных игр загрузите TXT с шестью выпавшими числами.';
+            status.className = 'eg-data-status';
+        } else if (stats.withDice === stats.total) {
+            status.textContent = 'Данные готовы: 6 чисел есть во всех ' + stats.total + ' рассчитанных тиражах.';
+            status.className = 'eg-data-status ready';
+        } else if (stats.withDice > 0) {
+            status.textContent = 'Частичные данные: 6 чисел есть в ' + stats.withDice + ' из ' + stats.total + ' тиражей. Остальные доп. игры не оцениваются.';
+            status.className = 'eg-data-status warn';
+        } else {
+            status.textContent = 'Загружены только суммы: затраты на доп. игры учтены, но их выигрыши без 6 чисел не рассчитываются.';
+            status.className = 'eg-data-status warn';
+        }
+    }
+
     function renderDrawGrid() {
         dg.innerHTML = '';
         updateDrawModeUI();
         for (let idx = 1; idx <= drawCount; idx++) {
             let d = document.createElement('div'); d.className = 'di'; d.id = 'sfd' + idx;
-            d.innerHTML = '<div class="dn">T' + idx + '</div><input type="number" min="6" max="36" id="sfi' + idx + '"><div class="dr" id="sfr' + idx + '"><span class="draw-result-text" id="sfrt' + idx + '"></span><button type="button" class="draw-clear" title="Очистить тиражи после T' + idx + '" aria-label="Очистить тиражи после T' + idx + '">Очистить</button></div>';
+            d.innerHTML = '<div class="dn">T' + idx + '</div><input type="number" min="6" max="36" id="sfi' + idx + '"><div class="dr" id="sfr' + idx + '"><span class="draw-result-text" id="sfrt' + idx + '"></span><button type="button" class="draw-clear" title="Очистить тиражи после T' + idx + '" aria-label="Очистить тиражи после T' + idx + '">Очистить</button></div><div class="draw-dice" id="sfdi' + idx + '"></div>';
             dg.appendChild(d);
             let input = document.getElementById('sfi' + idx);
             d.querySelector('.draw-clear').addEventListener('click', function() { clearDrawsAfter(idx); });
             input.value = drawValues[idx - 1];
+            updateDrawDiceDisplay(idx);
             input.addEventListener('input', function() {
                 drawValues[idx - 1] = this.value;
+                drawDice[idx - 1] = null;
+                updateDrawDiceDisplay(idx);
                 let val = parseInt(this.value);
                 if (val >= 6 && val <= 36 && idx < drawCount) document.getElementById('sfi' + (idx + 1)).focus();
                 activeDay = null;
@@ -822,27 +1268,45 @@
             });
         }
         dg.scrollTop = 0;
+        updateExtraDataStatus();
     }
 
     document.getElementById('sfa').onclick = function() {
-        if (!sn.size) return;
-        let nums = Array.from(sn).sort((a, b) => a - b); let cost = getBaseCost(nums.length);
-        getActiveLayer().tickets.push({ nums: nums, cost: cost, qty: new Array(drawCount).fill(0), auto: false, step: '' });
-        sn.clear(); ng.querySelectorAll('.nb').forEach(b => b.classList.remove('on'));
-        document.getElementById('sfsc').textContent = '0'; document.getElementById('sfscc').textContent = '0 \u20bd';
+        let extra = getExtraSelectionSnapshot();
+        if (hasAnyPosition(extra.positions) && !isPositionComplete(extra.positions)) {
+            alert('Для игры «Позиция» выберите минимум одно число в каждом из 6 ходов или очистите незаполненную позиционную ставку.');
+            return;
+        }
+        let nums = Array.from(sn).sort((a, b) => a - b);
+        let ticket = {
+            nums: nums,
+            specific: extra.specific,
+            combos: extra.combos,
+            positions: extra.positions,
+            qty: new Array(drawCount).fill(0),
+            auto: false,
+            step: ''
+        };
+        let variants = getTicketVariantCount(ticket);
+        if (!variants) return;
+        ticket.cost = getBaseCost(variants);
+        getActiveLayer().tickets.push(ticket);
+        resetBuilderSelection();
         renderTk(); fullRecalc();
     };
 
     document.getElementById('sfcl').onclick = function() {
-        sn.clear(); ng.querySelectorAll('.nb').forEach(b => b.classList.remove('on'));
-        document.getElementById('sfsc').textContent = '0'; document.getElementById('sfscc').textContent = '0 \u20bd';
+        resetBuilderSelection();
     };
 
     document.getElementById('sftd').onclick = function() { getActiveLayer().tickets = []; renderTk(); fullRecalc(); };
 
     function clearDrawsAfter(drawIndex) {
         captureDrawValues();
-        for (let i = drawIndex; i < MAX_DRAW_COUNT; i++) drawValues[i] = '';
+        for (let i = drawIndex; i < MAX_DRAW_COUNT; i++) {
+            drawValues[i] = '';
+            drawDice[i] = null;
+        }
         document.getElementById('af-input').value = drawValues.slice(0, drawIndex).join(',');
         activeDay = null;
         openMonthKey = null;
@@ -852,7 +1316,11 @@
         fullRecalc();
     }
 
-    function updateTicketCosts() { let cost = getBaseCost(1); layers.forEach(l => { l.tickets.forEach(t => { t.cost = t.nums.length * cost; }); }); }
+    function updateTicketCosts() {
+        layers.forEach(layer => {
+            layer.tickets.forEach(ticket => { ticket.cost = getBaseCost(getTicketVariantCount(ticket)); });
+        });
+    }
     function updateSumOfNums() {
         let sum = 0;
         for (let i = 1; i <= drawCount; i++) { let v = parseInt(document.getElementById('sfi' + i).value); if (!isNaN(v) && v >= 6 && v <= 36) sum += v; }
@@ -869,14 +1337,29 @@
     }
 
     document.getElementById('sfp').addEventListener('input', function() {
-        document.getElementById('sfscc').textContent = fm(getBaseCost(sn.size)) + ' \u20bd';
-        updateTicketCosts(); renderTk(); fullRecalc(); 
+        updateSelectionSummary();
+        updateTicketCosts(); renderTk(); fullRecalc();
     });
     document.getElementById('sfd').addEventListener('input', function() {
-        document.getElementById('sfscc').textContent = fm(getBaseCost(sn.size)) + ' \u20bd';
-        updateTicketCosts(); renderTk(); fullRecalc(); 
+        updateSelectionSummary();
+        updateTicketCosts(); renderTk(); fullRecalc();
     });
     document.getElementById('sfm').addEventListener('input', function() { fullRecalc(); });
+
+    function formatTicketGames(ticket) {
+        ensureTicketShape(ticket);
+        let parts = [];
+        if (ticket.nums.length) parts.push('Σ: ' + ticket.nums.join(', '));
+        if (ticket.specific.length) parts.push('Все шесть: ' + ticket.specific.join(', '));
+        if (ticket.combos.length) {
+            parts.push('Комбо: ' + ticket.combos.map(id => COMBO_BY_ID[id] ? COMBO_BY_ID[id].short : id).join(', '));
+        }
+        if (isPositionComplete(ticket.positions)) {
+            let positionText = ticket.positions.map(values => '[' + values.join('/') + ']').join(' ');
+            parts.push('Позиция: ' + positionText + ' (' + getPositionVariantCount(ticket.positions) + ' вар.)');
+        }
+        return parts.join(' · ');
+    }
 
     function renderTk() {
         let sec = document.getElementById('sfts'), list = document.getElementById('sftl'); let currentTickets = getActiveLayer().tickets;
@@ -888,9 +1371,13 @@
             ensureTicketQty(t);
             if (t.auto) applyAutoCalc(t);
             let d = document.createElement('div'); d.className = 'tci'; d.setAttribute('data-tidx', i);
-            
+
             let top = document.createElement('div'); top.className = 'tci-top';
-            top.innerHTML = '<div class="tci-left"><span class="tn">' + t.nums.join(', ') + '</span><span class="tc">' + fm(t.cost) + ' \u20bd</span></div><button class="td-btn" data-i="' + i + '">\u00d7</button>';
+            let topLeft = document.createElement('div'); topLeft.className = 'tci-left';
+            let games = document.createElement('span'); games.className = 'ticket-games'; games.textContent = formatTicketGames(t);
+            let ticketCost = document.createElement('span'); ticketCost.className = 'tc'; ticketCost.textContent = fm(t.cost) + ' ₽';
+            let deleteButton = document.createElement('button'); deleteButton.className = 'td-btn'; deleteButton.dataset.i = i; deleteButton.textContent = '\u00d7';
+            topLeft.appendChild(games); topLeft.appendChild(ticketCost); top.appendChild(topLeft); top.appendChild(deleteButton);
             d.appendChild(top);
 
             let autoRow = document.createElement('div'); autoRow.className = 'auto-row';
@@ -964,12 +1451,46 @@
     }
 
     function calcDraw(idx) {
-        let inp = document.getElementById('sfi' + idx); let res = document.getElementById('sfr' + idx); let resText = document.getElementById('sfrt' + idx); let wrap = document.getElementById('sfd' + idx); let val = parseInt(inp.value);
-        if (isNaN(val) || val < 6 || val > 36) { resText.textContent = ''; res.className = 'dr'; wrap.classList.remove('win', 'miss'); return; }
-        let mw = parseInt(document.getElementById('sfm').value) || 550; let c = CF[val]; let tw = 0, mc = 0; let currentTickets = getActiveLayer().tickets;
-        currentTickets.forEach(t => { let q = t.qty[idx - 1]; if (q > 0) { if (t.nums.indexOf(val) !== -1) { tw += mw * c * q; mc += q; } } });
-        if (mc > 0) { resText.textContent = mc + ' \u0448\u0442 \u2192 ' + fm(tw) + ' \u20bd'; res.className = 'dr w'; wrap.classList.add('win'); wrap.classList.remove('miss'); }
-        else { resText.textContent = '\u041c\u0438\u043c\u043e'; res.className = 'dr m'; wrap.classList.add('miss'); wrap.classList.remove('win'); }
+        let res = document.getElementById('sfr' + idx);
+        let resText = document.getElementById('sfrt' + idx);
+        let wrap = document.getElementById('sfd' + idx);
+        let draw = getDrawResult(idx);
+        if (draw.sum === null) {
+            resText.textContent = '';
+            resText.title = '';
+            res.className = 'dr';
+            wrap.classList.remove('win', 'miss', 'unknown');
+            return;
+        }
+        let tw = 0, winningQty = 0, payoutEvents = 0, unknown = false, hitLabels = [];
+        getActiveLayer().tickets.forEach(ticket => {
+            let q = ticket.qty[idx - 1];
+            if (q <= 0) return;
+            let outcome = getTicketOutcome(ticket, draw);
+            if (!outcome.complete) unknown = true;
+            if (outcome.win > 0) {
+                tw += outcome.win * q;
+                winningQty += q;
+                payoutEvents += outcome.payoutEvents * q;
+                hitLabels = hitLabels.concat(outcome.hits);
+            }
+        });
+        if (winningQty > 0) {
+            resText.textContent = winningQty + ' шт · ' + payoutEvents + ' выпл. → ' + fm(tw) + ' ₽' + (unknown ? ' *' : '');
+            resText.title = hitLabels.join('; ') + (unknown ? '\nДополнительные игры без 6 чисел рассчитаны не полностью.' : '');
+            res.className = 'dr w';
+            wrap.classList.add('win'); wrap.classList.remove('miss', 'unknown');
+        } else if (unknown) {
+            resText.textContent = 'Нужны 6 чисел';
+            resText.title = 'Затраты учтены, но результат дополнительных игр нельзя определить только по сумме.';
+            res.className = 'dr u';
+            wrap.classList.add('unknown'); wrap.classList.remove('win', 'miss');
+        } else {
+            resText.textContent = 'Мимо';
+            resText.title = '';
+            res.className = 'dr m';
+            wrap.classList.add('miss'); wrap.classList.remove('win', 'unknown');
+        }
         updateSumOfNums();
     }
 
@@ -994,14 +1515,13 @@
     function recalcMonth(monthKey) {
         let dates = getMonthDates(monthKey);
         let currentTickets = getActiveLayer().tickets;
-        let mw = parseInt(document.getElementById('sfm').value) || 550;
         let tc = 0, tw = 0, monthSum = 0;
 
         dates.forEach(date => {
             let values = loadedDays[date].slice(0, drawCount);
-            values.forEach(value => {
-                let v = parseInt(value);
-                if (!isNaN(v) && v >= 6 && v <= 36) monthSum += v;
+            values.forEach(record => {
+                let draw = normalizeLoadedRecord(record);
+                if (!isNaN(draw.sum) && draw.sum >= 6 && draw.sum <= 36) monthSum += draw.sum;
             });
 
             currentTickets.forEach(ticket => {
@@ -1009,27 +1529,28 @@
                 if (ticket.auto) {
                     let rule = parseStep(ticket.step);
                     let currentQty = 1;
-                    values.forEach(value => {
-                        let v = parseInt(value);
-                        if (isNaN(v) || v < 6 || v > 36) return;
+                    values.forEach(record => {
+                        let draw = normalizeLoadedRecord(record);
+                        if (isNaN(draw.sum) || draw.sum < 6 || draw.sum > 36) return;
                         let q = currentQty;
                         tc += ticket.cost * q;
-                        if (ticket.nums.indexOf(v) !== -1) {
-                            tw += mw * CF[v] * q;
+                        let outcome = getTicketOutcome(ticket, draw);
+                        tw += outcome.win * q;
+                        if (outcome.win > 0) {
                             currentQty = 1;
-                        } else {
+                        } else if (outcome.complete) {
                             currentQty = rule.type === 'mul' ? Math.round(currentQty * rule.value) : currentQty + rule.value;
                             if (!Number.isSafeInteger(currentQty) || currentQty > MAX_SAFE_AUTO_QTY) currentQty = MAX_SAFE_AUTO_QTY;
                         }
                     });
                 } else {
-                    values.forEach((value, index) => {
-                        let v = parseInt(value);
-                        if (isNaN(v) || v < 6 || v > 36) return;
+                    values.forEach((record, index) => {
+                        let draw = normalizeLoadedRecord(record);
+                        if (isNaN(draw.sum) || draw.sum < 6 || draw.sum > 36) return;
                         let q = ticket.qty[index] || 0;
                         if (q <= 0) return;
                         tc += ticket.cost * q;
-                        if (ticket.nums.indexOf(v) !== -1) tw += mw * CF[v] * q;
+                        tw += getTicketOutcome(ticket, draw).win * q;
                     });
                 }
             });
@@ -1037,6 +1558,7 @@
 
         document.getElementById('sum-nums').textContent = monthSum;
         updateCalculationScope();
+        updateExtraDataStatus();
         renderTotals(tc, tw);
     }
 
@@ -1048,11 +1570,18 @@
 
         let tc = 0, tw = 0; let currentTickets = getActiveLayer().tickets;
         for (let i = 1; i <= drawCount; i++) {
-            let v = parseInt(document.getElementById('sfi' + i).value); if (isNaN(v) || v < 6 || v > 36) continue;
-            let mw = parseInt(document.getElementById('sfm').value) || 550; let c = CF[v];
-            currentTickets.forEach(t => { let q = t.qty[i - 1]; if (q > 0) { tc += t.cost * q; if (t.nums.indexOf(v) !== -1) { tw += mw * c * q; } } });
+            let draw = getDrawResult(i);
+            if (draw.sum === null) continue;
+            currentTickets.forEach(ticket => {
+                let q = ticket.qty[i - 1];
+                if (q > 0) {
+                    tc += ticket.cost * q;
+                    tw += getTicketOutcome(ticket, draw).win * q;
+                }
+            });
         }
         updateCalculationScope();
+        updateExtraDataStatus();
         renderTotals(tc, tw);
     }
 
@@ -1060,6 +1589,8 @@
         btn.addEventListener('click', function() { setDrawMode(this.dataset.count); });
     });
 
+    renderExtraGames();
+    updateSelectionSummary();
     renderDrawGrid();
     renderTabs();
 </script>
