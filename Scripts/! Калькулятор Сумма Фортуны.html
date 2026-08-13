@@ -239,7 +239,10 @@
         .di input { background: #0d0404; border: 1px solid #4a1a0a; color: #fff; font-size: 15px; padding: 5px; border-radius: 4px; width: 36px; text-align: center; outline: 0; font-weight: 800; -moz-appearance: textfield; box-shadow: inset 0 1px 3px rgba(0,0,0,0.5); }
         .di input::-webkit-inner-spin-button, .di input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
         .di input:focus { border-color: #d4af37; }
-        .dr { font-size: 9px; flex: 1; text-align: right; line-height: 1.2; color: #666; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .dr { font-size: 9px; flex: 1; min-width: 0; display: flex; align-items: center; justify-content: flex-end; gap: 4px; text-align: right; line-height: 1.2; color: #666; white-space: nowrap; }
+        .draw-result-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+        .draw-clear { flex: 0 0 auto; background: #2a0808; border: 1px solid #5a1a0a; color: #a77b68; padding: 2px 4px; border-radius: 3px; font-size: 7px; line-height: 1; cursor: pointer; text-transform: uppercase; transition: 0.2s; }
+        .draw-clear:hover, .draw-clear:focus { border-color: #d4af37; color: #f5c518; outline: 0; }
         .dr.w { color: #f5c518; font-weight: 900; text-shadow: 0 0 10px rgba(245, 197, 24, 0.7); font-size: 16px; }
         .dr.m { color: #cc4444; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;}
 
@@ -324,7 +327,7 @@
             </div>
             
             <div class="ss" style="margin-bottom: 0; height: 100%; min-height: 0; display: flex; flex-direction: column;">
-                <h3>Тиражи (<span id="draw-count">24</span>) <span class="calc-scope" id="calc-scope">День</span> <button class="rb" id="sfrd" style="margin:0 0 0 10px;vertical-align:middle">Сбросить</button></h3>
+                <h3>Тиражи (<span id="draw-count">24</span>) <span class="calc-scope" id="calc-scope">День</span></h3>
                 <div class="dg" id="sfdg"></div>
             </div>
         </div>
@@ -798,9 +801,10 @@
         updateDrawModeUI();
         for (let idx = 1; idx <= drawCount; idx++) {
             let d = document.createElement('div'); d.className = 'di'; d.id = 'sfd' + idx;
-            d.innerHTML = '<div class="dn">T' + idx + '</div><input type="number" min="6" max="36" id="sfi' + idx + '"><div class="dr" id="sfr' + idx + '"></div>';
+            d.innerHTML = '<div class="dn">T' + idx + '</div><input type="number" min="6" max="36" id="sfi' + idx + '"><div class="dr" id="sfr' + idx + '"><span class="draw-result-text" id="sfrt' + idx + '"></span><button type="button" class="draw-clear" title="Очистить все тиражи" aria-label="Очистить все тиражи">Очистить</button></div>';
             dg.appendChild(d);
             let input = document.getElementById('sfi' + idx);
+            d.querySelector('.draw-clear').addEventListener('click', clearAllDraws);
             input.value = drawValues[idx - 1];
             input.addEventListener('input', function() {
                 drawValues[idx - 1] = this.value;
@@ -836,15 +840,16 @@
 
     document.getElementById('sftd').onclick = function() { getActiveLayer().tickets = []; renderTk(); fullRecalc(); };
 
-    document.getElementById('sfrd').onclick = function() {
+    function clearAllDraws() {
         setDrawValues([]);
+        document.getElementById('af-input').value = '';
         renderDrawGrid();
         activeDay = null;
         openMonthKey = null;
         calculationMonthKey = null;
         renderDayTabs();
         updateSumOfNums(); recalc();
-    };
+    }
 
     function updateTicketCosts() { let cost = getBaseCost(1); layers.forEach(l => { l.tickets.forEach(t => { t.cost = t.nums.length * cost; }); }); }
     function updateSumOfNums() {
@@ -958,12 +963,12 @@
     }
 
     function calcDraw(idx) {
-        let inp = document.getElementById('sfi' + idx); let res = document.getElementById('sfr' + idx); let wrap = document.getElementById('sfd' + idx); let val = parseInt(inp.value);
-        if (isNaN(val) || val < 6 || val > 36) { res.textContent = ''; res.className = 'dr'; wrap.classList.remove('win', 'miss'); return; }
+        let inp = document.getElementById('sfi' + idx); let res = document.getElementById('sfr' + idx); let resText = document.getElementById('sfrt' + idx); let wrap = document.getElementById('sfd' + idx); let val = parseInt(inp.value);
+        if (isNaN(val) || val < 6 || val > 36) { resText.textContent = ''; res.className = 'dr'; wrap.classList.remove('win', 'miss'); return; }
         let mw = parseInt(document.getElementById('sfm').value) || 550; let c = CF[val]; let tw = 0, mc = 0; let currentTickets = getActiveLayer().tickets;
         currentTickets.forEach(t => { let q = t.qty[idx - 1]; if (q > 0) { if (t.nums.indexOf(val) !== -1) { tw += mw * c * q; mc += q; } } });
-        if (mc > 0) { res.textContent = mc + ' \u0448\u0442 \u2192 ' + fm(tw) + ' \u20bd'; res.className = 'dr w'; wrap.classList.add('win'); wrap.classList.remove('miss'); }
-        else { res.textContent = '\u041c\u0438\u043c\u043e'; res.className = 'dr m'; wrap.classList.add('miss'); wrap.classList.remove('win'); }
+        if (mc > 0) { resText.textContent = mc + ' \u0448\u0442 \u2192 ' + fm(tw) + ' \u20bd'; res.className = 'dr w'; wrap.classList.add('win'); wrap.classList.remove('miss'); }
+        else { resText.textContent = '\u041c\u0438\u043c\u043e'; res.className = 'dr m'; wrap.classList.add('miss'); wrap.classList.remove('win'); }
         updateSumOfNums();
     }
 
