@@ -125,6 +125,11 @@
             display: inline-block; width: 12px; height: 12px; border-radius: 50%;
             border: 1px solid rgba(0,0,0,.2); vertical-align: -1px;
         }
+        .keno-export-panel {
+            margin: 10px 0; padding: 10px; border: 1px solid #9bc7f2;
+            border-radius: 5px; background: #f3f9ff;
+        }
+        .keno-export-panel button { margin: 0 0 5px; }
         @media (max-width: 560px) {
             body { padding: 10px; }
             .container { padding: 18px; }
@@ -340,7 +345,7 @@
             </div>
         </div>
 
-        <div class="note">Поддерживаются два формата: первые 6 шаров с сайта либо полные 35 шаров в порядке выпадения. Для архива из 6 шаров анализируется только 6-й ход.</div>
+        <div class="note">Поддерживаются два формата: первые 6 шаров с сайта либо полные 35 шаров в порядке выпадения. Для архива из 6 шаров анализируется только 6-й ход. После расчёта можно выгрузить до 500 лучших комбинаций для «Цветные Шары Calc».</div>
         <div id="kenoColorLegend" class="keno-legend" aria-label="Цветовые группы"></div>
         <button id="btnKenoScan" onclick="scanKenoCombos()">Проанализировать «Цветные шары»</button>
         <div id="resultKeno" class="result-box"></div>
@@ -350,12 +355,17 @@
 <script>
     let globalDraws = []; 
     let globalSums = [];  
+    let lastKenoExportPayload = null;
     const MAX_BALL = 80;  
     const MAX_AUTO_COMBINATIONS = 5000000;
     const KENO_WORK_LIMIT = 50000000;
     const KENO_GUARANTEED_MOVE = 12;
     const KENO_MAX_NUMBER = 48;
     const KENO_COMBINATION_SIZE = 6;
+    const KENO_DISPLAY_LIMIT = 100;
+    const KENO_EXPORT_LIMIT = 500;
+    const KENO_EXPORT_FORMAT = 'lotto-calc.keno-colored-balls-combinations';
+    const KENO_EXPORT_SCHEMA_VERSION = 1;
     const KENO_COLORS = [
         { name: 'Красная', color: '#d83b3b', text: '#fff', nums: [1, 9, 17, 25, 33, 41] },
         { name: 'Зелёная', color: '#2e9f55', text: '#fff', nums: [2, 10, 18, 26, 34, 42] },
@@ -881,6 +891,7 @@
         const minHits = parseInt(document.getElementById('kenoMinHits').value);
         const btn = document.getElementById('btnKenoScan');
         const box = document.getElementById('resultKeno');
+        lastKenoExportPayload = null;
 
         if (!Number.isInteger(maxMove) || maxMove < 6 || maxMove > 35) { alert('Ход должен быть от 6 до 35.'); return; }
         if (!Number.isInteger(minHits) || minHits < 1) { alert('Минимум тиражей должен быть 1 или больше.'); return; }
@@ -908,6 +919,14 @@
                         .filter(([, count]) => count >= minHits)
                         .map(([combo, count]) => ({ combo, count, bestMove: 6, averageMove: 6, worstMove: 6 }))
                         .sort((a,b) => b.count - a.count || a.combo.localeCompare(b.combo));
+                    prepareKenoExport(results, results.length, {
+                        maxMove: 6,
+                        minHits,
+                        archiveType: 'first-six',
+                        fullDraws: 0,
+                        firstSixDraws: archive.firstSix.length,
+                        rejectedRows: archive.rejected
+                    });
 
                     let html = `<p class="result-meta"><b>Распознан архив первых 6 шаров:</b> ${archive.firstSix.length} тиражей. На сайте это сокращённый формат; для ходов 7–35 нужны полные последовательности.</p>`;
                     html += validationNote(archive.rejected);
@@ -950,7 +969,7 @@
                     if ((drawIndex + 1) % 25 === 0) await new Promise(resolve => setTimeout(resolve, 0));
                 }
 
-                const selection = await selectTopKenoCandidates(counts, minHits, 100, done => {
+                const selection = await selectTopKenoCandidates(counts, minHits, KENO_EXPORT_LIMIT, done => {
                     btn.innerText = `Отбираю результаты... ${85 + Math.floor(done / counterSlots * 14)}%`;
                 });
                 const results = selection.candidates.map(candidate => {
@@ -966,6 +985,14 @@
                     };
                 });
                 results.sort((a,b) => b.count - a.count || a.averageMove - b.averageMove || a.combo.localeCompare(b.combo));
+                prepareKenoExport(results, selection.total, {
+                    maxMove,
+                    minHits,
+                    archiveType: 'full',
+                    fullDraws: archive.full.length,
+                    firstSixDraws: archive.firstSix.length,
+                    rejectedRows: archive.rejected
+                });
 
                 let html = `<p class="result-meta"><b>Полный архив:</b> ${archive.full.length} тиражей по 35 шаров${archive.firstSix.length ? `; строк только с первыми шестью: ${archive.firstSix.length}${maxMove === 6 ? ' (учтены)' : ' (не учитывались)'}` : ''}.</p>`;
                 html += validationNote(archive.rejected);
@@ -1003,13 +1030,81 @@
 
     function renderKenoResults(results, minHits, maxMove, totalResults = results.length) {
         if (totalResults === 0) return `<p class="highlight">Шестёрок, завершавшихся не позднее ${maxMove}-го хода минимум в ${minHits} тиражах, не найдено.</p>`;
-        const shown = results.slice(0, 100);
+        const shown = results.slice(0, KENO_DISPLAY_LIMIT);
         let html = `<p>Найдено шестёрок: <b>${totalResults}</b>. ${totalResults > shown.length ? `Показаны первые ${shown.length}.` : ''}</p>`;
+        if (lastKenoExportPayload) {
+            const exported = lastKenoExportPayload.exportedCount;
+            const truncated = lastKenoExportPayload.truncated
+                ? ` В файл войдут первые ${exported} по частоте совпадений.`
+                : ` В файл войдут все ${exported}.`;
+            html += `<div class="keno-export-panel"><button type="button" onclick="downloadKenoResults()">Скачать комбинации для «Цветные Шары Calc»</button><p class="result-meta">Формат JSON, версия ${KENO_EXPORT_SCHEMA_VERSION}.${truncated}</p></div>`;
+        }
         shown.forEach(result => {
             const balls = result.combo.split(',').map(Number).map(renderKenoBall).join('');
             html += `<div class="combo-item"><div>${balls}</div><p>Совпало в тиражах: <b>${result.count}</b> | лучший ход: <b>${result.bestMove}</b> | средний: <b>${result.averageMove.toFixed(1)}</b> | самый поздний: <b>${result.worstMove}</b></p></div>`;
         });
         return html;
+    }
+
+    function prepareKenoExport(results, totalResults, metadata) {
+        const exportedResults = results.slice(0, KENO_EXPORT_LIMIT);
+        const createdAt = new Date().toISOString();
+        lastKenoExportPayload = {
+            format: KENO_EXPORT_FORMAT,
+            schemaVersion: KENO_EXPORT_SCHEMA_VERSION,
+            lottery: 'keno-colored_balls',
+            createdAt,
+            source: {
+                application: 'Интервалы.html',
+                block: 9
+            },
+            criteria: {
+                completionMoveAtMost: metadata.maxMove,
+                minimumDrawHits: metadata.minHits
+            },
+            archive: {
+                type: metadata.archiveType,
+                fullDraws: metadata.fullDraws,
+                firstSixDraws: metadata.firstSixDraws,
+                rejectedRows: metadata.rejectedRows
+            },
+            sort: ['hits:desc', 'averageMove:asc', 'numbers:asc'],
+            totalFound: totalResults,
+            exportedCount: exportedResults.length,
+            truncated: totalResults > exportedResults.length,
+            combinations: exportedResults.map((result, index) => ({
+                position: index + 1,
+                numbers: result.combo.split(',').map(Number),
+                hits: result.count,
+                moves: {
+                    best: result.bestMove,
+                    average: Number(result.averageMove.toFixed(3)),
+                    worst: result.worstMove
+                }
+            }))
+        };
+    }
+
+    function downloadKenoResults() {
+        if (!lastKenoExportPayload || lastKenoExportPayload.combinations.length === 0) {
+            alert('Сначала выполните анализ «Цветных шаров».');
+            return;
+        }
+
+        const payload = lastKenoExportPayload;
+        const move = payload.criteria.completionMoveAtMost;
+        const minHits = payload.criteria.minimumDrawHits;
+        const date = payload.createdAt.slice(0, 10);
+        const fileName = `keno-colored-balls-combinations_move-${move}_min-${minHits}_${date}.json`;
+        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 0);
     }
 
     function renderKenoColorStats(fullDraws, firstSixDraws) {
