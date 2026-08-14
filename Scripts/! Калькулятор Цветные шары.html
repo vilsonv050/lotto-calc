@@ -909,12 +909,12 @@
                         <div class="combination-import-head">
                             <div>
                                 <strong>Комбинации из «Интервалы»</strong>
-                                <small>JSON-схема Цветных шаров v1 · до 500 шестёрок без дополнительных игр</small>
+                                <small>TXT из «Интервалы» · до 500 шестёрок без дополнительных игр</small>
                             </div>
                         </div>
                         <div class="combination-import-controls">
-                            <label class="primary-btn" for="combinations-file-input">Загрузить комбинации</label>
-                            <input class="file-input" id="combinations-file-input" type="file" accept=".json">
+                            <label class="primary-btn" for="combinations-file-input">Загрузить комбинации TXT</label>
+                            <input class="file-input" id="combinations-file-input" type="file" accept=".txt">
                             <div class="combination-import-modes" role="radiogroup" aria-label="Режим загрузки комбинаций">
                                 <label class="combination-import-mode"><input type="radio" name="combinations-import-mode" value="add" checked> Добавить в активный слой</label>
                                 <label class="combination-import-mode"><input type="radio" name="combinations-import-mode" value="replace"> Заменить ставки активного слоя</label>
@@ -1022,7 +1022,7 @@
         const MAX_QTY = Number.MAX_SAFE_INTEGER;
         const MAX_GENERATED_TICKETS = 500;
         const COMBINATIONS_IMPORT_FORMAT = 'lotto-calc.keno-colored-balls-combinations';
-        const COMBINATIONS_IMPORT_SCHEMA_VERSION = 1;
+        const COMBINATIONS_IMPORT_VERSION = 1;
         const COMBINATIONS_IMPORT_LIMIT = 500;
 
         let drawCount = 48;
@@ -1230,85 +1230,88 @@
             return [...numbers].sort((a,b) => a-b).join(',');
         }
 
-        function requireCombinationMetadata(payload) {
-            if (!payload.criteria || typeof payload.criteria !== 'object' || Array.isArray(payload.criteria)) {
-                throw new Error('Отсутствуют параметры поиска criteria.');
-            }
-            if (!Number.isInteger(payload.criteria.completionMoveAtMost) || payload.criteria.completionMoveAtMost < 1) {
-                throw new Error('Параметр criteria.completionMoveAtMost должен быть положительным целым числом.');
-            }
-            if (!Number.isInteger(payload.criteria.minimumDrawHits) || payload.criteria.minimumDrawHits < 0) {
-                throw new Error('Параметр criteria.minimumDrawHits должен быть целым числом не меньше нуля.');
-            }
-            if (!payload.archive || typeof payload.archive !== 'object' || Array.isArray(payload.archive)) {
-                throw new Error('Отсутствуют сведения об архиве archive.');
-            }
-            if (!Number.isInteger(payload.totalFound) || payload.totalFound < 0) {
-                throw new Error('Поле totalFound должно быть целым числом не меньше нуля.');
-            }
-            if (!Number.isInteger(payload.exportedCount) || payload.exportedCount < 0) {
-                throw new Error('Поле exportedCount должно быть целым числом не меньше нуля.');
-            }
-            if (typeof payload.truncated !== 'boolean') {
-                throw new Error('Поле truncated должно иметь логическое значение.');
-            }
-        }
-
         function parseCombinationExport(text) {
-            let payload;
-            try {
-                payload = JSON.parse(String(text).replace(/^\uFEFF/, ''));
-            } catch (error) {
-                throw new Error(`Некорректный JSON: ${error.message}`);
-            }
-            if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
-                throw new Error('Корневое значение файла должно быть объектом.');
-            }
-            if (payload.format !== COMBINATIONS_IMPORT_FORMAT) {
+            const metadata = {};
+            const combinationLines = [];
+            const lines = String(text).replace(/^\uFEFF/, '').split(/\r?\n/);
+
+            lines.forEach((rawLine, index) => {
+                const line = rawLine.trim();
+                if (!line) return;
+                if (!line.startsWith('#')) {
+                    combinationLines.push({ line, sourceLine: index + 1 });
+                    return;
+                }
+
+                const match = line.match(/^#\s*([a-z_]+)\s*=\s*(.*?)\s*$/i);
+                if (!match) throw new Error(`Некорректная служебная строка №${index + 1}.`);
+                const key = match[1].toLowerCase();
+                if (Object.prototype.hasOwnProperty.call(metadata, key)) {
+                    throw new Error(`Служебное поле ${key} указано повторно.`);
+                }
+                metadata[key] = match[2];
+            });
+
+            if (metadata.format !== COMBINATIONS_IMPORT_FORMAT) {
                 throw new Error(`Неверный format. Ожидается «${COMBINATIONS_IMPORT_FORMAT}».`);
             }
-            if (payload.schemaVersion !== COMBINATIONS_IMPORT_SCHEMA_VERSION) {
-                throw new Error(`Неподдерживаемая schemaVersion. Ожидается ${COMBINATIONS_IMPORT_SCHEMA_VERSION}.`);
+            const version = Number(metadata.version);
+            if (!Number.isInteger(version) || version !== COMBINATIONS_IMPORT_VERSION) {
+                throw new Error(`Неподдерживаемая версия TXT. Ожидается ${COMBINATIONS_IMPORT_VERSION}.`);
             }
-            if (payload.lottery !== 'keno_colored_balls') {
+            if (metadata.lottery !== 'keno_colored_balls') {
                 throw new Error('Неверная lottery. Ожидается «keno_colored_balls».');
             }
-            if (!Array.isArray(payload.combinations)) {
-                throw new Error('Поле combinations должно быть массивом.');
+
+            const completionMoveAtMost = Number(metadata.max_move);
+            const minimumDrawHits = Number(metadata.minimum_hits);
+            const totalFound = Number(metadata.total_found);
+            const exportedCount = Number(metadata.exported_count);
+            if (!Number.isInteger(completionMoveAtMost) || completionMoveAtMost < 6 || completionMoveAtMost > 35) {
+                throw new Error('Поле max_move должно быть целым числом от 6 до 35.');
             }
-            if (payload.combinations.length > COMBINATIONS_IMPORT_LIMIT) {
+            if (!Number.isInteger(minimumDrawHits) || minimumDrawHits < 1) {
+                throw new Error('Поле minimum_hits должно быть целым числом не меньше 1.');
+            }
+            if (!Number.isInteger(totalFound) || totalFound < 0) {
+                throw new Error('Поле total_found должно быть целым числом не меньше нуля.');
+            }
+            if (!Number.isInteger(exportedCount) || exportedCount < 0) {
+                throw new Error('Поле exported_count должно быть целым числом не меньше нуля.');
+            }
+            if (combinationLines.length > COMBINATIONS_IMPORT_LIMIT) {
                 throw new Error(`В файле больше ${COMBINATIONS_IMPORT_LIMIT} комбинаций.`);
             }
-            requireCombinationMetadata(payload);
+            if (exportedCount !== combinationLines.length) {
+                throw new Error(`Поле exported_count не совпадает с числом строк комбинаций (${combinationLines.length}).`);
+            }
+            if (totalFound < exportedCount) {
+                throw new Error('Поле total_found не может быть меньше exported_count.');
+            }
+            if (!['true','false'].includes(metadata.truncated)) {
+                throw new Error('Поле truncated должно быть true или false.');
+            }
+            const truncated = metadata.truncated === 'true';
+            if (truncated !== (totalFound > exportedCount)) {
+                throw new Error('Поле truncated не соответствует total_found и exported_count.');
+            }
 
             const combinations = [];
             const seen = new Set();
             let duplicatesInFile = 0;
-            payload.combinations.forEach((entry, index) => {
-                const position = index + 1;
-                if (!entry || typeof entry !== 'object' || Array.isArray(entry)) {
-                    throw new Error(`Комбинация №${position} должна быть объектом.`);
+            combinationLines.forEach(({ line, sourceLine }) => {
+                const tokens = line.split(',').map(token => token.trim());
+                if (tokens.length !== 6 || tokens.some(token => !/^\d+$/.test(token))) {
+                    throw new Error(`Строка №${sourceLine}: требуется ровно 6 целых чисел через запятую.`);
                 }
-                if (!Array.isArray(entry.numbers) || entry.numbers.length !== 6) {
-                    throw new Error(`Комбинация №${position}: numbers должен содержать ровно 6 чисел.`);
+                const numbers = tokens.map(Number);
+                if (numbers.some(number => number < 1 || number > 48)) {
+                    throw new Error(`Строка №${sourceLine}: допустимы только числа от 1 до 48.`);
                 }
-                if (!entry.numbers.every(number => Number.isInteger(number) && number >= 1 && number <= 48)) {
-                    throw new Error(`Комбинация №${position}: допустимы только целые числа от 1 до 48.`);
+                if (new Set(numbers).size !== 6) {
+                    throw new Error(`Строка №${sourceLine}: числа должны быть уникальными.`);
                 }
-                if (new Set(entry.numbers).size !== 6) {
-                    throw new Error(`Комбинация №${position}: числа должны быть уникальными.`);
-                }
-                if (!Number.isInteger(entry.hits) || entry.hits < 0) {
-                    throw new Error(`Комбинация №${position}: hits должен быть целым числом не меньше нуля.`);
-                }
-                const moves = entry.moves;
-                if (!moves || typeof moves !== 'object' || Array.isArray(moves)
-                    || !Number.isInteger(moves.best) || moves.best < 1
-                    || !Number.isFinite(moves.average) || moves.average < 1
-                    || !Number.isInteger(moves.worst) || moves.worst < 1) {
-                    throw new Error(`Комбинация №${position}: moves.best, moves.average и moves.worst должны быть положительными числами.`);
-                }
-                const numbers = [...entry.numbers].sort((a,b) => a-b);
+                numbers.sort((a,b) => a-b);
                 const key = numbers.join(',');
                 if (seen.has(key)) {
                     duplicatesInFile++;
@@ -1322,12 +1325,12 @@
                 combinations,
                 duplicatesInFile,
                 criteria: {
-                    completionMoveAtMost:payload.criteria.completionMoveAtMost,
-                    minimumDrawHits:payload.criteria.minimumDrawHits
+                    completionMoveAtMost,
+                    minimumDrawHits
                 },
-                totalFound:payload.totalFound,
-                exportedCount:payload.exportedCount,
-                truncated:payload.truncated
+                totalFound,
+                exportedCount,
+                truncated
             };
         }
 
