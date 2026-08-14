@@ -521,6 +521,47 @@
         .data-toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
         .file-input { display: none; }
         .file-name { margin-left: auto; color: var(--muted); font-size: 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 220px; }
+        .combination-import {
+            display: grid;
+            gap: 10px;
+            margin-bottom: 14px;
+            padding: 12px;
+            border: 1px solid rgba(75,166,255,.2);
+            border-radius: 14px;
+            background: linear-gradient(135deg, rgba(35,137,245,.1), rgba(130,87,255,.07));
+        }
+        .combination-import-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+        .combination-import-head strong { display: block; font-size: 11px; }
+        .combination-import-head small { display: block; margin-top: 2px; color: var(--muted); font-size: 9px; }
+        .combination-import-controls { display: grid; grid-template-columns: auto minmax(280px,1fr); gap: 9px; align-items: stretch; }
+        .combination-import-controls .primary-btn { display: grid; place-items: center; text-align: center; cursor: pointer; }
+        .combination-import-modes { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+        .combination-import-mode {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            min-width: 0;
+            padding: 9px 10px;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            background: rgba(29,29,42,.66);
+            color: #c9c9d7;
+            cursor: pointer;
+            font-size: 9px;
+            font-weight: 900;
+        }
+        .combination-import-mode:has(input:checked) { border-color: var(--blue); background: rgba(35,137,245,.18); color: white; }
+        .combination-import-mode input { flex: 0 0 auto; margin: 0; accent-color: var(--blue); }
+        .combination-import-status {
+            padding: 9px 11px;
+            border: 1px solid rgba(71,211,143,.22);
+            border-radius: 10px;
+            background: rgba(36,190,116,.09);
+            color: #c9f7dd;
+            font-size: 9px;
+            line-height: 1.5;
+        }
+        .combination-import-status.error { border-color: rgba(255,100,114,.25); background: rgba(255,80,98,.09); color: #ffc0c7; }
         .months { display: grid; gap: 7px; margin-top: 12px; }
         .month {
             border: 1px solid var(--line);
@@ -633,6 +674,9 @@
             .builder-tools { grid-template-columns: repeat(2,minmax(0,1fr)); }
             .builder-side { grid-column: 1 / -1; }
             .auto-fill-btn { grid-column: 1 / -1; width: 100%; padding: 10px 7px; font-size: 10px; }
+            .combination-import-head { align-items: flex-start; flex-direction: column; }
+            .combination-import-controls { grid-template-columns: 1fr; }
+            .combination-import-modes { grid-template-columns: 1fr; }
             .totals { grid-template-columns: repeat(2,1fr); }
         }
     </style>
@@ -861,6 +905,23 @@
                         </div>
                         <button class="danger-btn" id="delete-all-tickets">Удалить все</button>
                     </div>
+                    <div class="combination-import">
+                        <div class="combination-import-head">
+                            <div>
+                                <strong>Комбинации из «Интервалы»</strong>
+                                <small>JSON-схема Цветных шаров v1 · до 500 шестёрок без дополнительных игр</small>
+                            </div>
+                        </div>
+                        <div class="combination-import-controls">
+                            <label class="primary-btn" for="combinations-file-input">Загрузить комбинации</label>
+                            <input class="file-input" id="combinations-file-input" type="file" accept=".json">
+                            <div class="combination-import-modes" role="radiogroup" aria-label="Режим загрузки комбинаций">
+                                <label class="combination-import-mode"><input type="radio" name="combinations-import-mode" value="add" checked> Добавить в активный слой</label>
+                                <label class="combination-import-mode"><input type="radio" name="combinations-import-mode" value="replace"> Заменить ставки активного слоя</label>
+                            </div>
+                        </div>
+                        <div class="combination-import-status" id="combinations-import-status" role="status" aria-live="polite" hidden></div>
+                    </div>
                     <div class="ticket-list" id="ticket-list"></div>
                 </div>
             </section>
@@ -960,6 +1021,9 @@
         ];
         const MAX_QTY = Number.MAX_SAFE_INTEGER;
         const MAX_GENERATED_TICKETS = 500;
+        const COMBINATIONS_IMPORT_FORMAT = 'lotto-calc.keno-colored-balls-combinations';
+        const COMBINATIONS_IMPORT_SCHEMA_VERSION = 1;
+        const COMBINATIONS_IMPORT_LIMIT = 500;
 
         let drawCount = 48;
         let selected = new Set();
@@ -1149,9 +1213,10 @@
         }
 
         function newTicket(numbers, options = {}) {
+            const extras = Object.prototype.hasOwnProperty.call(options, 'extras') ? options.extras : draftExtras;
             return {
                 numbers,
-                extras: {...draftExtras},
+                extras: {...(extras || {})},
                 qty: new Array(drawCount).fill(0),
                 auto: false,
                 step: '×2',
@@ -1159,6 +1224,189 @@
                 bundleAuto: Boolean(options.bundleAuto),
                 bundleStep: options.bundleStep || '+1'
             };
+        }
+
+        function combinationKey(numbers) {
+            return [...numbers].sort((a,b) => a-b).join(',');
+        }
+
+        function requireCombinationMetadata(payload) {
+            if (!payload.criteria || typeof payload.criteria !== 'object' || Array.isArray(payload.criteria)) {
+                throw new Error('Отсутствуют параметры поиска criteria.');
+            }
+            if (!Number.isInteger(payload.criteria.completionMoveAtMost) || payload.criteria.completionMoveAtMost < 1) {
+                throw new Error('Параметр criteria.completionMoveAtMost должен быть положительным целым числом.');
+            }
+            if (!Number.isInteger(payload.criteria.minimumDrawHits) || payload.criteria.minimumDrawHits < 0) {
+                throw new Error('Параметр criteria.minimumDrawHits должен быть целым числом не меньше нуля.');
+            }
+            if (!payload.archive || typeof payload.archive !== 'object' || Array.isArray(payload.archive)) {
+                throw new Error('Отсутствуют сведения об архиве archive.');
+            }
+            if (!Number.isInteger(payload.totalFound) || payload.totalFound < 0) {
+                throw new Error('Поле totalFound должно быть целым числом не меньше нуля.');
+            }
+            if (!Number.isInteger(payload.exportedCount) || payload.exportedCount < 0) {
+                throw new Error('Поле exportedCount должно быть целым числом не меньше нуля.');
+            }
+            if (typeof payload.truncated !== 'boolean') {
+                throw new Error('Поле truncated должно иметь логическое значение.');
+            }
+        }
+
+        function parseCombinationExport(text) {
+            let payload;
+            try {
+                payload = JSON.parse(String(text).replace(/^\uFEFF/, ''));
+            } catch (error) {
+                throw new Error(`Некорректный JSON: ${error.message}`);
+            }
+            if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
+                throw new Error('Корневое значение файла должно быть объектом.');
+            }
+            if (payload.format !== COMBINATIONS_IMPORT_FORMAT) {
+                throw new Error(`Неверный format. Ожидается «${COMBINATIONS_IMPORT_FORMAT}».`);
+            }
+            if (payload.schemaVersion !== COMBINATIONS_IMPORT_SCHEMA_VERSION) {
+                throw new Error(`Неподдерживаемая schemaVersion. Ожидается ${COMBINATIONS_IMPORT_SCHEMA_VERSION}.`);
+            }
+            if (payload.lottery !== 'keno_colored_balls') {
+                throw new Error('Неверная lottery. Ожидается «keno_colored_balls».');
+            }
+            if (!Array.isArray(payload.combinations)) {
+                throw new Error('Поле combinations должно быть массивом.');
+            }
+            if (payload.combinations.length > COMBINATIONS_IMPORT_LIMIT) {
+                throw new Error(`В файле больше ${COMBINATIONS_IMPORT_LIMIT} комбинаций.`);
+            }
+            requireCombinationMetadata(payload);
+
+            const combinations = [];
+            const seen = new Set();
+            let duplicatesInFile = 0;
+            payload.combinations.forEach((entry, index) => {
+                const position = index + 1;
+                if (!entry || typeof entry !== 'object' || Array.isArray(entry)) {
+                    throw new Error(`Комбинация №${position} должна быть объектом.`);
+                }
+                if (!Array.isArray(entry.numbers) || entry.numbers.length !== 6) {
+                    throw new Error(`Комбинация №${position}: numbers должен содержать ровно 6 чисел.`);
+                }
+                if (!entry.numbers.every(number => Number.isInteger(number) && number >= 1 && number <= 48)) {
+                    throw new Error(`Комбинация №${position}: допустимы только целые числа от 1 до 48.`);
+                }
+                if (new Set(entry.numbers).size !== 6) {
+                    throw new Error(`Комбинация №${position}: числа должны быть уникальными.`);
+                }
+                if (!Number.isInteger(entry.hits) || entry.hits < 0) {
+                    throw new Error(`Комбинация №${position}: hits должен быть целым числом не меньше нуля.`);
+                }
+                const moves = entry.moves;
+                if (!moves || typeof moves !== 'object' || Array.isArray(moves)
+                    || !Number.isInteger(moves.best) || moves.best < 1
+                    || !Number.isFinite(moves.average) || moves.average < 1
+                    || !Number.isInteger(moves.worst) || moves.worst < 1) {
+                    throw new Error(`Комбинация №${position}: moves.best, moves.average и moves.worst должны быть положительными числами.`);
+                }
+                const numbers = [...entry.numbers].sort((a,b) => a-b);
+                const key = numbers.join(',');
+                if (seen.has(key)) {
+                    duplicatesInFile++;
+                    return;
+                }
+                seen.add(key);
+                combinations.push(numbers);
+            });
+
+            return {
+                combinations,
+                duplicatesInFile,
+                criteria: {
+                    completionMoveAtMost:payload.criteria.completionMoveAtMost,
+                    minimumDrawHits:payload.criteria.minimumDrawHits
+                },
+                totalFound:payload.totalFound,
+                exportedCount:payload.exportedCount,
+                truncated:payload.truncated
+            };
+        }
+
+        function importCombinationText(text, mode = 'add', render = true) {
+            if (!['add','replace'].includes(mode)) throw new Error('Неизвестный режим загрузки комбинаций.');
+            const parsed = parseCombinationExport(text);
+            const layer = activeLayer();
+            const existingKeys = mode === 'add'
+                ? new Set(layer.tickets.map(ticket => combinationKey(ticket.numbers)))
+                : new Set();
+            let duplicatesExisting = 0;
+            const importedTickets = [];
+            parsed.combinations.forEach(numbers => {
+                const key = numbers.join(',');
+                if (existingKeys.has(key)) {
+                    duplicatesExisting++;
+                    return;
+                }
+                existingKeys.add(key);
+                importedTickets.push(newTicket(numbers, {
+                    extras:emptyExtras(),
+                    bundleId:null,
+                    bundleAuto:false
+                }));
+            });
+
+            if (mode === 'replace') layer.tickets = importedTickets;
+            else layer.tickets.push(...importedTickets);
+
+            if (render) {
+                renderLayers();
+                renderTickets();
+                renderDrawsAndTotals();
+            }
+            return {
+                loaded:importedTickets.length,
+                duplicatesSkipped:parsed.duplicatesInFile + duplicatesExisting,
+                duplicatesInFile:parsed.duplicatesInFile,
+                duplicatesExisting,
+                criteria:parsed.criteria,
+                truncated:parsed.truncated,
+                totalFound:parsed.totalFound,
+                exportedCount:parsed.exportedCount
+            };
+        }
+
+        function setCombinationImportStatus(message, isError = false) {
+            const status = $('combinations-import-status');
+            status.hidden = false;
+            status.classList.toggle('error', isError);
+            status.textContent = message;
+        }
+
+        function combinationImportMessage(result) {
+            const criteria = result.criteria;
+            const parts = [
+                `Загружено: ${result.loaded}.`,
+                `Дублей пропущено: ${result.duplicatesSkipped}.`,
+                `Параметры поиска: ход до ${criteria.completionMoveAtMost}, минимум совпадений — ${criteria.minimumDrawHits}.`
+            ];
+            if (result.truncated) {
+                parts.push('Исходный анализ нашёл больше комбинаций, но файл содержит лучшие 500.');
+            }
+            return parts.join(' ');
+        }
+
+        async function loadCombinationsFile(file) {
+            try {
+                const text = await file.text();
+                const mode = document.querySelector('input[name="combinations-import-mode"]:checked')?.value || 'add';
+                const result = importCombinationText(text, mode);
+                const message = combinationImportMessage(result);
+                setCombinationImportStatus(message);
+                showToast(`Комбинации загружены: ${result.loaded}. Дублей пропущено: ${result.duplicatesSkipped}.`);
+            } catch (error) {
+                console.error(error);
+                setCombinationImportStatus(`Файл не загружен: ${error.message}`, true);
+                showToast(`Не удалось загрузить комбинации: ${error.message}`);
+            }
         }
 
         function autoFillNumbers() {
@@ -2453,6 +2701,11 @@
                 activeLayer().tickets = [];
                 renderTickets();
                 renderDrawsAndTotals();
+            };
+            $('combinations-file-input').onchange = event => {
+                const file = event.target.files[0];
+                event.target.value = '';
+                if (file) loadCombinationsFile(file);
             };
             $('file-input').onchange = event => {
                 const file = event.target.files[0];
