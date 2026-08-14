@@ -352,8 +352,10 @@
     let globalSums = [];  
     const MAX_BALL = 80;  
     const MAX_AUTO_COMBINATIONS = 5000000;
-    const KENO_WORK_LIMIT = 3000000;
-    const KENO_MAP_LIMIT = 350000;
+    const KENO_WORK_LIMIT = 50000000;
+    const KENO_GUARANTEED_MOVE = 12;
+    const KENO_MAX_NUMBER = 48;
+    const KENO_COMBINATION_SIZE = 6;
     const KENO_COLORS = [
         { name: 'Красная', color: '#d83b3b', text: '#fff', nums: [1, 9, 17, 25, 33, 41] },
         { name: 'Зелёная', color: '#2e9f55', text: '#fff', nums: [2, 10, 18, 26, 34, 42] },
@@ -364,6 +366,9 @@
         { name: 'Оранжевая', color: '#f28b30', text: '#fff', nums: [7, 15, 23, 31, 39, 47] },
         { name: 'Чёрная', color: '#2b2b2b', text: '#fff', nums: [8, 16, 24, 32, 40, 48] }
     ];
+    const KENO_RANK_PARTS = Array.from({ length: KENO_COMBINATION_SIZE }, (_, index) =>
+        Uint32Array.from({ length: KENO_MAX_NUMBER + 1 }, (_, number) => combinationCount(number - 1, index + 1))
+    );
 
     const fileInputElement = document.getElementById('fileInput');
     fileInputElement.addEventListener('change', () => {
@@ -877,8 +882,8 @@
         const btn = document.getElementById('btnKenoScan');
         const box = document.getElementById('resultKeno');
 
-        if (maxMove < 6 || maxMove > 35) { alert('Ход должен быть от 6 до 35.'); return; }
-        if (minHits < 1) { alert('Минимум тиражей должен быть 1 или больше.'); return; }
+        if (!Number.isInteger(maxMove) || maxMove < 6 || maxMove > 35) { alert('Ход должен быть от 6 до 35.'); return; }
+        if (!Number.isInteger(minHits) || minHits < 1) { alert('Минимум тиражей должен быть 1 или больше.'); return; }
 
         if(!parseFile(async () => {
             btn.disabled = true;
@@ -912,60 +917,59 @@
                     return;
                 }
 
-                const analysisDraws = archive.full.map(draw => draw.slice(0, maxMove));
-                if (maxMove === 6) analysisDraws.push(...archive.firstSix);
-                const combinationsPerDraw = combinationCount(maxMove, 6);
+                const analysisDraws = archive.full.map(draw => draw.slice(0, maxMove).sort((a,b) => a-b));
+                if (maxMove === 6) analysisDraws.push(...archive.firstSix.map(draw => [...draw].sort((a,b) => a-b)));
+                const combinationsPerDraw = combinationCount(maxMove, KENO_COMBINATION_SIZE);
                 const estimatedWork = archive.full.length * combinationsPerDraw + (maxMove === 6 ? archive.firstSix.length : 0);
                 const colorStatsHtml = renderKenoColorStats(archive.full, []);
 
-                if (estimatedWork > KENO_WORK_LIMIT) {
-                    box.innerHTML = `<p class="highlight">Для точного перебора потребуется ${formatNumber(estimatedWork)} операций — это слишком много для безопасной работы браузера.</p><p>Уменьшите номер хода. Например, ход 12 требует только 924 комбинации на тираж.</p>${validationNote(archive.rejected)}${colorStatsHtml}`;
+                if (maxMove > KENO_GUARANTEED_MOVE && estimatedWork > KENO_WORK_LIMIT) {
+                    box.innerHTML = `<p class="highlight">Для точного перебора потребуется ${formatNumber(estimatedWork)} операций — это слишком много для безопасной работы браузера.</p><p>Поиск гарантированно доступен до 12-го хода включительно. Для более позднего хода уменьшите архив или номер хода.</p>${validationNote(archive.rejected)}${colorStatsHtml}`;
                     return;
                 }
 
-                const countsMap = new Map();
+                const counterSlots = combinationCount(KENO_MAX_NUMBER, KENO_COMBINATION_SIZE);
+                const CounterArray = analysisDraws.length <= 65535 ? Uint16Array : Uint32Array;
+                let counts;
+                try {
+                    counts = new CounterArray(counterSlots);
+                } catch (error) {
+                    box.innerHTML = `<p class="highlight">Браузер не смог выделить память для счётчика комбинаций.</p><p>Закройте лишние вкладки и повторите анализ.</p>${validationNote(archive.rejected)}${colorStatsHtml}`;
+                    return;
+                }
                 let processedBefore = 0;
-                let aborted = false;
 
                 for (let drawIndex = 0; drawIndex < analysisDraws.length; drawIndex++) {
                     const draw = analysisDraws[drawIndex];
-                    const drawTotal = combinationCount(draw.length, 6);
-                    const scanInfo = await forEachCombinationAsync(draw, 6, combo => {
-                        const key = [...combo].sort((a,b) => a-b).join(',');
-                        countsMap.set(key, (countsMap.get(key) || 0) + 1);
-                        if (countsMap.size > KENO_MAP_LIMIT) return false;
-                    }, done => {
+                    const drawTotal = combinationCount(draw.length, KENO_COMBINATION_SIZE);
+                    await countKenoCombinationsAsync(draw, counts, done => {
                         const overall = processedBefore + done;
-                        btn.innerText = `Анализирую... ${Math.min(99, Math.floor(overall / estimatedWork * 100))}%`;
+                        btn.innerText = `Анализирую... ${Math.min(85, Math.floor(overall / estimatedWork * 85))}%`;
                     });
                     processedBefore += drawTotal;
-                    if (scanInfo.aborted) { aborted = true; break; }
+                    if ((drawIndex + 1) % 25 === 0) await new Promise(resolve => setTimeout(resolve, 0));
                 }
 
-                if (aborted) {
-                    box.innerHTML = `<p class="highlight">Найдено слишком много разных комбинаций для хранения в памяти.</p><p>Уменьшите номер хода.</p>${validationNote(archive.rejected)}${colorStatsHtml}`;
-                    return;
-                }
-
-                const results = [];
-                countsMap.forEach((count, combo) => {
-                    if (count < minHits) return;
-                    const numbers = combo.split(',').map(Number);
+                const selection = await selectTopKenoCandidates(counts, minHits, 100, done => {
+                    btn.innerText = `Отбираю результаты... ${85 + Math.floor(done / counterSlots * 14)}%`;
+                });
+                const results = selection.candidates.map(candidate => {
+                    const numbers = unrankKenoCombination(candidate.rank);
                     const moves = archive.full.map(draw => getKenoCompletionMove(draw, numbers)).filter(move => move !== null && move <= maxMove);
                     if (maxMove === 6) archive.firstSix.forEach(draw => { if (numbers.every(num => draw.includes(num))) moves.push(6); });
-                    results.push({
-                        combo,
-                        count,
+                    return {
+                        combo: numbers.join(','),
+                        count: candidate.count,
                         bestMove: Math.min(...moves),
                         averageMove: moves.reduce((sum, move) => sum + move, 0) / moves.length,
                         worstMove: Math.max(...moves)
-                    });
+                    };
                 });
                 results.sort((a,b) => b.count - a.count || a.averageMove - b.averageMove || a.combo.localeCompare(b.combo));
 
                 let html = `<p class="result-meta"><b>Полный архив:</b> ${archive.full.length} тиражей по 35 шаров${archive.firstSix.length ? `; строк только с первыми шестью: ${archive.firstSix.length}${maxMove === 6 ? ' (учтены)' : ' (не учитывались)'}` : ''}.</p>`;
                 html += validationNote(archive.rejected);
-                html += renderKenoResults(results, minHits, maxMove);
+                html += renderKenoResults(results, minHits, maxMove, selection.total);
                 html += colorStatsHtml;
                 box.innerHTML = html;
             } finally {
@@ -997,10 +1001,10 @@
         return lastPosition;
     }
 
-    function renderKenoResults(results, minHits, maxMove) {
-        if (results.length === 0) return `<p class="highlight">Шестёрок, завершавшихся не позднее ${maxMove}-го хода минимум в ${minHits} тиражах, не найдено.</p>`;
+    function renderKenoResults(results, minHits, maxMove, totalResults = results.length) {
+        if (totalResults === 0) return `<p class="highlight">Шестёрок, завершавшихся не позднее ${maxMove}-го хода минимум в ${minHits} тиражах, не найдено.</p>`;
         const shown = results.slice(0, 100);
-        let html = `<p>Найдено шестёрок: <b>${results.length}</b>. ${results.length > shown.length ? `Показаны первые ${shown.length}.` : ''}</p>`;
+        let html = `<p>Найдено шестёрок: <b>${totalResults}</b>. ${totalResults > shown.length ? `Показаны первые ${shown.length}.` : ''}</p>`;
         shown.forEach(result => {
             const balls = result.combo.split(',').map(Number).map(renderKenoBall).join('');
             html += `<div class="combo-item"><div>${balls}</div><p>Совпало в тиражах: <b>${result.count}</b> | лучший ход: <b>${result.bestMove}</b> | средний: <b>${result.averageMove.toFixed(1)}</b> | самый поздний: <b>${result.worstMove}</b></p></div>`;
@@ -1039,6 +1043,88 @@
         let result = 1;
         for (let i = 1; i <= k; i++) result = result * (n - k + i) / i;
         return Math.round(result);
+    }
+
+    function rankKenoCombination(sortedNumbers) {
+        let rank = 0;
+        for (let index = 0; index < sortedNumbers.length; index++) {
+            rank += KENO_RANK_PARTS[index][sortedNumbers[index]];
+        }
+        return rank;
+    }
+
+    function unrankKenoCombination(rank) {
+        const numbers = new Array(KENO_COMBINATION_SIZE);
+        let candidate = KENO_MAX_NUMBER - 1;
+        for (let size = KENO_COMBINATION_SIZE; size >= 1; size--) {
+            while (combinationCount(candidate, size) > rank) candidate--;
+            numbers[size - 1] = candidate + 1;
+            rank -= combinationCount(candidate, size);
+            candidate--;
+        }
+        return numbers;
+    }
+
+    async function selectTopKenoCandidates(counts, minHits, limit, onProgress = null) {
+        const candidates = [];
+        let total = 0;
+
+        for (let rank = 0; rank < counts.length; rank++) {
+            const count = counts[rank];
+            if (count >= minHits) {
+                total++;
+                const candidate = { rank, count };
+                if (candidates.length < limit) {
+                    candidates.push(candidate);
+                    if (candidates.length === limit) candidates.sort(compareKenoCandidates);
+                } else if (compareKenoCandidates(candidate, candidates[candidates.length - 1]) < 0) {
+                    candidates[candidates.length - 1] = candidate;
+                    candidates.sort(compareKenoCandidates);
+                }
+            }
+
+            if ((rank + 1) % 250000 === 0) {
+                if (onProgress) onProgress(rank + 1, counts.length);
+                await new Promise(resolve => setTimeout(resolve, 0));
+            }
+        }
+
+        candidates.sort(compareKenoCandidates);
+        if (onProgress) onProgress(counts.length, counts.length);
+        return { candidates, total };
+    }
+
+    function compareKenoCandidates(a, b) {
+        return b.count - a.count || a.rank - b.rank;
+    }
+
+    async function countKenoCombinationsAsync(sortedNumbers, counts, onProgress = null) {
+        const total = combinationCount(sortedNumbers.length, KENO_COMBINATION_SIZE);
+        const indices = Array.from({ length: KENO_COMBINATION_SIZE }, (_, index) => index);
+        let processed = 0;
+
+        while (true) {
+            let rank = 0;
+            for (let index = 0; index < KENO_COMBINATION_SIZE; index++) {
+                rank += KENO_RANK_PARTS[index][sortedNumbers[indices[index]]];
+            }
+            counts[rank]++;
+            processed++;
+
+            if (processed % 100000 === 0) {
+                if (onProgress) onProgress(processed, total);
+                await new Promise(resolve => setTimeout(resolve, 0));
+            }
+
+            let position = KENO_COMBINATION_SIZE - 1;
+            while (position >= 0 && indices[position] === sortedNumbers.length - KENO_COMBINATION_SIZE + position) position--;
+            if (position < 0) break;
+            indices[position]++;
+            for (let index = position + 1; index < KENO_COMBINATION_SIZE; index++) indices[index] = indices[index - 1] + 1;
+        }
+
+        if (onProgress) onProgress(processed, total);
+        return processed;
     }
 
     function formatNumber(value) {
