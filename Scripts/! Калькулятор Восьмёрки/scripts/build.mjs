@@ -49,8 +49,8 @@ await writeFile(new URL("styles.css", portable), portableStyles, "utf8");
 const publicHtml = await readFile(new URL("../public/index.html", import.meta.url), "utf8");
 const portableHtml = publicHtml
   .replace(
-    '<script type="module" src="./app.js?v=20260812-2"></script>',
-    '<script defer src="./calculator.js?v=20260812-2"></script>',
+    '<script type="module" src="./app.js?v=20260814-1"></script>',
+    '<script defer src="./calculator.js?v=20260814-1"></script>',
   )
   .replaceAll('content="/og-v3.png"', 'content="./og-v3.png"');
 await writeFile(new URL("index.html", portable), portableHtml, "utf8");

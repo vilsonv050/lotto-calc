@@ -2259,6 +2259,25 @@ const games = {
     price: 250,
     generation: "Текущий архив + поколение до 12.07.2024",
     payouts: [5_000_000, 500_000, 25_000, 5_000, 2_000, 1_250, 800, 750, 750],
+    defaultTariffId: "250",
+    tariffs: [
+      {
+        id: "250",
+        label: "250 ₽ · текущая таблица",
+        price: 250,
+        payouts: [5_000_000, 500_000, 25_000, 5_000, 2_000, 1_250, 800, 750, 750],
+        source: "НЛОТО · тариф 250 ₽",
+        date: "14.08.2026",
+      },
+      {
+        id: "300",
+        label: "300 ₽ · архивная таблица",
+        price: 300,
+        payouts: [5_000_000, 500_000, 30_000, 5_000, 2_000, 1_500, 1_000, 900, 900],
+        source: "Архивная таблица · тариф 300 ₽",
+        date: "2026",
+      },
+    ],
     draws: [
       {
         drawNum: "071493",
@@ -2306,9 +2325,36 @@ const games = {
     motif: "Поле удачи",
     heroLine: "Соберите несколько точных ставок на одном поле",
     jackpot: 10_000_000,
-    price: 250,
+    price: 600,
     generation: "Текущий архив + поколение до 31.07.2026",
-    payouts: [10_000_000, 500_000, 25_000, 7_500, 3_000, 1_500, 750, 500, 500],
+    payouts: [10_000_000, 1_400_000, 70_000, 21_000, 8_400, 4_000, 2_100, 1_200, 1_200],
+    defaultTariffId: "600",
+    tariffs: [
+      {
+        id: "250",
+        label: "250 ₽ · архивная таблица",
+        price: 250,
+        payouts: [10_000_000, 500_000, 25_000, 7_500, 3_000, 1_500, 750, 500, 500],
+        source: "Архивная таблица · тариф 250 ₽",
+        date: "—",
+      },
+      {
+        id: "500",
+        label: "500 ₽ · архивная таблица",
+        price: 500,
+        payouts: [10_000_000, 1_000_000, 50_000, 15_000, 6_000, 3_000, 1_500, 1_000, 1_000],
+        source: "Архивная таблица · тариф 500 ₽",
+        date: "2026",
+      },
+      {
+        id: "600",
+        label: "600 ₽ · текущая таблица",
+        price: 600,
+        payouts: [10_000_000, 1_400_000, 70_000, 21_000, 8_400, 4_000, 2_100, 1_200, 1_200],
+        source: "НЛОТО · тариф 600 ₽",
+        date: "14.08.2026",
+      },
+    ],
     draws: [
       {
         drawNum: "002871",
@@ -2342,9 +2388,44 @@ const games = {
     motif: "Бильярдная восьмёрка",
     heroLine: "В погоне за суперпризом — рассчитайте каждый удар",
     jackpot: 1_000_000,
-    price: 10,
+    price: 40,
     generation: "Текущий архив + поколение до 31.07.2026",
-    payouts: [1_000_000, 12_500, 500, 400, 125, 60, 30, 15, 10],
+    payouts: [1_000_000, 50_000, 2_000, 1_600, 500, 300, 120, 60, 60],
+    defaultTariffId: "40",
+    tariffs: [
+      {
+        id: "10",
+        label: "10 ₽ · архивная таблица",
+        price: 10,
+        payouts: [1_000_000, 12_500, 500, 400, 125, 60, 30, 15, 10],
+        source: "Архивная таблица · тариф 10 ₽",
+        date: "2026",
+      },
+      {
+        id: "20",
+        label: "20 ₽ · архивная таблица",
+        price: 20,
+        payouts: [1_000_000, 25_000, 1_000, 800, 250, 120, 60, 30, 30],
+        source: "Архивная таблица · тариф 20 ₽",
+        date: "2026",
+      },
+      {
+        id: "40",
+        label: "40 ₽ · текущая таблица",
+        price: 40,
+        payouts: [1_000_000, 50_000, 2_000, 1_600, 500, 300, 120, 60, 60],
+        source: "НЛОТО · тариф 40 ₽",
+        date: "14.08.2026",
+      },
+      {
+        id: "80",
+        label: "80 ₽ · архивная таблица",
+        price: 80,
+        payouts: [2_000_000, 100_000, 10_000, 5_000, 1_000, 500, 300, 100, 150],
+        source: "Архивная таблица · тариф 80 ₽",
+        date: "2024",
+      },
+    ],
     draws: [
       {
         drawNum: "003145",
@@ -2370,6 +2451,220 @@ const games = {
     ],
   },
 };
+
+function normaliseTariffPayouts(values, fallback = []) {
+  return Array.from({ length: PAYOUT_CATEGORIES.length }, (_, index) =>
+    Math.max(0, Number(values?.[index] ?? fallback?.[index] ?? 0) || 0),
+  );
+}
+
+function createTariffTable(definition, fallback = {}) {
+  const price = Math.max(1, Number(definition?.price ?? fallback?.price) || 1);
+  const sitePayouts = normaliseTariffPayouts(
+    definition?.sitePayouts ?? definition?.payouts,
+    fallback?.sitePayouts ?? fallback?.payouts,
+  );
+  const customPayouts = normaliseTariffPayouts(
+    definition?.customPayouts,
+    sitePayouts,
+  );
+  return {
+    id: String(definition?.id ?? fallback?.id ?? price),
+    label: String(
+      definition?.label ?? fallback?.label ?? `${formatMoney(price)} · моя таблица`,
+    ),
+    price,
+    sitePrice: price,
+    sitePayouts,
+    customPayouts,
+    payoutDraft: normaliseTariffPayouts(
+      definition?.payoutDraft,
+      customPayouts,
+    ),
+    siteMeta: {
+      source: String(
+        definition?.siteMeta?.source ??
+          definition?.source ??
+          fallback?.siteMeta?.source ??
+          fallback?.source ??
+          "Таблица тарифа",
+      ),
+      drawNum: String(
+        definition?.siteMeta?.drawNum ?? fallback?.siteMeta?.drawNum ?? "—",
+      ),
+      date: String(
+        definition?.siteMeta?.date ??
+          definition?.date ??
+          fallback?.siteMeta?.date ??
+          fallback?.date ??
+          "—",
+      ),
+    },
+    customMeta: {
+      source: String(
+        definition?.customMeta?.source ??
+          fallback?.customMeta?.source ??
+          "Пользовательская версия не изменялась",
+      ),
+      date: String(
+        definition?.customMeta?.date ?? fallback?.customMeta?.date ?? "—",
+      ),
+    },
+    isCustom: Boolean(definition?.isCustom ?? fallback?.isCustom),
+  };
+}
+
+function createGameTariffTables(game) {
+  return Object.fromEntries(
+    (game.tariffs || [
+      {
+        id: String(game.price),
+        price: game.price,
+        payouts: game.payouts,
+      },
+    ]).map((tariff) => {
+      const table = createTariffTable(tariff);
+      return [table.id, table];
+    }),
+  );
+}
+
+function tariffList(profile) {
+  return Object.values(profile.tariffTables || {}).sort(
+    (left, right) =>
+      Number(left.price) - Number(right.price) ||
+      String(left.label).localeCompare(String(right.label), "ru"),
+  );
+}
+
+function storeActiveTariff(profile) {
+  const table = profile.tariffTables?.[profile.tariffId];
+  if (!table) return;
+  table.price = Math.max(1, Number(profile.price) || Number(table.price) || 1);
+  table.sitePrice = Math.max(
+    1,
+    Number(profile.sitePrice) || Number(table.sitePrice) || table.price,
+  );
+  table.sitePayouts = normaliseTariffPayouts(
+    profile.sitePayouts,
+    table.sitePayouts,
+  );
+  table.customPayouts = normaliseTariffPayouts(
+    profile.customPayouts,
+    table.customPayouts,
+  );
+  table.payoutDraft = normaliseTariffPayouts(
+    profile.payoutDraft,
+    table.customPayouts,
+  );
+  table.siteMeta = { ...table.siteMeta, ...(profile.siteMeta || {}) };
+  table.customMeta = { ...table.customMeta, ...(profile.customMeta || {}) };
+}
+
+function activateTariff(profile, tariffId, persistCurrent = true) {
+  const next = profile.tariffTables?.[tariffId];
+  if (!next) return false;
+  if (persistCurrent) storeActiveTariff(profile);
+  profile.tariffId = next.id;
+  profile.price = Number(next.price);
+  profile.sitePrice = Number(next.sitePrice || next.price);
+  profile.sitePayouts = [...next.sitePayouts];
+  profile.customPayouts = [...next.customPayouts];
+  profile.payoutDraft = [...next.payoutDraft];
+  profile.siteMeta = { ...next.siteMeta };
+  profile.customMeta = { ...next.customMeta };
+  profile.newTariffPrice = "";
+  return true;
+}
+
+function addOrActivateCustomTariff(profile, requestedPrice) {
+  const numericPrice = Number(requestedPrice);
+  if (!Number.isFinite(numericPrice) || numericPrice <= 0) {
+    return { ok: false, created: false };
+  }
+  const price = Math.max(1, Math.round(numericPrice));
+  const existing = tariffList(profile).find(
+    (table) => Number(table.price) === price,
+  );
+  if (existing) {
+    activateTariff(profile, existing.id);
+    return { ok: true, created: false, table: existing };
+  }
+
+  storeActiveTariff(profile);
+  let tariffId = `custom-${price}`;
+  let suffix = 2;
+  while (profile.tariffTables[tariffId]) {
+    tariffId = `custom-${price}-${suffix}`;
+    suffix += 1;
+  }
+  const table = createTariffTable({
+    id: tariffId,
+    label: `${formatMoney(price)} · моя таблица`,
+    price,
+    payouts: profile.customPayouts,
+    customPayouts: profile.customPayouts,
+    payoutDraft: profile.customPayouts,
+    source: `Пользовательский тариф ${formatMoney(price)}`,
+    date: new Date().toLocaleDateString("ru-RU"),
+    isCustom: true,
+  });
+  profile.tariffTables[tariffId] = table;
+  activateTariff(profile, tariffId, false);
+  return { ok: true, created: true, table };
+}
+
+function hydrateTariffs(profile, saved, game) {
+  const tables = createGameTariffTables(game);
+  for (const [id, savedTable] of Object.entries(saved?.tariffTables || {})) {
+    tables[id] = createTariffTable(savedTable, tables[id]);
+  }
+
+  const savedPrice = Math.max(1, Number(saved?.price ?? profile.price) || game.price);
+  let tariffId = String(saved?.tariffId || "");
+  if (!tables[tariffId]) {
+    tariffId = tariffList({ tariffTables: tables }).find(
+      (table) => Number(table.price) === savedPrice,
+    )?.id;
+  }
+  if (!tariffId) {
+    tariffId = `custom-${savedPrice}`;
+    tables[tariffId] = createTariffTable({
+      id: tariffId,
+      label: `${formatMoney(savedPrice)} · моя таблица`,
+      price: savedPrice,
+      payouts: saved?.sitePayouts ?? saved?.customPayouts ?? game.payouts,
+      customPayouts: saved?.customPayouts,
+      payoutDraft: saved?.payoutDraft,
+      source: "Пользовательский тариф",
+      date: "—",
+      customMeta: saved?.customMeta,
+      isCustom: true,
+    });
+  }
+
+  if (!saved?.tariffTables && saved) {
+    const legacy = tables[tariffId];
+    legacy.sitePayouts = normaliseTariffPayouts(
+      saved.sitePayouts,
+      legacy.sitePayouts,
+    );
+    legacy.customPayouts = normaliseTariffPayouts(
+      saved.customPayouts,
+      legacy.customPayouts,
+    );
+    legacy.payoutDraft = normaliseTariffPayouts(
+      saved.payoutDraft,
+      legacy.customPayouts,
+    );
+    legacy.siteMeta = { ...legacy.siteMeta, ...(saved.siteMeta || {}) };
+    legacy.customMeta = { ...legacy.customMeta, ...(saved.customMeta || {}) };
+  }
+
+  profile.tariffTables = tables;
+  profile.tariffId = tariffId || game.defaultTariffId;
+  activateTariff(profile, profile.tariffId, false);
+}
 
 function bundledDrawSignature(draw) {
   return [
@@ -2457,9 +2752,17 @@ function defaultStrategyLayer(id = 1) {
 }
 
 function defaultProfile(game) {
+  const tariffTables = createGameTariffTables(game);
+  const tariffId = tariffTables[game.defaultTariffId]
+    ? game.defaultTariffId
+    : Object.keys(tariffTables)[0];
+  const tariff = tariffTables[tariffId];
   return {
-    price: game.price,
-    sitePrice: game.price,
+    tariffId,
+    tariffTables,
+    newTariffPrice: "",
+    price: tariff.price,
+    sitePrice: tariff.sitePrice,
     main: [],
     extra: [],
     systemMainTarget: 10,
@@ -2477,18 +2780,11 @@ function defaultProfile(game) {
     optionalRulesDefaultsVersion: 1,
     selectedDraw: game.draws[0]?.drawNum || "",
     importMode: "add",
-    sitePayouts: [...game.payouts],
-    siteMeta: {
-      source: "Базовая таблица выплат",
-      drawNum: "—",
-      date: "06.08.2026",
-    },
-    customPayouts: [...game.payouts],
-    payoutDraft: [...game.payouts],
-    customMeta: {
-      source: "Пользовательская версия не изменялась",
-      date: "—",
-    },
+    sitePayouts: [...tariff.sitePayouts],
+    siteMeta: { ...tariff.siteMeta },
+    customPayouts: [...tariff.customPayouts],
+    payoutDraft: [...tariff.payoutDraft],
+    customMeta: { ...tariff.customMeta },
     ticketsText: "",
     analysis: defaultAnalysis(),
     strategyLayers: [defaultStrategyLayer(1)],
@@ -2549,6 +2845,7 @@ function hydrateState() {
             ? saved.strategyLayers
             : base.profiles[key].strategyLayers,
       };
+      hydrateTariffs(base.profiles[key], saved, games[key]);
       if (saved.drawsAreDemo === undefined) {
         base.profiles[key].drawsAreDemo =
           base.profiles[key].drawsUpdated === "Демонстрационный архив";
@@ -2916,6 +3213,35 @@ function fieldTitle(label, help) {
   return `<span class="field-title"><span>${label}</span>${helpTip(help)}</span>`;
 }
 
+function tariffSelectField(profile = currentProfile()) {
+  const active = profile.tariffTables?.[profile.tariffId];
+  return `
+    <label class="tariff-select-field">
+      ${fieldTitle("Тариф билета", "Переключает одновременно цену одной простой комбинации и связанную с ней таблицу выплат. Все расчёты используют выбранный тариф.")}
+      <select data-input="tariffId" aria-label="Тариф билета">
+        ${tariffList(profile)
+          .map(
+            (table) =>
+              `<option value="${escapeHtml(table.id)}" ${table.id === profile.tariffId ? "selected" : ""}>${escapeHtml(table.label)}</option>`,
+          )
+          .join("")}
+      </select>
+      <small class="help-text">Активна отдельная таблица: ${escapeHtml(active?.label || formatMoney(profile.price))}</small>
+    </label>`;
+}
+
+function customTariffField(profile = currentProfile()) {
+  return `
+    <label class="tariff-custom-field">
+      ${fieldTitle("Добавить свою цену, ₽", "Создаёт новый тариф для текущей лотереи. В качестве основы копируется активная таблица выплат, после чего её можно отредактировать во вкладке «Выплаты».")}
+      <span class="tariff-create-control">
+        <input type="number" min="1" step="1" value="${profile.newTariffPrice || ""}"
+          data-input="newTariffPrice" placeholder="Например, 350" aria-label="Новая цена тарифа">
+        <button type="button" class="secondary-btn" data-action="add-custom-tariff">Добавить</button>
+      </span>
+    </label>`;
+}
+
 function sampleRange(max, count) {
   const values = Array.from({ length: max }, (_, index) => index + 1);
   for (let index = values.length - 1; index > 0; index -= 1) {
@@ -2957,7 +3283,7 @@ function gameSwitch() {
               <span class="game-card-mark">${game.short}</span>
               <span>
                 <strong>${game.name}</strong>
-                <small>${formatMoney(profile.price)} · от ${formatMoney(game.jackpot)}</small>
+                <small>${formatMoney(profile.price)} · от ${formatMoney(profile.customPayouts?.[0] || game.jackpot)}</small>
               </span>
             </button>`;
         })
@@ -4131,9 +4457,8 @@ function workbenchView() {
                     .join("")}
                 </select>
               </label>
-              <label>${fieldTitle("Цена комбинации, ₽", `Можно ввести фактическую цену вручную. Цена с сайта для ${game.name}: ${formatMoney(profile.sitePrice)}.`)}
-                <input type="number" min="1" step="1" value="${profile.price}" data-input="price">
-              </label>
+              ${tariffSelectField(profile)}
+              ${customTariffField(profile)}
             </div>
             <div class="generator-action-line workbench-generate-line">
               <div><span>Одна строка</span><strong>${rowCombinations} ком. · ${formatMoney(rowCombinations * profile.price)}</strong></div>
@@ -5678,6 +6003,17 @@ function payoutsView() {
 
   return `
     <section class="stack">
+      <article class="panel tariff-switch-panel">
+        <div>
+          <span class="eyebrow">Тариф расчёта</span>
+          <h2>${game.name}: ${formatMoney(profile.price)} за комбинацию</h2>
+          <p class="help-text">При переключении меняются цена билета и вся таблица выплат. Генератор, проверка архива и стратегии сразу используют выбранный тариф.</p>
+        </div>
+        <div class="tariff-switch-controls">
+          ${tariffSelectField(profile)}
+          ${customTariffField(profile)}
+        </div>
+      </article>
       <section class="view-grid payout-meta-grid">
         <article class="panel source-version">
           <span class="eyebrow">Базовые данные</span>
@@ -5686,9 +6022,9 @@ function payoutsView() {
             <div><dt>Источник</dt><dd>${escapeHtml(profile.siteMeta.source)}</dd></div>
             <div><dt>Версия</dt><dd>${escapeHtml(profile.siteMeta.drawNum)}</dd></div>
             <div><dt>Дата</dt><dd>${escapeHtml(profile.siteMeta.date)}</dd></div>
-            <div><dt>Базовая цена</dt><dd>${formatMoney(profile.sitePrice)}</dd></div>
+            <div><dt>Цена тарифа</dt><dd>${formatMoney(profile.sitePrice)}</dd></div>
           </dl>
-          <p class="help-text">Это исходная таблица выбранной лотереи. Активные выплаты и цену можно менять вручную.</p>
+          <p class="help-text">Это исходная таблица выбранного тарифа. Пользовательские правки сохраняются отдельно для каждой цены.</p>
         </article>
         <article class="panel source-version">
           <span class="eyebrow">Активная пользовательская версия</span>
@@ -5760,7 +6096,7 @@ function render() {
           <div class="lottery-logo">${gameLogo(game)}</div>
           <h1>${game.name}</h1>
           <p>${game.heroLine}</p>
-          <div class="hero-jackpot"><span>Суперприз от</span><strong>${formatMoney(game.jackpot)}</strong><small>тиражи каждые 15 минут</small></div>
+          <div class="hero-jackpot"><span>Суперприз от</span><strong>${formatMoney(currentProfile().customPayouts?.[0] || game.jackpot)}</strong><small>тиражи каждые 15 минут</small></div>
         </div>
         ${heroArt(game)}
       </section>
@@ -6302,6 +6638,22 @@ function handleExtendedAction(action) {
   const profile = currentProfile();
   if (action === "generate") {
     runGenerator();
+  } else if (action === "add-custom-tariff") {
+    const result = addOrActivateCustomTariff(profile, profile.newTariffPrice);
+    if (!result.ok) {
+      toast("Введите цену нового тарифа", "error");
+      return;
+    }
+    clearStrategyResults();
+    runtime.ticketEvaluation[state.gameKey] = null;
+    save();
+    render();
+    toast(
+      result.created
+        ? `Добавлен тариф ${formatMoney(result.table.price)}. Его выплаты можно изменить во вкладке «Выплаты»`
+        : `Выбран существующий тариф ${formatMoney(result.table.price)}`,
+      "success",
+    );
   } else if (action === "analyze-generator-archive") {
     runGeneratorArchiveAnalysis();
   } else if (action === "export-generator") {
@@ -6440,12 +6792,14 @@ function handleExtendedAction(action) {
       source: "Пользовательская версия",
       date: new Date().toLocaleString("ru-RU"),
     };
+    storeActiveTariff(profile);
     clearStrategyResults();
     save();
     render();
     toast("Пользовательская таблица сохранена", "success");
   } else if (action === "discard-payout-draft") {
     profile.payoutDraft = [...profile.customPayouts];
+    storeActiveTariff(profile);
     render();
   } else if (action === "restore-base-payouts") {
     profile.customPayouts = [...profile.sitePayouts];
@@ -6454,6 +6808,7 @@ function handleExtendedAction(action) {
       source: "Применены базовые выплаты",
       date: new Date().toLocaleString("ru-RU"),
     };
+    storeActiveTariff(profile);
     clearStrategyResults();
     save();
     render();
@@ -6573,6 +6928,7 @@ document.addEventListener("input", (event) => {
   }
   if (target.matches("[data-payout-index]")) {
     profile.payoutDraft[Number(target.dataset.payoutIndex)] = Number(target.value);
+    storeActiveTariff(profile);
     save();
     const saveButton = document.querySelector('[data-action="save-payouts"]');
     const discardButton = document.querySelector(
@@ -6584,19 +6940,34 @@ document.addEventListener("input", (event) => {
   }
   if (!target.matches("[data-input]")) return;
   const field = target.dataset.input;
+  if (field === "tariffId") {
+    if (activateTariff(profile, target.value)) {
+      clearStrategyResults();
+      runtime.ticketEvaluation[state.gameKey] = null;
+      save();
+    }
+    return;
+  }
   const value =
     target.type === "number" || field === "scenarioIndex"
       ? Number(target.value)
       : target.value;
   profile[field] = value;
-  if (field === "price") {
-    runtime.generatorArchiveAnalysis[state.gameKey] = null;
-  }
   save();
 });
 
 document.addEventListener("change", (event) => {
   const target = event.target;
+  if (target.matches('[data-input="tariffId"]')) {
+    const profile = currentProfile();
+    if (profile.tariffId !== target.value && activateTariff(profile, target.value)) {
+      clearStrategyResults();
+      runtime.ticketEvaluation[state.gameKey] = null;
+      save();
+    }
+    render();
+    return;
+  }
   if (target.matches("[data-strategy-history-size]")) {
     const layer = activeStrategyLayer();
     const history = strategyHistoryState(layer?.id);

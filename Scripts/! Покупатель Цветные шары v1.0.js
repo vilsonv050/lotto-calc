@@ -22,7 +22,15 @@
         return;
     }
 
-    const state = { running: false, stopped: false, drawOptions: [], selectedDrawIds: [], drawLoading: false };
+    const state = {
+        running: false,
+        stopped: false,
+        drawOptions: [],
+        selectedDrawIds: [],
+        drawLoading: false,
+        numberSets: [],
+        numberFileName: ''
+    };
     const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
     const normalize = (value) => String(value || '')
         .replace(/\u00a0/g, ' ')
@@ -352,8 +360,109 @@
         return null;
     }
 
+    function parseNumberSets(text) {
+        const lines = String(text || '').replace(/^\uFEFF/, '').split(/\r?\n/);
+        const sets = [];
+        const errors = [];
+
+        lines.forEach((sourceLine, index) => {
+            let line = sourceLine.trim();
+            if (!line || /^(#|\/\/)/.test(line)) return;
+
+            const labeled = line.match(/^\s*(?:билет|ticket|строка|row)\s*№?\s*\d+\s*[:;,=\-]\s*(.+)$/i);
+            if (labeled) line = labeled[1].trim();
+            else if (/[a-zа-яё]/i.test(line)) {
+                const header = sets.length === 0 && /(?:билет|ticket|строка|row|номер|number|число|шар|ball|^id\b)/i.test(line);
+                if (header) return;
+                errors.push('строка ' + (index + 1) + ': посторонний текст');
+                return;
+            }
+
+            const residue = line.replace(/\d+/g, '').replace(/[\s,;|\t"']/g, '');
+            if (residue) {
+                errors.push('строка ' + (index + 1) + ': непонятный формат');
+                return;
+            }
+
+            const numbers = (line.match(/\d+/g) || []).map(Number);
+            if (!numbers.length) return;
+            if (numbers.length > 6) {
+                errors.push('строка ' + (index + 1) + ': больше 6 чисел');
+                return;
+            }
+            if (numbers.some((number) => !Number.isInteger(number) || number < 1 || number > 48)) {
+                errors.push('строка ' + (index + 1) + ': числа должны быть от 1 до 48');
+                return;
+            }
+            if (new Set(numbers).size !== numbers.length) {
+                errors.push('строка ' + (index + 1) + ': числа повторяются');
+                return;
+            }
+            sets.push(numbers);
+        });
+
+        if (errors.length) {
+            const tail = errors.length > 3 ? ' (и ещё ' + (errors.length - 3) + ')' : '';
+            throw new Error('Ошибка файла: ' + errors.slice(0, 3).join('; ') + tail);
+        }
+        if (!sets.length) throw new Error('В файле не найдено ни одного набора чисел');
+        if (sets.length > 50) throw new Error('В файле ' + sets.length + ' наборов. Максимум — 50');
+        return sets;
+    }
+
+    function refreshNumberFileUi() {
+        const quantity = document.getElementById('cbb-quantity');
+        const fixed = document.getElementById('cbb-fixed');
+        const clear = document.getElementById('cbb-clear-number-file');
+        const summary = document.getElementById('cbb-number-file-summary');
+        const loaded = state.numberSets.length > 0;
+
+        if (quantity) {
+            if (loaded) quantity.value = String(state.numberSets.length);
+            quantity.disabled = state.running || loaded;
+        }
+        if (fixed) fixed.disabled = state.running || loaded;
+        if (clear) clear.disabled = state.running || !loaded;
+        if (!summary) return;
+
+        if (!loaded) {
+            summary.textContent = 'Файл не загружен — используется общее поле закреплённых шаров.';
+            summary.dataset.loaded = 'false';
+            return;
+        }
+
+        const incomplete = state.numberSets.filter((numbers) => numbers.length < 6).length;
+        summary.textContent = state.numberFileName + ' · ' + ticketCountText(state.numberSets.length) +
+            (incomplete ? ' · автодобор в ' + incomplete : ' · все наборы по 6 чисел');
+        summary.dataset.loaded = 'true';
+    }
+
+    async function loadNumberFile(file) {
+        if (!file) return;
+        if (!/\.(txt|csv|cvs)$/i.test(file.name)) throw new Error('Выберите файл .txt, .csv или .cvs');
+        if (file.size > 1024 * 1024) throw new Error('Файл слишком большой. Максимум — 1 МБ');
+
+        const sets = parseNumberSets(await file.text());
+        state.numberSets = sets;
+        state.numberFileName = file.name;
+        const fixed = document.getElementById('cbb-fixed');
+        if (fixed) fixed.value = '';
+        refreshNumberFileUi();
+        setStatus('Загружено: ' + ticketCountText(sets.length) + ' из «' + file.name + '». Каждый набор станет отдельным билетом.', 'ok');
+    }
+
+    function clearNumberFile() {
+        state.numberSets = [];
+        state.numberFileName = '';
+        const input = document.getElementById('cbb-number-file');
+        if (input) input.value = '';
+        refreshNumberFileUi();
+        setStatus('Файл сброшен. Снова используется общее поле закреплённых шаров.', 'normal');
+    }
+
     function getConfig(requirePhone) {
-        const quantity = Math.floor(Number(document.getElementById('cbb-quantity').value));
+        const numberSets = state.numberSets.map((numbers) => numbers.slice());
+        const quantity = numberSets.length || Math.floor(Number(document.getElementById('cbb-quantity').value));
         const delay = Math.floor(Number(document.getElementById('cbb-delay').value));
         if (!Number.isFinite(quantity) || quantity < 1 || quantity > 50) throw new Error('Общее количество билетов: от 1 до 50');
         if (!Number.isFinite(delay) || delay < 80 || delay > 3000) throw new Error('Задержка: от 80 до 3000 мс');
@@ -383,7 +492,7 @@
         };
         if (state.drawLoading) throw new Error('Подождите окончания загрузки тиражей');
         if (!state.selectedDrawIds.length) throw new Error('Выберите хотя бы один тираж');
-        return { quantity, delay, fixedNumbers, phone, extras, drawIds: state.selectedDrawIds.slice() };
+        return { quantity, delay, fixedNumbers, numberSets, phone, extras, drawIds: state.selectedDrawIds.slice() };
     }
 
     function extraCount(extras) {
@@ -404,13 +513,16 @@
             fill: document.getElementById('cbb-fill'),
             cart: document.getElementById('cbb-cart'),
             stop: document.getElementById('cbb-stop'),
-            refreshDraws: document.getElementById('cbb-refresh-draws')
+            refreshDraws: document.getElementById('cbb-refresh-draws'),
+            numberFile: document.getElementById('cbb-number-file')
         };
         if (controls.check) controls.check.disabled = running;
         if (controls.fill) controls.fill.disabled = running;
         if (controls.cart) controls.cart.disabled = running;
         if (controls.stop) controls.stop.disabled = !running;
         if (controls.refreshDraws) controls.refreshDraws.disabled = running;
+        if (controls.numberFile) controls.numberFile.disabled = running;
+        refreshNumberFileUi();
         const drawChecks = document.querySelectorAll('#cbb-draw-list input[type="checkbox"]');
         drawChecks.forEach((checkbox) => { checkbox.disabled = running; });
     }
@@ -437,6 +549,19 @@
                 : mod10 >= 2 && mod10 <= 4
                     ? 'тиража'
                     : 'тиражей';
+        return count + ' ' + word;
+    }
+
+    function ticketCountText(count) {
+        const mod100 = count % 100;
+        const mod10 = count % 10;
+        const word = mod100 >= 11 && mod100 <= 14
+            ? 'билетов'
+            : mod10 === 1
+                ? 'билет'
+                : mod10 >= 2 && mod10 <= 4
+                    ? 'билета'
+                    : 'билетов';
         return count + ' ' + word;
     }
 
@@ -707,12 +832,14 @@
 
         for (let number = 1; number <= config.quantity; number += 1) {
             assertRunning();
-            setStatus('Билет ' + number + ' из ' + config.quantity + ': заполняю шары…');
+            const ticketNumbers = config.numberSets[number - 1] || config.fixedNumbers;
+            setStatus('Билет ' + number + ' из ' + config.quantity + ': заполняю шары' +
+                (config.numberSets.length ? ' из файла' : '') + '…');
             await activateTicket(number, config.delay);
             await clearActiveTicket(config.delay);
             setStatus('Билет ' + number + ' из ' + config.quantity + ': ' + drawCountText(config.drawIds.length) + '…');
             await applyDrawSelection(config.drawIds, config.delay);
-            await fillMainNumbers(number, config.fixedNumbers, config.delay);
+            await fillMainNumbers(number, ticketNumbers, config.delay);
             const count = extraCount(config.extras);
             if (count) {
                 setStatus('Билет ' + number + ' из ' + config.quantity + ': допигры ' + count + '…');
@@ -785,7 +912,11 @@
             const extras = extraCount(config.extras);
             if (mode === 'fill') {
                 const testQuantity = Math.min(5, config.quantity);
-                const testConfig = { ...config, quantity: testQuantity };
+                const testConfig = {
+                    ...config,
+                    quantity: testQuantity,
+                    numberSets: config.numberSets.slice(0, testQuantity)
+                };
                 setStatus('Тест: заполняю первые ' + testQuantity + ' из ' + config.quantity + ' билетов…');
                 const testTotal = await fillTickets(testConfig);
                 const remainder = config.quantity - testQuantity;
@@ -804,7 +935,11 @@
                 assertRunning();
                 await ensureTicketStep(config.delay);
                 const batchSize = Math.min(5, config.quantity - completed);
-                const batchConfig = { ...config, quantity: batchSize };
+                const batchConfig = {
+                    ...config,
+                    quantity: batchSize,
+                    numberSets: config.numberSets.slice(completed, completed + batchSize)
+                };
                 setStatus('Партия ' + batchNumber + ' из ' + batchCount + ': ' + batchSize + ' билетов × ' +
                     drawCountText(config.drawIds.length) + ', допигр в каждом — ' + extras);
                 const batchTotal = await fillTickets(batchConfig);
@@ -848,6 +983,13 @@
         #${ROOT_ID} label{color:#cbd5e1;font-size:10px;font-weight:800}
         #${ROOT_ID} input,#${ROOT_ID} select{width:100%;min-width:0;padding:8px;border:1px solid #475569;border-radius:8px;background:#1f2937;color:#fff;font:700 12px system-ui,sans-serif;outline:none}
         #${ROOT_ID} input:focus,#${ROOT_ID} select:focus{border-color:#fb923c;box-shadow:0 0 0 3px rgba(251,146,60,.15)}
+        #${ROOT_ID} input:disabled,#${ROOT_ID} select:disabled{cursor:not-allowed;opacity:.55}
+        #${ROOT_ID} input[type="file"]{padding:5px;font-size:10px}
+        #${ROOT_ID} input[type="file"]::file-selector-button{margin-right:8px;padding:6px 9px;border:0;border-radius:6px;background:#2563eb;color:#fff;font:900 10px system-ui,sans-serif;cursor:pointer}
+        #${ROOT_ID} .cbb-file-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+        #${ROOT_ID} .cbb-file-head button{padding:5px 9px;background:#7f1d1d;color:#fff;font-size:9px}
+        #${ROOT_ID} .cbb-number-file-summary{padding:7px 9px;border:1px solid #334155;border-radius:8px;background:#0f172a;color:#94a3b8;font-size:10px;font-weight:700}
+        #${ROOT_ID} .cbb-number-file-summary[data-loaded="true"]{border-color:#15803d;color:#bbf7d0}
         #${ROOT_ID} .cbb-section{margin-top:10px;padding-top:10px;border-top:1px solid #334155}
         #${ROOT_ID} .cbb-section-title{margin-bottom:7px;color:#fdba74;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.04em}
         #${ROOT_ID} .cbb-actions{display:flex;flex-wrap:wrap;gap:7px;margin-top:11px}
@@ -895,6 +1037,11 @@
             <div class="cbb-field wide"><label for="cbb-fixed">Закреплённые шары — до 6</label><input id="cbb-fixed" type="text" inputmode="numeric" placeholder="Например: 6 или 6 12 25"></div>
             <div class="cbb-field wide"><label for="cbb-phone">Телефон — 10 цифр после +7</label><input id="cbb-phone" type="tel" inputmode="numeric" autocomplete="off" placeholder="9001234567"></div>
             <div class="cbb-field full">
+                <div class="cbb-file-head"><label for="cbb-number-file">Готовые наборы — TXT / CSV / CVS</label><button id="cbb-clear-number-file" type="button" disabled>СБРОСИТЬ</button></div>
+                <input id="cbb-number-file" type="file" accept=".txt,.csv,.cvs,text/plain,text/csv">
+                <div class="cbb-number-file-summary" id="cbb-number-file-summary" data-loaded="false">Файл не загружен — используется общее поле закреплённых шаров.</div>
+            </div>
+            <div class="cbb-field full">
                 <div class="cbb-draw-head"><label>Тиражи — применяются ко всем билетам</label><button id="cbb-refresh-draws" type="button">ОБНОВИТЬ</button></div>
                 <div class="cbb-draw-summary" id="cbb-draw-summary">Считываю тиражи…</div>
                 <div class="cbb-draw-list" id="cbb-draw-list"><div class="cbb-draw-message">Считываю доступные тиражи с кассы…</div></div>
@@ -919,13 +1066,14 @@
             <button class="cbb-stop" id="cbb-stop" disabled>СТОП</button>
         </div>
         <div class="cbb-status" id="cbb-status">Готов. Для первой проверки используйте «ТЕСТ — ЗАПОЛНИТЬ».</div>
-        <div class="cbb-note">Количество автоматически делится на партии по 5. Телефон вводится только для первой партии; следующие партии используют сохранённый номер и сразу добавляются в корзину. Тиражи считываются и применяются в фоне; родное окно выбора не показывается.</div>
+        <div class="cbb-note">В TXT/CSV каждая непустая строка — отдельный билет с 1–6 числами от 1 до 48; недостающие числа добираются автоматически. Количество делится на партии по 5. Телефон вводится только для первой партии, следующие используют сохранённый номер.</div>
     `;
     document.body.appendChild(panel);
 
     const initialDrawIds = currentDrawIdsFromButton();
     state.selectedDrawIds = initialDrawIds;
     refreshDrawSummary();
+    refreshNumberFileUi();
 
     function enablePanelDrag() {
         const handle = panel.querySelector('.cbb-head');
@@ -1011,6 +1159,15 @@
         else setStatus('Касса готова: основная сетка, 7 допигр и управление билетами найдены.', 'ok');
     });
     document.getElementById('cbb-refresh-draws').addEventListener('click', () => scanDrawsInBackground(true));
+    document.getElementById('cbb-number-file').addEventListener('change', async (event) => {
+        try {
+            await loadNumberFile(event.target.files && event.target.files[0]);
+        } catch (error) {
+            event.target.value = '';
+            setStatus(error && error.message ? error.message : String(error), 'error');
+        }
+    });
+    document.getElementById('cbb-clear-number-file').addEventListener('click', clearNumberFile);
     document.getElementById('cbb-fill').addEventListener('click', () => run('fill'));
     document.getElementById('cbb-cart').addEventListener('click', () => run('cart'));
     setTimeout(() => scanDrawsInBackground(false), 0);

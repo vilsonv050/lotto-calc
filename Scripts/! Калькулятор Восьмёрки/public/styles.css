@@ -1387,6 +1387,42 @@ textarea:focus {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+.tariff-select-field,
+.tariff-custom-field {
+  min-width: 0;
+}
+
+.tariff-create-control {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.tariff-create-control .secondary-btn {
+  min-height: 44px;
+  padding-inline: 16px;
+  white-space: nowrap;
+}
+
+.tariff-switch-panel {
+  display: grid;
+  grid-template-columns: minmax(260px, 0.8fr) minmax(420px, 1.2fr);
+  gap: 24px;
+  align-items: end;
+}
+
+.tariff-switch-panel h2 {
+  margin: 4px 0 8px;
+}
+
+.tariff-switch-controls {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  align-items: start;
+}
+
 .source-version h2 {
   margin: 4px 0 0;
 }
@@ -5050,5 +5086,22 @@ button.strategy-history-row {
     grid-template-columns: 28px 64px minmax(0, 1fr) 10px 30px;
     gap: 5px;
     padding-inline: 7px;
+  }
+}
+
+@media (max-width: 900px) {
+  .tariff-switch-panel,
+  .tariff-switch-controls {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 520px) {
+  .tariff-create-control {
+    grid-template-columns: 1fr;
+  }
+
+  .tariff-create-control .secondary-btn {
+    width: 100%;
   }
 }

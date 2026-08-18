@@ -64,6 +64,36 @@ test("calculates systems, odds and economics", () => {
   });
 });
 
+test("recalculates ticket cost and prize when the tariff changes", () => {
+  const draw = {
+    drawNum: "tariff-check",
+    date: "2026-08-14",
+    main: [1, 2, 3, 4, 5, 6, 7, 8],
+    extra: 1,
+  };
+  const ticket = {
+    main: [1, 2, 3, 4, 5, 6, 7, 9],
+    extra: [1],
+  };
+  const tariff250 = evaluateTickets(
+    [ticket],
+    draw,
+    [5_000_000, 500_000, 25_000, 5_000, 2_000, 1_250, 800, 750, 750],
+    250,
+  );
+  const tariff300 = evaluateTickets(
+    [ticket],
+    draw,
+    [5_000_000, 500_000, 30_000, 5_000, 2_000, 1_500, 1_000, 900, 900],
+    300,
+  );
+
+  assert.equal(tariff250.cost, 250);
+  assert.equal(tariff250.prize, 25_000);
+  assert.equal(tariff300.cost, 300);
+  assert.equal(tariff300.prize, 30_000);
+});
+
 test("generates deterministic unique tickets with constraints and coverage", () => {
   const settings = {
     count: 12,
@@ -931,6 +961,15 @@ test("build contains every version-three surface and visual asset", async () => 
   assert.match(script, /Проверка билетов/);
   assert.match(script, /Предварительный просмотр/);
   assert.match(script, /Вернуть базовые выплаты/);
+  assert.match(script, /Тариф билета/);
+  assert.match(script, /data-input="tariffId"/);
+  assert.match(script, /add-custom-tariff/);
+  assert.match(script, /function activateTariff/);
+  assert.match(script, /function storeActiveTariff/);
+  assert.match(script, /300 ₽ · архивная таблица/);
+  assert.match(script, /600 ₽ · текущая таблица/);
+  assert.match(script, /40 ₽ · текущая таблица/);
+  assert.match(script, /80 ₽ · архивная таблица/);
   assert.doesNotMatch(script, /data-action="update-draws"/);
   assert.doesNotMatch(script, /data-action="update-payouts"/);
   assert.doesNotMatch(script, /\/api\/nloto\//);
@@ -1008,7 +1047,7 @@ test("build contains every version-three surface and visual asset", async () => 
   );
   assert.match(
     portableHtml,
-    /<script defer src="\.\/calculator\.js\?v=20260812-2"><\/script>/,
+    /<script defer src="\.\/calculator\.js\?v=20260814-1"><\/script>/,
   );
   assert.doesNotMatch(portableHtml, /type="module"/);
   assert.doesNotMatch(portableScript, /^import\s/m);
