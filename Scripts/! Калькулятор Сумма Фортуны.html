@@ -288,8 +288,9 @@
         .di input::-webkit-inner-spin-button, .di input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
         .di input:focus { border-color: #d4af37; }
         .dr { font-size: 9px; flex: 1; min-width: 0; display: flex; align-items: center; justify-content: flex-end; gap: 4px; text-align: right; line-height: 1.2; color: #666; white-space: nowrap; }
-        .draw-result-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
-        .draw-clear { flex: 0 0 auto; background: #2a0808; border: 1px solid #5a1a0a; color: #a77b68; padding: 2px 4px; border-radius: 3px; font-size: 7px; line-height: 1; cursor: pointer; text-transform: uppercase; transition: 0.2s; }
+        .draw-result-text { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+        .draw-clear-actions { flex: 0 0 auto; display: flex; flex-direction: column; gap: 2px; }
+        .draw-clear { background: #2a0808; border: 1px solid #5a1a0a; color: #a77b68; padding: 1px 3px; border-radius: 3px; font-size: 7px; line-height: 1; cursor: pointer; text-transform: uppercase; transition: 0.2s; }
         .draw-clear:hover, .draw-clear:focus { border-color: #d4af37; color: #f5c518; outline: 0; }
         .draw-dice { grid-column: 2 / 4; color: #8b7056; font-size: 8px; font-weight: 700; min-height: 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .draw-dice.empty { color: #493629; font-weight: 500; }
@@ -1259,10 +1260,11 @@
         updateDrawModeUI();
         for (let idx = 1; idx <= drawCount; idx++) {
             let d = document.createElement('div'); d.className = 'di'; d.id = 'sfd' + idx;
-            d.innerHTML = '<div class="dn">T' + idx + '</div><input type="number" min="6" max="36" id="sfi' + idx + '"><div class="dr" id="sfr' + idx + '"><span class="draw-result-text" id="sfrt' + idx + '"></span><button type="button" class="draw-clear" title="Очистить тиражи после T' + idx + '" aria-label="Очистить тиражи после T' + idx + '">Очистить</button></div><div class="draw-dice" id="sfdi' + idx + '"></div>';
+            d.innerHTML = '<div class="dn">T' + idx + '</div><input type="number" min="6" max="36" id="sfi' + idx + '"><div class="dr" id="sfr' + idx + '"><span class="draw-result-text" id="sfrt' + idx + '"></span><span class="draw-clear-actions"><button type="button" class="draw-clear draw-clear-before" title="Очистить тиражи до T' + idx + '" aria-label="Очистить тиражи до T' + idx + '">До</button><button type="button" class="draw-clear draw-clear-after" title="Очистить тиражи после T' + idx + '" aria-label="Очистить тиражи после T' + idx + '">После</button></span></div><div class="draw-dice" id="sfdi' + idx + '"></div>';
             dg.appendChild(d);
             let input = document.getElementById('sfi' + idx);
-            d.querySelector('.draw-clear').addEventListener('click', function() { clearDrawsAfter(idx); });
+            d.querySelector('.draw-clear-before').addEventListener('click', function() { clearDrawsBefore(idx); });
+            d.querySelector('.draw-clear-after').addEventListener('click', function() { clearDrawsAfter(idx); });
             input.value = drawValues[idx - 1];
             updateDrawDiceDisplay(idx);
             input.addEventListener('input', function() {
@@ -1316,6 +1318,25 @@
 
     document.getElementById('sftd').onclick = function() { getActiveLayer().tickets = []; renderTk(); fullRecalc(); };
 
+    function refreshAfterDrawClear() {
+        activeDay = null;
+        openMonthKey = null;
+        calculationMonthKey = null;
+        renderDayTabs();
+        renderDrawGrid();
+        fullRecalc();
+    }
+
+    function clearDrawsBefore(drawIndex) {
+        captureDrawValues();
+        for (let i = 0; i < drawIndex - 1; i++) {
+            drawValues[i] = '';
+            drawDice[i] = null;
+        }
+        document.getElementById('af-input').value = '';
+        refreshAfterDrawClear();
+    }
+
     function clearDrawsAfter(drawIndex) {
         captureDrawValues();
         for (let i = drawIndex; i < MAX_DRAW_COUNT; i++) {
@@ -1323,12 +1344,7 @@
             drawDice[i] = null;
         }
         document.getElementById('af-input').value = drawValues.slice(0, drawIndex).join(',');
-        activeDay = null;
-        openMonthKey = null;
-        calculationMonthKey = null;
-        renderDayTabs();
-        renderDrawGrid();
-        fullRecalc();
+        refreshAfterDrawClear();
     }
 
     function updateTicketCosts() {
