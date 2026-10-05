@@ -1,0 +1,1103 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Генератор Разниц [ 86 ] v3.2 Update</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: Arial, sans-serif; background: #f0f2f5; overflow: hidden; }
+        #widget {
+            position: fixed; width: auto; min-width: 340px; max-width: 460px;
+            background: #ffffff; border: 1px solid #ccc;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3); border-radius: 8px;
+            z-index: 99999; display: inline-flex; flex-direction: column; height: auto; overflow: hidden; 
+        }
+        #header {
+            background: #2c3e50; color: white; padding: 8px 12px; font-size: 13px; font-weight: bold;
+            cursor: move; display: flex; justify-content: space-between; align-items: center;
+            user-select: none; border-radius: 8px 8px 0 0; white-space: nowrap;
+        }
+        .header-btns { display: flex; gap: 8px; }
+        #helpBtn, #closeBtn {
+            color: white; border: none; border-radius: 50%; width: 22px; height: 22px; font-size: 13px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; font-weight: bold;
+        }
+        #helpBtn { background: #3498db; } #helpBtn:hover { background: #2980b9; }
+        #closeBtn { background: #e74c3c; } #closeBtn:hover { background: #c0392b; }
+        #body { padding: 10px 12px 12px 12px; display: flex; flex-direction: column; gap: 7px; overflow: hidden; }
+        #lotterySelect {
+            width: 100%; padding: 7px; border: 2px solid #3498db; border-radius: 6px;
+            font-size: 13px; font-weight: bold; color: #2c3e50; background: #ebf5fb; outline: none; cursor: pointer;
+        }
+        .pool-box {
+            display: flex; align-items: center; gap: 8px;
+            padding: 6px 10px; background: #f8f9fa; border: 1px solid #d5e8d4; border-radius: 5px;
+        }
+        .pool-info { font-size: 11px; color: #27ae60; font-weight: bold; flex-grow: 1; line-height: 1.4; }
+        .pool-info.pool-empty { color: #e74c3c; }
+        .pool-info.pool-est { color: #7f8c8d; }
+        .pool-info .pool-label { color: #7f8c8d; font-weight: normal; font-size: 10px; }
+        .btn-recalc {
+            background: #27ae60; color: white; border: none; border-radius: 4px;
+            padding: 4px 10px; font-size: 11px; font-weight: bold; cursor: pointer; white-space: nowrap;
+        }
+        .btn-recalc:hover { background: #2ecc71; }
+        .algo-box { border: 1px solid #dcdcdc; border-radius: 6px; padding: 0; background: #fdfdfd; }
+        .algo-title { font-size: 11px; color: #7f8c8d; font-weight: bold; text-align: center; padding: 6px 10px 0 10px; }
+        .algo-summary {
+            font-size: 11px; color: #3498db; text-align: center; padding: 5px 10px 6px 10px; cursor: pointer; font-weight: bold;
+            border-bottom: 1px dashed #dcdcdc; transition: background 0.2s;
+        }
+        .algo-summary:hover { background: #f0f0f0; }
+        .algo-body { padding: 0 10px 6px 10px; display: flex; flex-direction: column; gap: 4px; }
+        .algo-row { display: flex; align-items: center; font-size: 11px; position: relative; }
+        .custom-check { display: flex; align-items: center; cursor: pointer; user-select: none; flex-grow: 1; }
+        .custom-check input { display: none; }
+        .checkmark { width: 15px; height: 15px; border: 2px solid #bdc3c7; border-radius: 3px; margin-right: 6px; position: relative; flex-shrink: 0; }
+        .custom-check input:checked ~ .checkmark { background: #3498db; border-color: #3498db; }
+        .custom-check input:checked ~ .checkmark::after { content: "✓"; position: absolute; color: white; font-size: 11px; top: -2px; left: 1px; }
+        .tip { position: relative; display: inline-block; margin-left: auto; cursor: help; color: #bdc3c7; font-weight: bold; flex-shrink: 0; }
+        .tip .tiptext {
+            visibility: hidden; opacity: 0; width: 300px; background: #2c3e50; color: #fff; text-align: left;
+            border-radius: 6px; padding: 10px 12px; position: absolute; z-index: 10000; 
+            top: 50%; right: 110%; transform: translateY(-50%); transition: opacity 0.3s; font-size: 11px; font-weight: normal; line-height: 1.4;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3); pointer-events: none;
+        }
+        .tip .tiptext::after { content: ""; position: absolute; top: 50%; left: 100%; margin-top: -5px; border-width: 5px; border-style: solid; border-color: transparent transparent transparent #2c3e50; }
+        .tip:hover .tiptext { visibility: visible; opacity: 1; }
+        .tip .tiptext b { color: #f1c40f; display: inline; margin: 0; font-size: 11px; }
+        
+        .even-settings-row { display: flex; gap: 5px; align-items: center; padding-left: 21px; margin-top: 2px; }
+        .even-settings-row label { font-size: 10px; color: #7f8c8d; font-weight: bold; }
+        .even-settings-row select, .even-settings-row input[type="number"] { padding: 2px 4px; border: 1px solid #bdc3c7; border-radius: 3px; font-size: 10px; font-weight: bold; outline: none; }
+        .even-settings-row select { cursor: pointer; }
+        .even-settings-row input[type="number"] { width: 32px; text-align: center; }
+
+        .color-group-box { display: flex; flex-direction: column; gap: 5px; border: 1px solid #dcdcdc; border-radius: 6px; padding: 7px 10px; background: #fdfdfd; }
+        .color-group-title { font-size: 10px; color: #7f8c8d; font-weight: bold; text-align: center; display: flex; justify-content: center; align-items: center; position: relative; padding-right: 18px; }
+        .color-group-title .tip { position: absolute; right: 0; margin-left: 0; top: 50%; transform: translateY(-50%); }
+        .color-balls-row { display: flex; justify-content: center; gap: 8px; margin: 4px 0; }
+        .color-ball { width: 26px; height: 26px; border-radius: 50%; cursor: pointer; transition: transform 0.1s, box-shadow 0.2s; border: 2px solid rgba(0,0,0,0.15); }
+        .color-ball:hover { transform: scale(1.15); }
+        .color-ball.active { box-shadow: 0 0 0 2px #fff, 0 0 0 4px #2c3e50; transform: scale(1.1); border-color: transparent; }
+        .color-input-row { display: flex; gap: 5px; align-items: center; }
+        .color-quota-input { padding: 4px 5px; border: 1px solid #bdc3c7; border-radius: 3px; font-size: 11px; width: 100%; font-weight: bold; text-align: center; }
+        .color-input-row .tip { margin-left: 0; }
+
+        .filters-box { border: 1px solid #dcdcdc; border-radius: 6px; padding: 7px 10px; background: #fdfdfd; display: flex; flex-direction: column; gap: 5px; }
+        .filters-title { font-size: 10px; color: #7f8c8d; font-weight: bold; text-align: center; display: flex; align-items: center; justify-content: center; gap: 4px; position: relative; padding-right: 18px; }
+        .filters-title .tip { position: absolute; right: 0; margin-left: 0; top: 50%; transform: translateY(-50%); }
+        .filters-row { display: flex; gap: 5px; align-items: flex-end; }
+        .filters-group { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+        .filters-group label { font-size: 10px; color: #7f8c8d; font-weight: bold; }
+        .filters-group input { padding: 4px 5px; border: 1px solid #bdc3c7; border-radius: 3px; font-size: 11px; width: 100%; font-weight: bold; }
+        .filters-nb-check { flex-shrink: 0; flex-grow: 0; width: auto; font-size: 10px; align-self: flex-end; padding-bottom: 3px; }
+        .filters-nb-check .checkmark { width: 13px; height: 13px; margin-right: 3px; }
+        .filters-nb-check input:checked ~ .checkmark::after { font-size: 9px; top: -3px; left: 0px; }
+        .filters-sep { font-size: 9px; color: #bdc3c7; text-align: center; border-top: 1px dashed #e0e0e0; padding-top: 3px; letter-spacing: 1px; }
+        
+        /* Стили для Слипов */
+        .slip-group { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; position: relative; }
+        .slip-group label { font-size: 10px; color: #7f8c8d; font-weight: bold; }
+        .slip-input-wrap { position: relative; width: 100%; display: flex; align-items: center; }
+        .slip-dropdown-btn { padding: 4px 16px 4px 5px; border: 1px solid #bdc3c7; border-radius: 3px; font-size: 11px; font-weight: bold; cursor: pointer; background: #fff; user-select: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; text-align: left; }
+        .slip-dropdown-panel { display: none; position: absolute; top: 100%; left: 0; width: 220px; max-height: 200px; overflow-y: auto; background: #fff; border: 1px solid #bdc3c7; border-radius: 4px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); z-index: 10001; padding: 4px; }
+        .slip-dropdown-panel.open { display: block; }
+        .slip-category { display: flex; align-items: center; gap: 5px; font-size: 9px; color: #7f8c8d; font-weight: bold; padding: 2px 4px; border-bottom: 1px dashed #e0e0e0; margin-top: 4px; cursor: pointer; user-select: none; }
+        .slip-category:first-child { margin-top: 0; }
+        .slip-category input { display: none; }
+        .slip-category .checkmark { width: 13px; height: 13px; border: 2px solid #bdc3c7; border-radius: 3px; position: relative; flex-shrink: 0; margin-right: 2px; }
+        .slip-category input:checked ~ .checkmark { background: #3498db; border-color: #3498db; }
+        .slip-category input:checked ~ .checkmark::after { content: "✓"; position: absolute; color: white; font-size: 9px; top: -2px; left: 1px; }
+        .slip-option { display: flex; align-items: center; gap: 5px; padding: 2px 4px; cursor: pointer; font-size: 11px; font-weight: bold; border-radius: 3px; }
+        .slip-option:hover { background: #f0f0f0; }
+        .slip-option input { display: none; }
+        .slip-option .checkmark { width: 13px; height: 13px; margin-right: 0; }
+        .slip-option input:checked ~ .checkmark { background: #3498db; border-color: #3498db; }
+        .slip-option input:checked ~ .checkmark::after { font-size: 9px; top: -3px; left: 0px; }
+        .slip-clear-btn { position: absolute; right: 4px; top: 50%; transform: translateY(-50%); color: #bdc3c7; cursor: pointer; font-size: 12px; font-weight: bold; display: none; z-index: 2; }
+        .slip-clear-btn:hover { color: #e74c3c; }
+        .slip-input-wrap.has-value .slip-clear-btn { display: block; }
+        #filterSlipManual { padding-right: 16px !important; }
+
+        .top-settings { background: #ecf0f1; padding: 8px; border-radius: 6px; display: flex; flex-direction: column; gap: 6px; }
+        .top-row { display: flex; gap: 6px; align-items: flex-end; }
+        .top-group { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+        .top-group label { font-size: 10px; color: #555; font-weight: bold; }
+        input[type="number"], input[type="text"] { padding: 4px 6px; border: 1px solid #bdc3c7; border-radius: 4px; font-size: 11px; width: 100%; }
+        input[type="number"] { font-weight: bold; font-size: 13px; }
+        .inc-row { display: flex; gap: 4px; align-items: center; }
+        .inc-input { flex: 1; }
+        .inc-rand-check { flex-shrink: 0; flex-grow: 0; width: auto; font-size: 10px; }
+        .inc-rand-check .checkmark { width: 13px; height: 13px; margin-right: 2px; }
+        .inc-rand-check input:checked ~ .checkmark::after { font-size: 9px; top: -3px; left: 0px; }
+        .inc-rand-count { width: 28px !important; text-align: center; font-size: 11px !important; padding: 4px 2px !important; flex-shrink: 0; font-weight: bold !important; }
+        .inc-rand-count:disabled { background: #ecf0f1; color: #aab; border-color: #dcdcdc; cursor: not-allowed; }
+        .btn-row { display: flex; gap: 6px; align-items: center; }
+        #btnClear { background: #95a5a6; color: white; border: none; border-radius: 4px; padding: 6px; font-size: 12px; font-weight: bold; cursor: pointer; height: 30px; white-space: nowrap; }
+        #btnClear:hover { background: #7f8c8d; }
+        .freeze-check { flex-shrink: 0; flex-grow: 0; width: auto; font-size: 10px; }
+        .freeze-check .checkmark { border-color: #e67e22; width: 13px; height: 13px; margin-right: 3px; }
+        .freeze-check input:checked ~ .checkmark { background: #e67e22; border-color: #e67e22; }
+        .freeze-check input:checked ~ .checkmark::after { font-size: 9px; top: -3px; left: 0px; }
+        .freeze-check span:last-child { font-size: 10px; color: #d35400; font-weight: bold; white-space: nowrap; }
+        #btnGenerate { background: #27ae60; color: white; border: none; border-radius: 4px; padding: 6px; font-size: 12px; font-weight: bold; cursor: pointer; height: 30px; flex-grow: 1; white-space: nowrap; }
+        #btnGenerate:hover { background: #2ecc71; }
+        .rules-scroll-box { max-height: 140px; overflow-y: auto; overflow-x: hidden; display: flex; flex-direction: column; gap: 5px; padding-right: 3px; }
+        .rules-scroll-box::-webkit-scrollbar { width: 5px; }
+        .rules-scroll-box::-webkit-scrollbar-track { background: #ecf0f1; border-radius: 3px; }
+        .rules-scroll-box::-webkit-scrollbar-thumb { background: #bdc3c7; border-radius: 3px; }
+        .rules-scroll-box::-webkit-scrollbar-thumb:hover { background: #95a5a6; }
+        .rules-scroll-box { scrollbar-width: 5px; scrollbar-color: #bdc3c7 #ecf0f1; }
+        .rule-row { border: 1px solid #dcdcdc; border-radius: 5px; padding: 6px; background: #fff; display: flex; flex-direction: column; gap: 4px; flex-shrink: 0; }
+        .rule-checks { display: flex; gap: 10px; }
+        .rule-checks .custom-check { font-size: 10px; flex-grow: 0; }
+        .rule-checks .custom-check .checkmark { width: 13px; height: 13px; margin-right: 4px; }
+        .rule-checks .custom-check input:checked ~ .checkmark::after { font-size: 9px; top: -3px; left: 0px; }
+        .rule-top { display: flex; gap: 5px; align-items: center; }
+        .rule-input { flex: 1; min-width: 0; font-size: 11px !important; padding: 3px 5px !important; }
+        .rule-status { font-size: 10px; color: #7f8c8d; white-space: nowrap; overflow: hidden; }
+        button { cursor: pointer; border: none; border-radius: 4px; font-weight: bold; flex-shrink: 0; }
+        .btn-add { background: #34495e; color: white; width: 26px; height: 26px; font-size: 14px; display: flex; align-items: center; justify-content: center; }
+        .btn-del { background: #e0e0e0; color: #c0392b; width: 26px; height: 26px; font-size: 14px; display: flex; align-items: center; justify-content: center; }
+        .btn-count { background: #3498db; color: white; height: 26px; padding: 0 6px; font-size: 10px; white-space: nowrap; }
+        #globalStatus { font-size: 10px; color: #2980b9; text-align: center; line-height: 1.3; white-space: pre-line; }
+        #field2Block { display: flex; gap: 6px; align-items: flex-end; }
+        .hidden { display: none !important; }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 100000; justify-content: center; align-items: center; }
+        .modal-box { background: white; padding: 15px; border-radius: 8px; width: 90%; max-width: 480px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); position: relative; max-height: 90vh; overflow-y: auto; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 14px; font-weight: bold; color: #2c3e50; }
+        .modal-close { background: none; border: none; font-size: 18px; color: #7f8c8d; cursor: pointer; }
+        .modal-text { font-size: 12px; color: #333; line-height: 1.5; }
+        .modal-text b { color: #2c3e50; display: block; margin-top: 10px; margin-bottom: 3px; }
+        .modal-text b:first-child { margin-top: 0; }
+        .modal-text ul { margin-left: 16px; margin-top: 4px; }
+        .modal-text li { margin-bottom: 3px; }
+        .modal-text em { color: #7f8c8d; font-size: 11px; display: block; margin-bottom: 4px; }
+        .modal-text .ex { color: #2980b9; font-size: 11px; font-style: italic; }
+        .version-box { background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 4px; padding: 8px 10px; margin-bottom: 10px; font-size: 11px; color: #495057; }
+        .version-box b { color: #3498db; margin: 0; }
+        .changelog { margin-top: 4px; font-size: 10px; color: #7f8c8d; line-height: 1.4; }
+        .changelog li { margin-bottom: 1px; }
+
+        #txtPanelToggle { background: #8e44ad; color: white; border: none; border-radius: 4px; padding: 3px 7px; font-size: 11px; cursor: pointer; }
+        #txtPanelToggle:hover { background: #71368a; }
+        #txtPanel { display: none; position: fixed; z-index: 100002; width: 320px; background: #ffffff; border: 1px solid #ccc; border-radius: 8px; box-shadow: 0 8px 20px rgba(0,0,0,0.3); padding: 0; overflow: hidden; }
+#txtPanel.open { display: flex; flex-direction: column; }
+        #txtPanel.open { display: block; }
+        .txt-panel-head { background: #2c3e50; color: white; padding: 8px 12px; font-size: 13px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; margin: 0; }
+        .txt-panel-close { background: #e74c3c; color: white; border: none; border-radius: 50%; width: 22px; height: 22px; font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; padding: 0; }
+.txt-panel-close:hover { background: #c0392b; }
+        .txt-panel-note { color:#7f8c8d; font-size:10px; line-height:1.35; margin:6px 0 8px; }
+        .txt-row { display: flex; gap: 7px; align-items: center; justify-content: space-between; }
+        .txt-group { flex:1; min-width:0; }
+        .txt-group label { display:block; color:#555; font-size:10px; font-weight:bold; margin-bottom:2px; }
+        #txtFile { width:100%; font-size:11px; }
+        #txtLoadStatus { min-height:28px; padding:6px 7px; border-radius:4px; background:#f8f9fa; color:#2980b9; font-size:11px; line-height:1.35; }
+        #txtLoadStatus.error { color:#c0392b; background:#fdf0ef; }
+        .txt-export-note { font-size:10px; color:#7f8c8d; margin-top:7px; }
+        .txt-mode-disabled { opacity:.48; pointer-events:none; }
+
+            .txt-panel-body { padding: 10px 12px 12px 12px; display: flex; flex-direction: column; gap: 7px; }
+    </style>
+</head>
+<body>
+
+<div id="widget">
+    <div id="header">
+        <span>Генератор Разниц [ 86 ] v3.2</span>
+        <div class="header-btns">
+            <button id="txtPanelToggle" title="Готовые комбинации TXT">TXT</button>
+            <button id="helpBtn" title="Справка">?</button>
+            <button id="closeBtn" title="Закрыть">✕</button>
+        </div>
+    </div>
+    <div id="body">
+        <select id="lotterySelect">
+            <option value="vosmerki">Восьмерки (8 из 20, Поле 2: 1-4)</option>
+            <option value="premier">Премьер (4 из 20, Поле 2: 1-20)</option>
+            <option value="top12">ТОП-12 (12 из 24, 1 поле)</option>
+            <option value="fiveOf36">5 из 36 (1 поле, макс. 12 чисел)</option>
+            <option value="coloredBalls">Цветные Шары (6 из 48, 1 поле)</option>
+        </select>
+
+        <div class="pool-box">
+            <div class="pool-info" id="poolInfo">
+                <span class="pool-label">ПУЛ КОМБИНАЦИЙ</span><br>
+                <span id="poolText">Расчёт...</span>
+            </div>
+            <button id="btnRecalc" class="btn-recalc">Рассчитать</button>
+        </div>
+
+        <div class="algo-box">
+            <div class="algo-title">АЛГОРИТМ ВЫБОРКИ (по умолчанию: Классический)</div>
+            <details>
+                <summary class="algo-summary">▾ Развернуть алгоритмы</summary>
+                <div class="algo-body">
+                    <div class="algo-row"><label class="custom-check"><input type="checkbox" class="algo-checkbox" data-algo="unique"><span class="checkmark"></span>Уникальный П1</label><span class="tip">?<span class="tiptext"><b>Уникальный П1</b><br>Работает как Классический, но гарантирует, что в пачке билетов Поле 1 не будет повторяться.</span></span></div>
+                    <div class="algo-row"><label class="custom-check"><input type="checkbox" class="algo-checkbox" data-algo="even"><span class="checkmark"></span>Равномерное</label><span class="tip">?<span class="tiptext"><b>Равномерное</b><br>Делит пул на равные сегменты. Даёт максимальный охват.</span></span></div>
+                    <div id="evenSettings" class="even-settings-row hidden">
+                        <label>Охват:</label>
+                        <select id="evenMode">
+                            <option value="order">Порядку</option>
+                            <option value="sum">Сумме</option>
+                            <option value="spread">Разбросу</option>
+                            <option value="mix">Миксу</option>
+                        </select>
+                        <label>Из сегм.:</label>
+                        <input type="number" id="evenPerSegment" min="1" max="100" value="1">
+                    </div>
+                    <div class="algo-row"><label class="custom-check"><input type="checkbox" class="algo-checkbox" data-algo="anti"><span class="checkmark"></span>Анти-пересечение</label><span class="tip">?<span class="tiptext"><b>Анти-пересечение</b><br>Минимум общих чисел со всеми выбранными.</span></span></div>
+                    <div class="algo-row"><label class="custom-check"><input type="checkbox" class="algo-checkbox" data-algo="weight"><span class="checkmark"></span>Взвешенный</label><span class="tip">?<span class="tiptext"><b>По сумме</b><br>Сортирует по близости к «золотой середине».</span></span></div>
+                    <div class="algo-row"><label class="custom-check"><input type="checkbox" class="algo-checkbox" data-algo="reservoir"><span class="checkmark"></span>Поток (Reservoir)</label><span class="tip">?<span class="tiptext"><b>Reservoir</b><br>Каждая комбинация имеет равную вероятность.</span></span></div>
+                    <div class="algo-row"><label class="custom-check"><input type="checkbox" class="algo-checkbox" data-algo="hist"><span class="checkmark"></span>Историческая экскл.</label><span class="tip">?<span class="tiptext"><b>История</b><br>Исключает скачанные ранее. Сброс — «Очистить всё».</span></span></div>
+                </div>
+            </details>
+        </div>
+
+        <div id="colorGroupBlock" class="color-group-box hidden">
+            <div class="color-group-title">ЦВЕТОВЫЕ ГРУППЫ <span class="tip">?<span class="tiptext"><b>Цветовые группы</b><br>Клик по шарику: в билете ОБЯЗАТЕЛЬНО должно быть хотя бы 1 число из этого цвета.<br>Поле ввода: жесткое количество чисел.</span></span></div>
+            <div class="color-balls-row">
+                <div class="color-ball" data-color="red" style="background:#e74c3c" title="Красная"></div>
+                <div class="color-ball" data-color="green" style="background:#2ecc71" title="Зеленая"></div>
+                <div class="color-ball" data-color="blue" style="background:#3498db" title="Синяя"></div>
+                <div class="color-ball" data-color="purple" style="background:#9b59b6" title="Фиолетовая"></div>
+                <div class="color-ball" data-color="brown" style="background:#8b4513" title="Коричневая"></div>
+                <div class="color-ball" data-color="yellow" style="background:#f1c40f" title="Желтая"></div>
+                <div class="color-ball" data-color="orange" style="background:#e67e22" title="Оранжевая"></div>
+                <div class="color-ball" data-color="black" style="background:#34495e" title="Черная"></div>
+            </div>
+            <div class="color-input-row">
+                <input type="text" id="filterColorQuota" class="color-quota-input" placeholder="Жёстко чисел: Кр:2, Син:1" style="flex: 1;">
+                <span class="tip">?<span class="tiptext"><b>Жёсткие квоты</b><br>Точное количество чисел указанного цвета.</span></span>
+            </div>
+            <div class="color-input-row">
+                <input type="text" id="filterColorPattern" class="color-quota-input" placeholder="Паттерн: 2-2-1-1" style="flex: 1;">
+                <span class="tip">?<span class="tiptext"><b>Паттерн групп</b><br>Структура распределения чисел по цветам.</span></span>
+            </div>
+        </div>
+
+        <div class="filters-box">
+            <div class="filters-title">ФИЛЬТРЫ КОМБИНАЦИЙ <span class="tip">?<span class="tiptext"><b>Кратко:</b> Верхние отсекают билеты. Пакетные — анализируют пачку.</span></span></div>
+            
+            <div class="filters-row">
+                <div class="filters-group"><label>Сумма:</label><input type="text" id="filterSum" placeholder="75 / 75-85"></div>
+                <div class="filters-group"><label>Секторы:</label><input type="text" id="filterSectors" placeholder="1-10:3, 11-20:5"></div>
+                <div class="filters-group"><label>Разброс:</label><input type="text" id="filterSpread" placeholder="12 / 12-16"></div>
+                <div class="filters-group">
+                    <label>Чётные:</label>
+                    <div class="inc-row">
+                        <input type="text" id="filterEven" placeholder="3 / 3-5" style="flex:1;">
+                        <label id="evenGlobalWrap" class="custom-check inc-rand-check" title="Сумма чётных Полей 1 и 2"><input type="checkbox" id="filterEvenGlobal"><span class="checkmark"></span>∑</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="filters-row">
+                <label class="custom-check filters-nb-check"><input type="checkbox" id="filterNoNeighbors"><span class="checkmark"></span>Без сосед.</label>
+                <div class="slip-group">
+                    <label>Слипы Вкл:</label>
+                    <div class="slip-input-wrap" id="slipIncWrap">
+                        <div class="slip-dropdown-btn" id="slipIncBtn" onclick="toggleSlipDropdown('Inc')">0</div>
+                        <span class="slip-clear-btn" onclick="clearSlips('Inc')">✕</span>
+                    </div>
+                    <div id="slip1plus1Count" class="hidden" style="font-size:10px; color:#2980b9; text-align:center; padding-top:2px; font-weight:bold;"></div>
+                    <div class="slip-dropdown-panel" id="slipIncPanel"></div>
+                </div>
+                <label class="custom-check filters-nb-check" id="slip1plus1Wrap" title="Матрица: 1 однозн. слип + 1 двузн. слип"><input type="checkbox" id="slip1plus1"><span class="checkmark"></span>1+1</label>
+                <div class="slip-group">
+                    <label>Слипы Искл:</label>
+                    <div class="slip-input-wrap" id="slipExcWrap">
+                        <div class="slip-dropdown-btn" id="slipExcBtn" onclick="toggleSlipDropdown('Exc')">0</div>
+                        <span class="slip-clear-btn" onclick="clearSlips('Exc')">✕</span>
+                    </div>
+                    <div class="slip-dropdown-panel" id="slipExcPanel"></div>
+                </div>
+                <div class="slip-group">
+                    <label>Вручную:</label>
+                    <div class="slip-input-wrap" id="slipManWrap">
+                        <input type="text" id="filterSlipManual" placeholder="1,2 4,5,6">
+                        <span class="slip-clear-btn" onclick="clearSlips('Manual')">✕</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="filters-row">
+                <div class="filters-group"><label>Десятки:</label><input type="text" id="filterDecades" placeholder="3-4-1 или 2-3-1-0-0"></div>
+                <div class="filters-group"><label>Хвосты:</label><input type="text" id="filterTails" placeholder="6-8 / 6"></div>
+            </div>
+            <div class="filters-row">
+                <div class="filters-group"><label>Условие (Если):</label><input type="text" id="filterCondIf" placeholder="4 / 4,7"></div>
+                <div class="filters-group"><label>То (всегда):</label><input type="text" id="filterCondThen" placeholder="5 / 5,9"></div>
+            </div>
+            <div class="filters-sep">ПАКЕТНЫЕ</div>
+            <div class="filters-row">
+                <div class="filters-group"><label>Связь N:</label><input type="number" id="filterChain" min="0" max="20" placeholder="2"></div>
+                <div class="filters-group"><label>Покрытие ≥:</label><input type="number" id="filterCoverage" min="0" max="99" placeholder="3"></div>
+            </div>
+        </div>
+
+        <div class="top-settings">
+            <div class="top-row">
+                <div class="top-group"><label>Поле 1:</label><input type="number" id="inputN1" value="8" min="2" max="20"></div>
+                <div id="field2Block"><div class="top-group"><label>Поле 2:</label><input type="number" id="inputN2" value="1" min="1" max="4"></div></div>
+                <div class="top-group"><label id="labelAmount">Билетов:</label><input type="number" id="inputAmount" value="15" min="1"></div>
+            </div>
+            <div class="top-row">
+                <div class="top-group"><label>Исключения П1:</label><input type="text" id="excN1" placeholder="Напр: 5, 12"></div>
+                <div id="exc2Block" class="top-group"><label>Исключения П2:</label><input type="text" id="excN2" placeholder="Напр: 2"></div>
+            </div>
+            <div class="top-row">
+                <div class="top-group">
+                    <label style="color: #d35400;">Включения П1:</label>
+                    <div class="inc-row">
+                        <input type="text" class="inc-input" id="incN1" placeholder="3, 10, 15" style="border-color: #e67e22;">
+                        <label class="custom-check inc-rand-check" title="Случайных N из списка"><input type="checkbox" id="incRandF1"><span class="checkmark"></span></label>
+                        <input type="number" class="inc-rand-count" id="incRandCountF1" min="1" max="9" value="" placeholder="N" disabled>
+                    </div>
+                </div>
+                <div id="inc2Block" class="top-group">
+                    <label style="color: #d35400;">Включения П2:</label>
+                    <div class="inc-row">
+                        <input type="text" class="inc-input" id="incN2" placeholder="2, 4" style="border-color: #e67e22;">
+                        <label class="custom-check inc-rand-check" title="Случайных N из списка"><input type="checkbox" id="incRandF2"><span class="checkmark"></span></label>
+                        <input type="number" class="inc-rand-count" id="incRandCountF2" min="1" max="9" value="" placeholder="N" disabled>
+                    </div>
+                </div>
+            </div>
+            <div class="btn-row">
+                <button id="btnClear">Очистить</button>
+                <label class="custom-check freeze-check" title="При повторной генерации Поле 1 не пересчитывается"><input type="checkbox" id="freezeF1"><span class="checkmark"></span><span>Заморозить П1</span></label>
+                <button id="btnGenerate">Сформировать CSV</button>
+            </div>
+        </div>
+
+        <div id="rulesContainer" class="rules-scroll-box"></div>
+        <div id="globalStatus"></div>
+    </div>
+</div>
+
+<div id="helpModal" class="modal-overlay">
+    <div class="modal-box">
+        <div class="modal-header">Справка v3.2 <button class="modal-close" id="closeHelp">✕</button></div>
+        <div class="modal-text">
+            <div class="version-box">
+                <b>Версия: 3.2</b>
+                <ul class="changelog">
+                    <li>Алгоритм "Равномерное" расширен: добавлены режимы охвата (Сумма, Разброс, Микс) и множитель выборки из сегмента.</li>
+                    <li>В CSV добавлена первая строка с форматом генерации (Лотерея, Алгоритм, Поля).</li>
+                    <li>Добавлена лотерея "5 из 36" (1 поле, макс. 12 чисел).</li>
+                    <li>Добавлена лотерея "Цветные Шары" (6 из 48).</li>
+                    <li>Добавлен алгоритм "Уникальный П1" для генерации без дублей.</li>
+                    <li>Добавлен фильтр "Условное включение" (Если -> То) для жесткой связки чисел.</li>
+                    <li>Добавлен режим слипов "1+1": матричная генерация всех пар однозначных и двузначных слипов.</li>
+                </ul>
+            </div>
+            <b>1. Выбор лотереи и Пул</b>
+            <ul>
+                <li><b>Восьмерки:</b> П1 (1–20), П2 (1–4). Макс чисел: 24.</li>
+                <li><b>Премьер:</b> П1 (1–20), П2 (1–20). Макс: 12 в поле, 18 суммарно.</li>
+                <li><b>ТОП-12:</b> П1 (1–24). П2 нет.</li>
+                <li><b>5 из 36:</b> П1 (1–36). П2 нет. Макс чисел: 12.</li>
+                <li><b>Цветные Шары:</b> П1 (1–48). П2 нет. 8 цветовых групп.</li>
+                <li><b>Пул:</b> Показывает число подходящих комбинаций. Если точное — зелёный. Если примерное — серый.</li>
+            </ul>
+            <b>2. Алгоритмы выборки</b>
+            <em>Определяют, как именно выбирать билеты из пула.</em>
+            <ul>
+                <li><b>Классический (по умолчанию):</b> Полный рандом.</li>
+                <li><b>Уникальный П1:</b> Гарантирует отсутствие дубликатов П1 в пачке.</li>
+                <li><b>Равномерное:</b> Делит пул на сегменты. Максимальный охват.</li>
+                <li><b>Анти-пересечение:</b> Минимум общих чисел между билетами.</li>
+                <li><b>Взвешенный:</b> Сумма ближе к "золотой середине".</li>
+                <li><b>Поток (Reservoir):</b> Строгая равновероятная выборка.</li>
+                <li><b>Историческая:</b> Исключает скачанные ранее.</li>
+            </ul>
+            <b>3. Фильтры комбинаций</b>
+            <ul>
+                <li><b>Слипы Вкл / Искл:</b> Слип — последовательность чисел подряд (напр. 13,14,15).</li>
+                <li><b>1+1:</b> Работает вместе со "Слипы Вкл". Создает матрицу: перебирает все пары "1 однозн. слип + 1 двузн. слип". Генератор последовательно включает эти пары как жесткие включения, добирая остаток рандомом. Если пар не хватило на кол-во билетов — добор обычными.</li>
+                <li><b>Условие (Если -> То):</b> Жёсткая связка чисел.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+
+<div id="txtPanel" aria-label="Готовые комбинации">
+    <div class="txt-panel-head"><span>Готовые комбинации TXT</span><button id="txtPanelClose" class="txt-panel-close" title="Закрыть">✕</button></div>
+    <input id="txtFile" type="file" accept=".txt,text/plain">
+    <div class="txt-panel-body">
+        <div class="txt-row">
+        <div class="txt-group"><label>Чисел в поле 1</label><input id="txtN1" type="number" min="1" value="8"></div>
+        <div class="txt-group"><label>Чисел в поле 2</label><input id="txtN2" type="number" min="0" value="1"></div>
+    </div>
+    <div class="txt-panel-note">Одна комбинация на строку, числа через запятую. Первые N — поле 1, следующие N — поле 2. П1 фильтруется общими фильтрами; для П2 действуют только «Исключения П2» и «Включения П2».</div>
+    <div id="txtLoadStatus">Файл не загружен.</div>
+    <div class="txt-export-note">«Сформировать CSV» выгрузит только комбинации, прошедшие отбор.</div>
+</div>
+
+<script>
+    document.querySelectorAll('.algo-checkbox').forEach(cb => { 
+        cb.addEventListener('change', function() { 
+            if (this.checked) { document.querySelectorAll('.algo-checkbox').forEach(other => { if (other !== this) other.checked = false; }); }
+            if (document.querySelector('.algo-checkbox[data-algo="even"]').checked) {
+                document.getElementById('evenSettings').classList.remove('hidden'); document.getElementById('labelAmount').innerText = 'Сегментов:';
+            } else { document.getElementById('evenSettings').classList.add('hidden'); document.getElementById('labelAmount').innerText = 'Билетов:'; }
+        }); 
+    });
+
+    function getSelectedAlgo() { const c = document.querySelector('.algo-checkbox:checked'); return c ? c.dataset.algo : 'classic'; }
+    function getAlgoName() { const map = {unique: 'Уникальный П1', even: 'Равномерное', anti: 'Анти-пересечение', weight: 'Взвешенный', reservoir: 'Поток', hist: 'Историческая'}; return map[getSelectedAlgo()] || 'Классический'; }
+
+    const configs = {
+        vosmerki: { maxNum: 20, maxNumF2: 4, defN1: 8, defN2: 1, maxN1: 20, maxN2: 4, hasField2: true, maxTotal: 24 },
+        premier: { maxNum: 20, maxNumF2: 20, defN1: 4, defN2: 4, maxN1: 12, maxN2: 12, hasField2: true, maxTotal: 18 },
+        top12: { maxNum: 24, maxNumF2: 0, defN1: 12, defN2: 0, maxN1: 24, maxN2: 0, hasField2: false, maxTotal: 24 },
+        fiveOf36: { maxNum: 36, maxNumF2: 0, defN1: 5, defN2: 0, maxN1: 12, maxN2: 0, hasField2: false, maxTotal: 12 },
+        coloredBalls: { maxNum: 48, maxNumF2: 0, defN1: 6, defN2: 0, maxN1: 48, maxN2: 0, hasField2: false, maxTotal: 48 }
+    };
+    let currentConfig = configs.vosmerki;
+    let frozenField1 = null;
+    const freezeCb = document.getElementById('freezeF1');
+    freezeCb.addEventListener('change', () => { if (!freezeCb.checked) frozenField1 = null; });
+
+    const colorMap = {
+        red: [1,9,17,25,33,41], green: [2,10,18,26,34,42], blue: [3,11,19,27,35,43],
+        purple: [4,12,20,28,36,44], brown: [5,13,21,29,37,45], yellow: [6,14,22,30,38,46],
+        orange: [7,15,23,31,39,47], black: [8,16,24,32,40,48]
+    };
+    const colorAlias = { 'кр':'red', 'крас':'red', 'зл':'green', 'зел':'green', 'син':'blue', 'фл':'purple', 'фио':'purple', 'кор':'brown', 'жл':'yellow', 'жел':'yellow', 'ор':'orange', 'оран':'orange', 'чр':'black', 'чер':'black' };
+
+    document.querySelectorAll('.color-ball').forEach(ball => { ball.addEventListener('click', function() { this.classList.toggle('active'); scheduleRecalc(); }); });
+
+    function toggleIncRand(f) { let cb = document.getElementById('incRandF'+f), inp = document.getElementById('incRandCountF'+f); inp.disabled = !cb.checked; if (!cb.checked) inp.value = ''; }
+    document.getElementById('incRandF1').addEventListener('change', () => { toggleIncRand(1); scheduleRecalc(); });
+    document.getElementById('incRandF2').addEventListener('change', () => { toggleIncRand(2); scheduleRecalc(); });
+    function getIncSettings(f) { let l = parseNumList(document.getElementById('incN'+f).value); let r = document.getElementById('incRandF'+f).checked; let c = r ? (parseInt(document.getElementById('incRandCountF'+f).value) || 0) : 0; return { incList: l, isRandomMode: r, randCount: c }; }
+
+    function parseNumList(str) { if (!str.trim()) return []; return [...new Set(str.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n)))]; }
+    function parseRange(str) { if (!str.trim()) return null; let p = str.split('-'); if (p.length === 1) { let v = parseInt(p[0]); if (isNaN(v)) throw "Целое число!"; return { min: v, max: v }; } if (p.length !== 2) throw "Формат: 'мин-макс' или число"; let mn = parseInt(p[0]), mx = parseInt(p[1]); if (isNaN(mn) || isNaN(mx)) throw "Целые числа!"; if (mn > mx) throw "Мин > Макс!"; return { min: mn, max: mx }; }
+    function parseSectors(str) { if (!str.trim()) return []; let s = []; for (let pt of str.split(',')) { pt = pt.trim(); if (!pt) continue; let sp = pt.split(':'); if (sp.length !== 2) throw "Формат: 'от-до:кол'"; let rng = sp[0].split('-'); if (rng.length !== 2) throw "Формат: 'от-до'"; let from = parseInt(rng[0]), to = parseInt(rng[1]), cnt = parseInt(sp[1]); if (isNaN(from) || isNaN(to) || isNaN(cnt)) throw "Целые числа!"; if (from > to) throw "От > До!"; if (cnt < 0) throw "Кол ≥ 0!"; s.push({ from, to, count: cnt }); } return s; }
+    function parseDecades(str, N1) { if (!str.trim()) return null; let p = str.split('-').map(s => parseInt(s.trim())); if (p.length < 3 || p.some(isNaN)) throw "Формат: 'а-б-в' (или 4-5 групп)"; if (p.reduce((a,b)=>a+b,0) !== N1) throw "Сумма десятков должна быть "+N1+"!"; return p; }
+    function parseColorQuota(str) { if (!str.trim()) return null; let res = {}; let parts = str.split(','); for (let p of parts) { p = p.trim(); if (!p) continue; let sp = p.split(':'); if (sp.length !== 2) throw "Формат: 'Цвет:Кол'"; let alias = sp[0].toLowerCase().trim(), count = parseInt(sp[1]); if (isNaN(count) || count < 0) throw "Кол-во >= 0!"; let colorKey = colorAlias[alias]; if (!colorKey) throw "Неизвестный цвет: " + sp[0]; res[colorKey] = (res[colorKey] || 0) + count; } return res; }
+    function parseColorPattern(str, N1) { if (!str.trim()) return null; let patterns = []; let parts = str.split(','); for (let p of parts) { p = p.trim(); if (!p) continue; let nums = p.split('-').map(s => parseInt(s.trim())); if (nums.some(isNaN)) throw "Паттерн: только цифры и '-'!"; if (nums.reduce((a,b)=>a+b,0) !== N1) throw "Сумма паттерна должна быть "+N1+"!"; nums.sort((a, b) => b - a); patterns.push(nums); } return patterns; }
+    function parseReqs(str, g) { let r = {}; if (!str.trim()) return r; for (let p of str.split(',')) { p = p.trim(); if (!p) continue; let s = p.split('-'); if (s.length !== 2) throw "Формат: 'раз-кол'"; let d = parseInt(s[0]), c = parseInt(s[1]); if (d < 1) throw "Раз ≥ 1"; if (c < 0) throw "Кол ≥ 0"; r[d] = c; } if (Object.values(r).reduce((a, b) => a + b, 0) > g) throw 'Сумма разниц > '+g+'!'; return r; }
+
+    // --- СЛИПЫ ЛОГИКА ---
+    function generateSlips(maxNum) {
+        let slips = { 2: [], 3: [], 4: [], 5: [] };
+        for (let size = 2; size <= 5; size++) { for (let i = 1; i <= maxNum - size + 1; i++) { let slip = []; for(let j=0; j<size; j++) slip.push(i+j); slips[size].push(slip.join(',')); } }
+        return slips;
+    }
+    function populateSlipDropdowns() {
+        let slips = generateSlips(currentConfig.maxNum);
+        ['Inc', 'Exc'].forEach(type => {
+            let panel = document.getElementById('slip'+type+'Panel'); panel.innerHTML = ''; 
+            for (let size in slips) {
+                let cat = document.createElement('label'); cat.className = 'slip-category'; cat.innerHTML = `<input type="checkbox" data-size="${size}" onchange="toggleSlipCategory('${type}', ${size}, this.checked)"><span class="checkmark"></span>Слипы ${size}`; panel.appendChild(cat);
+                slips[size].forEach(slipStr => { let opt = document.createElement('label'); opt.className = 'slip-option'; opt.dataset.size = size; let cb = document.createElement('input'); cb.type = 'checkbox'; cb.value = slipStr; cb.addEventListener('change', () => { updateSlipBtnText(type); syncSlipCategoryCheckbox(type, size); }); let cm = document.createElement('span'); cm.className = 'checkmark'; let txt = document.createTextNode(slipStr); opt.appendChild(cb); opt.appendChild(cm); opt.appendChild(txt); panel.appendChild(opt); });
+            } updateSlipBtnText(type);
+        });
+    }
+    function toggleSlipDropdown(type) { let panel = document.getElementById('slip'+type+'Panel'); document.querySelectorAll('.slip-dropdown-panel').forEach(p => { if(p !== panel) p.classList.remove('open'); }); panel.classList.toggle('open'); }
+    function updateSlipBtnText(type) { let panel = document.getElementById('slip'+type+'Panel'); let btn = document.getElementById('slip'+type+'Btn'); let wrap = document.getElementById('slip'+type+'Wrap'); let count = panel.querySelectorAll('.slip-option input:checked').length; btn.innerText = count > 0 ? count + ' выбрано' : '0'; if(count > 0) wrap.classList.add('has-value'); else wrap.classList.remove('has-value'); scheduleRecalc(); updateSlip1plus1Count(); }
+    function toggleSlipCategory(type, size, isChecked) { let panel = document.getElementById('slip'+type+'Panel'); panel.querySelectorAll(`.slip-option[data-size="${size}"] input`).forEach(cb => cb.checked = isChecked); updateSlipBtnText(type); }
+    function syncSlipCategoryCheckbox(type, size) { let panel = document.getElementById('slip'+type+'Panel'); let catCb = panel.querySelector(`.slip-category input[data-size="${size}"]`); let totalSlips = panel.querySelectorAll(`.slip-option[data-size="${size}"] input`).length; let checkedSlips = panel.querySelectorAll(`.slip-option[data-size="${size}"] input:checked`).length; if (catCb) catCb.checked = (totalSlips === checkedSlips); }
+    function clearSlips(type) { if (type === 'Manual') { document.getElementById('filterSlipManual').value = ''; document.getElementById('slipManWrap').classList.remove('has-value'); } else { let panel = document.getElementById('slip'+type+'Panel'); panel.querySelectorAll('input:checked').forEach(cb => cb.checked = false); updateSlipBtnText(type); } scheduleRecalc(); }
+    function getSelectedSlips(type) { let panel = document.getElementById('slip'+type+'Panel'); let slips = []; panel.querySelectorAll('.slip-option input:checked').forEach(cb => { slips.push(cb.value.split(',').map(Number)); }); return slips; }
+    function parseManualSlips(str) { if (!str.trim()) return []; let slips = []; let parts = str.split(' '); for (let p of parts) { p = p.trim(); if (!p) continue; let nums = p.split(',').map(n => parseInt(n.trim())).filter(n => !isNaN(n)); if (nums.length > 0) slips.push(nums); } return slips; }
+    
+    document.getElementById('filterSlipManual').addEventListener('input', function() { let wrap = document.getElementById('slipManWrap'); if(this.value.trim() !== '') wrap.classList.add('has-value'); else wrap.classList.remove('has-value'); scheduleRecalc(); });
+    document.addEventListener('click', function(e) { if (!e.target.closest('.slip-group')) { document.querySelectorAll('.slip-dropdown-panel').forEach(p => p.classList.remove('open')); } });
+    
+    function splitSlipsByDigits(slips) {
+        let single = [], double = [];
+        for (let slip of slips) { let isSingle = slip.every(n => n >= 1 && n <= 9); let isDouble = slip.every(n => n >= 10); if (isSingle) single.push(slip); else if (isDouble) double.push(slip); }
+        return { single, double };
+    }
+
+    function updateSlip1plus1Count() {
+        let cb = document.getElementById('slip1plus1'); let el = document.getElementById('slip1plus1Count');
+        if (cb.checked) {
+            let slipsInc = getSelectedSlips('Inc'); let { single, double } = splitSlipsByDigits(slipsInc); let count = single.length * double.length;
+            if (count > 0) { el.innerText = 'Уникальных пар 1+1: ' + count + ' шт.'; el.classList.remove('hidden'); } 
+            else { el.innerText = 'Нет пар для 1+1'; el.classList.remove('hidden'); }
+        } else { el.classList.add('hidden'); }
+    }
+    document.getElementById('slip1plus1').addEventListener('change', updateSlip1plus1Count);
+    // --- КОНЕЦ СЛИПЫ ЛОГИКА ---
+
+    function getFilterSettings() {
+        let sumR, spreadR, evenR, sectors, decadesR, tailsR, colorQuota, colorPattern;
+        try { sumR = parseRange(document.getElementById('filterSum').value); } catch(e) { sumR = 'err'; }
+        try { spreadR = parseRange(document.getElementById('filterSpread').value); } catch(e) { spreadR = 'err'; }
+        try { evenR = parseRange(document.getElementById('filterEven').value); } catch(e) { evenR = 'err'; }
+        try { sectors = parseSectors(document.getElementById('filterSectors').value); } catch(e) { sectors = 'err'; }
+        try { decadesR = parseDecades(document.getElementById('filterDecades').value, parseInt(document.getElementById('inputN1').value)); } catch(e) { decadesR = 'err'; }
+        try { tailsR = parseRange(document.getElementById('filterTails').value); } catch(e) { tailsR = 'err'; }
+        try { colorQuota = parseColorQuota(document.getElementById('filterColorQuota').value); } catch(e) { colorQuota = 'err'; }
+        if (colorQuota !== 'err' && colorQuota !== null) { let quotaSum = 0; for (let c in colorQuota) quotaSum += colorQuota[c]; let N1 = parseInt(document.getElementById('inputN1').value); if (quotaSum > N1) throw 'Сумма квот (' + quotaSum + ') не может превышать размер П1 (' + N1 + ')!'; }
+        try { colorPattern = parseColorPattern(document.getElementById('filterColorPattern').value, parseInt(document.getElementById('inputN1').value)); } catch(e) { colorPattern = 'err'; }
+        let condIf = parseNumList(document.getElementById('filterCondIf').value); let condThen = parseNumList(document.getElementById('filterCondThen').value);
+        if (condIf.length > 0 && condThen.length === 0) { throw "Заполните 'То' для условия!"; }
+        let colorRequired = []; document.querySelectorAll('.color-ball.active').forEach(b => colorRequired.push(b.dataset.color));
+        let slipsInc = getSelectedSlips('Inc'); let slipsExc = getSelectedSlips('Exc'); let slipsManual = parseManualSlips(document.getElementById('filterSlipManual').value);
+
+        return { 
+            sumRange: sumR, spreadRange: spreadR, evenRange: evenR, evenGlobal: document.getElementById('filterEvenGlobal').checked, 
+            noNeighbors: document.getElementById('filterNoNeighbors').checked, sectors, decadesReq: decadesR, tailsRange: tailsR,
+            condTriggers: condIf, condDeps: condThen,
+            chainN: parseInt(document.getElementById('filterChain').value) || 0, coverageMin: parseInt(document.getElementById('filterCoverage').value) || 0,
+            colorRequired: colorRequired, colorQuota: colorQuota, colorPattern: colorPattern,
+            slipsInc: slipsInc, slipsExc: slipsExc, slipsManual: slipsManual,
+            slip1plus1: document.getElementById('slip1plus1').checked
+        };
+    }
+    function getFilterSettingsSafe() { try { let f = getFilterSettings(); validateFilters(f); return f; } catch(e) { return null; } }
+    function validateFilters(f) { let errs = []; if (f.sumRange === 'err') errs.push('Сумма'); if (f.spreadRange === 'err') errs.push('Разброс'); if (f.evenRange === 'err') errs.push('Чётные'); if (f.sectors === 'err') errs.push('Секторы'); if (f.decadesReq === 'err') errs.push('Десятки'); if (f.tailsRange === 'err') errs.push('Хвосты'); if (f.colorQuota === 'err') errs.push('Квоты цвета'); if (f.colorPattern === 'err') errs.push('Паттерн'); if (errs.length > 0) throw 'Ошибка формата: '+errs.join(', '); }
+    function hasActiveFilters(f) { 
+        if (!f) return false; 
+        if (f.sumRange !== null && f.sumRange !== 'err') return true; if (f.spreadRange !== null && f.spreadRange !== 'err') return true; 
+        if (f.evenRange !== null && f.evenRange !== 'err' && !f.evenGlobal) return true; if (f.noNeighbors) return true; 
+        if (f.sectors && f.sectors !== 'err' && f.sectors.length > 0) return true; if (f.decadesReq !== null && f.decadesReq !== 'err') return true;
+        if (f.tailsRange !== null && f.tailsRange !== 'err') return true; if (f.condTriggers && f.condTriggers.length > 0) return true;
+        if (f.colorRequired && f.colorRequired.length > 0) return true; if (f.colorQuota && f.colorQuota !== 'err') return true;
+        if (f.colorPattern && f.colorPattern !== 'err') return true; if (f.slipsInc && f.slipsInc.length > 0) return true;
+        if (f.slipsExc && f.slipsExc.length > 0) return true; if (f.slipsManual && f.slipsManual.length > 0) return true;
+        return false; 
+    }
+    
+    function hasSlip(combo, slip) { for (let i = 0; i < combo.length; i++) { if (combo[i] === slip[0]) { let match = true; for (let j = 1; j < slip.length; j++) { if (i+j >= combo.length || combo[i+j] !== slip[j]) { match = false; break; } } if (match) return true; } } return false; }
+
+    function checkTicketFilters(combo, f) {
+        if (!f) return true;
+        if (f.sumRange && f.sumRange !== 'err') { let s = combo.reduce((a, b) => a + b, 0); if (s < f.sumRange.min || s > f.sumRange.max) return false; }
+        if (f.spreadRange && f.spreadRange !== 'err') { let sp = combo[combo.length - 1] - combo[0]; if (sp < f.spreadRange.min || sp > f.spreadRange.max) return false; }
+        if (f.evenRange && f.evenRange !== 'err' && !f.evenGlobal) { let ec = 0; for(let i=0; i<combo.length; i++) if(combo[i] % 2 === 0) ec++; if (ec < f.evenRange.min || ec > f.evenRange.max) return false; }
+        if (f.noNeighbors) { for (let i = 1; i < combo.length; i++) { if (combo[i] - combo[i - 1] === 1) return false; } }
+        if (f.sectors && f.sectors !== 'err' && f.sectors.length > 0) { for (let sec of f.sectors) { let cnt = 0; for(let i=0; i<combo.length; i++) { if(combo[i] >= sec.from && combo[i] <= sec.to) cnt++; } if (cnt < sec.count) return false; } }
+        if (f.decadesReq && f.decadesReq !== 'err') { let bounds = [9, 19, 29, 39, 999]; let cnts = new Array(f.decadesReq.length).fill(0); for(let i=0; i<combo.length; i++) { let n = combo[i]; for(let b=0; b<bounds.length; b++) { if(n <= bounds[b]) { if(b < cnts.length) cnts[b]++; break; } } } for(let i=0; i<f.decadesReq.length; i++) if(cnts[i] !== f.decadesReq[i]) return false; }
+        if (f.tailsRange && f.tailsRange !== 'err') { let tailsArr = [false,false,false,false,false,false,false,false,false,false]; let tailsCount = 0; for(let i=0; i<combo.length; i++) { let t = combo[i] % 10; if (!tailsArr[t]) { tailsArr[t] = true; tailsCount++; } } if (tailsCount < f.tailsRange.min || tailsCount > f.tailsRange.max) return false; }
+        if (f.condTriggers && f.condTriggers.length > 0 && f.condDeps && f.condDeps.length > 0) { let hasTrigger = false; for(let i=0; i<combo.length; i++) { for(let j=0; j<f.condTriggers.length; j++) { if(combo[i] === f.condTriggers[j]) { hasTrigger = true; break; } } if(hasTrigger) break; } if (hasTrigger) { for(let i=0; i<f.condDeps.length; i++) { let found = false; for(let j=0; j<combo.length; j++) { if(combo[j] === f.condDeps[i]) { found = true; break; } } if (!found) return false; } } }
+        if (f.colorRequired && f.colorRequired.length > 0) { for (let reqColor of f.colorRequired) { let hasColor = false; for(let i=0; i<combo.length; i++) { if (colorMap[reqColor].includes(combo[i])) { hasColor = true; break; } } if (!hasColor) return false; } }
+        if (f.colorQuota && f.colorQuota !== 'err') { for (let colorKey in f.colorQuota) { let needed = f.colorQuota[colorKey]; let count = 0; for(let i=0; i<combo.length; i++) { if (colorMap[colorKey].includes(combo[i])) count++; } if (count !== needed) return false; } }
+        if (f.colorPattern && f.colorPattern !== 'err' && f.colorPattern.length > 0) { let groupCounts = []; for (let colorKey in colorMap) { let cnt = 0; for(let i=0; i<combo.length; i++) { if (colorMap[colorKey].includes(combo[i])) cnt++; } if (cnt > 0) groupCounts.push(cnt); } groupCounts.sort((a, b) => b - a); let matchAny = false; for (let pattern of f.colorPattern) { if (groupCounts.length !== pattern.length) continue; let isMatch = true; for (let i = 0; i < pattern.length; i++) { if (groupCounts[i] !== pattern[i]) { isMatch = false; break; } } if (isMatch) { matchAny = true; break; } } if (!matchAny) return false; }
+
+        if (f.slipsExc && f.slipsExc.length > 0) { for (let slip of f.slipsExc) { if (hasSlip(combo, slip)) return false; } }
+        
+        if ((f.slipsInc && f.slipsInc.length > 0) || (f.slipsManual && f.slipsManual.length > 0)) {
+            let foundInc = false;
+            if (f.slipsInc) { for (let slip of f.slipsInc) { if (hasSlip(combo, slip)) { foundInc = true; break; } } }
+            if (!foundInc && f.slipsManual) { for (let slip of f.slipsManual) { if (hasSlip(combo, slip)) { foundInc = true; break; } } }
+            if (!foundInc) return false;
+        }
+        return true;
+    }
+
+    function buildFieldWithSectors(N, exc, inc, maxNum, sectors) {
+        let totalQuota = sectors.reduce((s, sec) => s + sec.count, 0); if (totalQuota > N) throw 'Секторы: квоты '+totalQuota+' > '+N+'!'; let pool = []; for (let i = 1; i <= maxNum; i++) { if (!exc.includes(i)) pool.push(i); } let used = new Set(), result = [];
+        for (let sec of sectors) { let sp = pool.filter(n => n >= sec.from && n <= sec.to && !used.has(n)); sp.sort(() => Math.random() - 0.5); let pick = sp.slice(0, sec.count); if (pick.length < sec.count) throw 'Сектор '+sec.from+'-'+sec.to+': не хватает!'; pick.forEach(n => { result.push(n); used.add(n); }); }
+        if (inc.incList.length > 0) { let ip = inc.incList.filter(n => pool.includes(n)); if (inc.isRandomMode && inc.randCount > 0) { let al = result.filter(n => ip.includes(n)).length, need = inc.randCount - al; if (need > 0) ip.filter(n => !used.has(n)).sort(() => Math.random() - 0.5).slice(0, need).forEach(n => { result.push(n); used.add(n); }); } else if (!inc.isRandomMode) { ip.filter(n => !used.has(n)).forEach(n => { result.push(n); used.add(n); }); } }
+        let need = N - result.length; if (need < 0) throw 'Секторы+включения > '+N+'!'; pool.filter(n => !used.has(n)).sort(() => Math.random() - 0.5).slice(0, need).forEach(n => result.push(n)); return result.sort((a, b) => a - b);
+    }
+
+    function generateFilteredField(N, exc, inc, maxNum, filters) {
+        let hasSectors = filters && filters.sectors && filters.sectors !== 'err' && filters.sectors.length > 0; 
+        let hasColorQuota = filters && filters.colorQuota && filters.colorQuota !== 'err';
+        if (hasColorQuota) { return generateFieldWithColorQuota(N, exc, inc, maxNum, filters); }
+        
+        // Увеличено количество попыток с 500 до 1500 для лучшей генерации
+        for (let att = 0; att < 1500; att++) { 
+            let fld = hasSectors ? buildFieldWithSectors(N, exc, inc, maxNum, filters.sectors) : generateRandomField(N, exc, inc, maxNum); 
+            if (checkTicketFilters(fld, filters)) return fld; 
+        }
+        throw 'Не удалось сгенерировать билет за 1500 попыток. Проверьте совместимость фильтров.'; 
+    }
+    
+    // Специальная функция для режима 1+1 - ИСПРАВЛЕНА: больше не допускает добор обычными билетами
+    function generateField1plus1(N, exc, inc, maxNum, filters) {
+        let attempts = 0;
+        let maxAttempts = 2000; // Увеличено с 500 до 2000
+        while(attempts < maxAttempts) {
+            attempts++;
+            let forcedNums = inc.incList;
+            if (forcedNums.length === 0 || forcedNums.length >= N) {
+                // Если нет чисел для матрицы 1+1 или их уже достаточно, возвращаем ошибку
+                throw 'Режим 1+1: требуется ровно 1 однозначное и 1 двузначное число из слипов';
+            }
+            let enhancedExc = [...new Set(exc)]; 
+            let forcedSet = new Set(forcedNums);
+            
+            // Запрещаем числа, прилегающие к слипам, чтобы рандом не образовал новые слипы
+            for (let n of forcedNums) {
+                if (!forcedSet.has(n - 1) && n - 1 >= 1) enhancedExc.push(n - 1);
+                if (!forcedSet.has(n + 1) && n + 1 <= maxNum) enhancedExc.push(n + 1);
+            }
+            enhancedExc = [...new Set(enhancedExc)]; 
+            
+            // Генерируем пул доступных чисел
+            let pool = [];
+            for(let i=1; i<=maxNum; i++) {
+                if (!enhancedExc.includes(i) && !forcedSet.has(i)) pool.push(i);
+            }
+            
+            let need = N - forcedNums.length;
+            if (pool.length < need) continue;
+            
+            // Случайный выбор нужного количества чисел без соседств между собой
+            let selected = [];
+            let selectedSet = new Set(forcedSet);
+            let tempPool = [...pool].sort(() => Math.random() - 0.5);
+            
+            for(let i=0; i<tempPool.length && selected.length < need; i++) {
+                let n = tempPool[i];
+                if (!selectedSet.has(n-1) && !selectedSet.has(n+1)) {
+                    selected.push(n);
+                    selectedSet.add(n);
+                }
+            }
+            
+            if (selected.length < need) continue;
+            
+            let combo = [...forcedNums, ...selected].sort((a,b) => a-b);
+            
+            // Проверяем остальные фильтры (noNeighbors отключен, т.к. слипы уже есть)
+            let checkFilters = {...filters, noNeighbors: false}; 
+            if (checkTicketFilters(combo, checkFilters)) return combo;
+        }
+        throw 'Не удалось сгенерировать 1+1 билет за ' + maxAttempts + ' попыток. Проверьте слипы и фильтры.';
+    }
+
+    function generateFieldWithColorQuota(N, exc, inc, maxNum, filters) {
+        let quota = filters.colorQuota; let quotaSum = 0; for (let c in quota) quotaSum += quota[c]; if (quotaSum > N) throw 'Сумма квот (' + quotaSum + ') не может превышать размер П1 (' + N + ')!'; let attempts = 0;
+        while(attempts < 200) { attempts++; let result = [], used = new Set(), forcedCounts = {}; for (let c in quota) forcedCounts[c] = 0; let forcedNums = [];
+            if (inc.incList.length > 0) { let validIncs = inc.incList.filter(n => !exc.includes(n)); if (inc.isRandomMode && inc.randCount > 0) { forcedNums = [...validIncs].sort(() => Math.random() - 0.5).slice(0, inc.randCount); } else if (!inc.isRandomMode) { forcedNums = [...validIncs]; } }
+            let validForce = true; for (let n of forcedNums) { let colorFound = null; for (let c in colorMap) { if (colorMap[c].includes(n)) { colorFound = c; break; } } if (colorFound && quota[colorFound] !== undefined) { forcedCounts[colorFound]++; if (forcedCounts[colorFound] > quota[colorFound]) validForce = false; } else if (colorFound && quota[colorFound] === undefined) { if (quotaSum === N) validForce = false; } }
+            if (!validForce) { if (attempts >= 200) throw 'Включения конфликтуют с квотами цветов!'; continue; } result = [...forcedNums]; forcedNums.forEach(n => used.add(n));
+            let quotaSuccess = true; for (let c in quota) { let needMore = quota[c] - (forcedCounts[c] || 0); if (needMore > 0) { let pool = colorMap[c].filter(n => !exc.includes(n) && !used.has(n)); if (pool.length < needMore) { quotaSuccess = false; break; } pool.sort(() => Math.random() - 0.5); pool.slice(0, needMore).forEach(n => { result.push(n); used.add(n); }); } else if (needMore < 0) { quotaSuccess = false; break; } }
+            if (!quotaSuccess) { if (attempts >= 200) throw 'Не хватает чисел для соблюдения квот!'; continue; }
+            let needRandom = N - result.length; if (needRandom > 0) { let otherColorsPool = []; for (let c in colorMap) { if (quota[c] !== undefined) continue; for (let n of colorMap[c]) { if (!exc.includes(n) && !used.has(n)) otherColorsPool.push(n); } } if (otherColorsPool.length < needRandom) { if (attempts >= 200) throw 'Не хватает чисел других цветов!'; continue; } otherColorsPool.sort(() => Math.random() - 0.5); otherColorsPool.slice(0, needRandom).forEach(n => { result.push(n); used.add(n); }); }
+            result.sort((a, b) => a - b); let tempFilters = {...filters, colorQuota: null, colorRequired: null, colorPattern: null}; if (checkTicketFilters(result, tempFilters)) return result;
+        } throw 'Не удалось подобрать билет: квоты цветов конфликтуют с другими фильтрами';
+    }
+
+    function generateRandomField(N, exc, inc, maxNum) {
+        let pool = []; for (let i = 1; i <= maxNum; i++) { if (!exc.includes(i)) pool.push(i); } let t = [];
+        if (inc.isRandomMode && inc.randCount > 0) { let v = inc.incList.filter(n => pool.includes(n)); v.sort(() => Math.random() - 0.5); t = v.slice(0, inc.randCount); let r = pool.filter(n => !t.includes(n)); r.sort(() => Math.random() - 0.5); t = t.concat(r.slice(0, N - t.length)).sort((a, b) => a - b); }
+        else { t = [...inc.incList]; let r = pool.filter(n => !inc.incList.includes(n)); r.sort(() => Math.random() - 0.5); t = t.concat(r.slice(0, N - inc.incList.length)).sort((a, b) => a - b); } return t;
+    }
+
+    const COUNT_LIMIT = 500000; const MAX_ALGO_POOL = 300000; 
+    let baseEstF1 = 0, exactCountF1 = 0, isExactF1 = false; let baseEstF2 = 0, exactCountF2 = 0, isExactF2 = false;
+    function C(n, k) { if (k > n || k < 0) return 0; if (k === 0 || k === n) return 1; if (k > n - k) k = n - k; let r = 1; for (let i = 0; i < k; i++) r = r * (n - i) / (i + 1); return Math.round(r); }
+    function estimateBase(N, maxNum, exc, inc) { let avail = maxNum - exc.length; if (inc.incList.length > 0 && !inc.isRandomMode) { let inPool = inc.incList.filter(n => !exc.includes(n)); return C(avail - inPool.length, N - inPool.length); } return C(avail, N); }
+    function countFilteredCombinations(N, maxNum, exc, inc, filters) { let nums = []; for (let i = 1; i <= maxNum; i++) { if (!exc.includes(i)) nums.push(i); } let mustHave = []; if (inc.incList.length > 0 && !inc.isRandomMode) { mustHave = inc.incList.filter(n => nums.includes(n)); if (mustHave.length > N) return 0; } let minInc = (inc.isRandomMode && inc.randCount > 0) ? inc.randCount : 0; let count = 0; function gen(start, chosen) { if (chosen.length === N) { if (mustHave.length > 0 && !mustHave.every(m => chosen.includes(m))) return; if (minInc > 0 && chosen.filter(n => inc.incList.includes(n)).length < minInc) return; if (filters && !checkTicketFilters(chosen, filters)) return; count++; return; } let rem = nums.length - start, need = N - chosen.length; if (rem < need) return; for (let i = start; i < nums.length; i++) { chosen.push(nums[i]); gen(i + 1, chosen); chosen.pop(); } } gen(0, []); return count; }
+    function countFilteredWithDiffs(N, maxNum, exc, inc, filters, diffRaw) { let nums = []; for (let i = 1; i <= maxNum; i++) { if (!exc.includes(i)) nums.push(i); } let mustHave = []; if (inc.incList.length > 0 && !inc.isRandomMode) { mustHave = inc.incList.filter(n => nums.includes(n)); if (mustHave.length > N) return 0; } let minInc = (inc.isRandomMode && inc.randCount > 0) ? inc.randCount : 0; let count = 0; function gen(start, chosen) { if (chosen.length === N) { if (mustHave.length > 0 && !mustHave.every(m => chosen.includes(m))) return; if (minInc > 0 && chosen.filter(n => inc.incList.includes(n)).length < minInc) return; if (filters && !checkTicketFilters(chosen, filters)) return; if (!checkDiffs(chosen, diffRaw)) return; count++; return; } let rem = nums.length - start, need = N - chosen.length; if (rem < need) return; for (let i = start; i < nums.length; i++) { chosen.push(nums[i]); gen(i + 1, chosen); chosen.pop(); } } gen(0, []); return count; }
+    function generateFilteredPool(N, maxNum, exc, inc, filters, diffRaw = null) { let nums = []; for (let i = 1; i <= maxNum; i++) { if (!exc.includes(i)) nums.push(i); } let mustHave = []; if (inc.incList.length > 0 && !inc.isRandomMode) { mustHave = inc.incList.filter(n => nums.includes(n)); if (mustHave.length > N) return []; } let minInc = (inc.isRandomMode && inc.randCount > 0) ? inc.randCount : 0; let pool = []; function gen(start, chosen) { if (chosen.length === N) { if (mustHave.length > 0 && !mustHave.every(m => chosen.includes(m))) return; if (minInc > 0 && chosen.filter(n => inc.incList.includes(n)).length < minInc) return; if (filters && !checkTicketFilters(chosen, filters)) return; if (diffRaw && !checkDiffs(chosen, diffRaw)) return; pool.push([...chosen]); return; } let rem = nums.length - start, need = N - chosen.length; if (rem < need) return; for (let i = start; i < nums.length; i++) { chosen.push(nums[i]); gen(i + 1, chosen); chosen.pop(); } } gen(0, []); return pool; }
+    function checkDiffs(combo, reqsRaw) { 
+        if (!reqsRaw || !reqsRaw.trim()) return true; // Пустые разницы = проход
+        let reqs; 
+        try { reqs = parseReqs(reqsRaw, combo.length - 1); } 
+        catch(e) { return false; } 
+        let gaps = {}; 
+        for (let i = 1; i < combo.length; i++) { 
+            let g = combo[i] - combo[i-1]; 
+            gaps[g] = (gaps[g] || 0) + 1; 
+        } 
+        for (let d in reqs) { 
+            let needed = reqs[d]; 
+            let actual = gaps[parseInt(d)] || 0; 
+            if (actual < needed) return false; 
+        } 
+        return true; 
+    }
+    
+    // Улучшенная функция генерации с разницами - больше попыток и лучшая обработка
+    function generateWithDiffs(N, exc, inc, maxNum, filters, diffRaw) { 
+        if (!diffRaw || !diffRaw.trim()) {
+            return generateFilteredField(N, exc, inc, maxNum, filters);
+        }
+        let maxAttempts = 25000; // Увеличено с 10000 до 25000
+        for (let att = 0; att < maxAttempts; att++) { 
+            let fld;
+            try {
+                fld = generateFilteredField(N, exc, inc, maxNum, filters); 
+            } catch(e) {
+                continue; // Пробуем снова при ошибке генерации
+            }
+            if (checkDiffs(fld, diffRaw)) return fld; 
+        } 
+        throw 'Не удалось подобрать разницы за ' + maxAttempts + ' попыток. Проверьте совместимость фильтров и разниц.'; 
+    }
+
+    function rebuildPool() { let N1 = parseInt(document.getElementById('inputN1').value); let e1 = parseNumList(document.getElementById('excN1').value); let is1 = getIncSettings(1); let filters = getFilterSettingsSafe(); baseEstF1 = estimateBase(N1, currentConfig.maxNum, e1, is1); if (hasActiveFilters(filters)) { if (baseEstF1 <= COUNT_LIMIT) { exactCountF1 = countFilteredCombinations(N1, currentConfig.maxNum, e1, is1, filters); isExactF1 = true; } else { exactCountF1 = baseEstF1; isExactF1 = false; } } else { exactCountF1 = baseEstF1; isExactF1 = true; } baseEstF2 = 0; exactCountF2 = 0; isExactF2 = false; if (currentConfig.hasField2) { let N2 = parseInt(document.getElementById('inputN2').value); let e2 = parseNumList(document.getElementById('excN2').value); let is2 = getIncSettings(2); baseEstF2 = estimateBase(N2, currentConfig.maxNumF2, e2, is2); exactCountF2 = baseEstF2; isExactF2 = true; } updatePoolDisplay(); resetDiffStatuses(); }
+    let recalcTimer = null; function scheduleRecalc() { clearTimeout(recalcTimer); recalcTimer = setTimeout(rebuildPool, 350); } function fmtNum(n) { return n.toLocaleString('ru-RU'); }
+    function updatePoolDisplay() { let el = document.getElementById('poolInfo'), txt = document.getElementById('poolText'); el.className = 'pool-info'; let p1, p2, total; if (exactCountF1 === 0) { p1 = '0'; el.className = 'pool-info pool-empty'; } else if (isExactF1 && hasActiveFilters(getFilterSettingsSafe())) { p1 = fmtNum(exactCountF1) + ' (из ~' + fmtNum(baseEstF1) + ')'; } else { p1 = '~' + fmtNum(exactCountF1); el.className = 'pool-info pool-est'; } let line2 = ''; if (currentConfig.hasField2) { p2 = '~' + fmtNum(exactCountF2); line2 = ' | П2: ' + p2; } let t1 = exactCountF1, t2 = exactCountF2; total = currentConfig.hasField2 ? (t1 * t2) : t1; txt.innerHTML = 'П1: ' + p1 + line2 + '<br>Итого: ' + fmtNum(total); if (exactCountF1 === 0) el.className = 'pool-info pool-empty'; }
+    function resetDiffStatuses() { document.querySelectorAll('.rule-status').forEach(se => { if (se.style.color === 'rgb(39, 174, 96)') { se.innerText = '⚠️ Пул изменён — нажмите Посчитать'; se.style.color = '#e67e22'; } }); }
+
+    const lotterySelect = document.getElementById('lotterySelect');
+    lotterySelect.addEventListener('change', (e) => {
+        currentConfig = configs[e.target.value]; let in1 = document.getElementById('inputN1'), in2 = document.getElementById('inputN2'); in1.value = currentConfig.defN1; in1.max = currentConfig.maxN1;
+        if (currentConfig.hasField2) { in2.value = currentConfig.defN2; in2.max = currentConfig.maxN2; document.getElementById('field2Block').classList.remove('hidden'); document.getElementById('exc2Block').classList.remove('hidden'); document.getElementById('inc2Block').classList.remove('hidden'); document.getElementById('evenGlobalWrap').classList.remove('hidden'); } else { document.getElementById('field2Block').classList.add('hidden'); document.getElementById('exc2Block').classList.add('hidden'); document.getElementById('inc2Block').classList.add('hidden'); document.getElementById('evenGlobalWrap').classList.add('hidden'); document.getElementById('filterEvenGlobal').checked = false; }
+        if (e.target.value === 'coloredBalls') { document.getElementById('colorGroupBlock').classList.remove('hidden'); } else { document.getElementById('colorGroupBlock').classList.add('hidden'); document.querySelectorAll('.color-ball').forEach(b => b.classList.remove('active')); document.getElementById('filterColorQuota').value = ''; document.getElementById('filterColorPattern').value = ''; }
+        document.getElementById('excN1').placeholder = 'Напр: 5, 12, '+(currentConfig.maxNum - 2); document.getElementById('excN2').placeholder = '1..'+currentConfig.maxNumF2;
+        ['excN1','incN1','excN2','incN2'].forEach(id => document.getElementById(id).value = ''); ['incRandF1','incRandF2'].forEach(id => { document.getElementById(id).checked = false; }); ['incRandCountF1','incRandCountF2'].forEach(id => { let el = document.getElementById(id); el.value = ''; el.disabled = true; });
+        freezeCb.disabled = !currentConfig.hasField2; if (!currentConfig.hasField2) { freezeCb.checked = false; frozenField1 = null; }
+        document.querySelectorAll('.rule-cb-f2-wrap').forEach(el => { if (currentConfig.hasField2) el.classList.remove('hidden'); else { el.classList.add('hidden'); el.querySelector('input').checked = false; } });
+        document.querySelectorAll('.algo-checkbox').forEach(cb => cb.checked = false); document.getElementById('evenSettings').classList.add('hidden'); document.getElementById('labelAmount').innerText = 'Билетов:';
+        populateSlipDropdowns(); document.getElementById('filterSlipManual').value = ''; document.getElementById('slipManWrap').classList.remove('has-value'); document.getElementById('slip1plus1').checked = false; updateSlip1plus1Count();
+        ruleSetsData = {}; ruleIdCounter = 0; document.getElementById('rulesContainer').innerHTML = ''; addRuleRow();
+        document.getElementById('globalStatus').innerText = ''; clearTimeout(recalcTimer); rebuildPool();
+    });
+
+    document.getElementById('btnClear').addEventListener('click', () => {
+        txtRows = []; txtFileName = ''; document.getElementById('txtFile').value = ''; setTxtModeUi(); setTxtStatus('Файл не загружен.');
+        localStorage.removeItem('lottery_history'); document.getElementById('inputAmount').value = 15; document.querySelectorAll('.algo-checkbox').forEach(cb => cb.checked = false); document.getElementById('evenSettings').classList.add('hidden'); document.getElementById('labelAmount').innerText = 'Билетов:';
+        ['filterSum','filterSpread','filterEven','filterSectors','filterDecades','filterTails','filterCondIf','filterCondThen','filterChain','filterCoverage','filterColorQuota','filterColorPattern','filterSlipManual'].forEach(id => document.getElementById(id).value = '');
+        document.getElementById('filterNoNeighbors').checked = false; document.getElementById('filterEvenGlobal').checked = false; document.querySelectorAll('.color-ball').forEach(b => b.classList.remove('active')); frozenField1 = null; freezeCb.checked = false;
+        populateSlipDropdowns(); document.getElementById('slipManWrap').classList.remove('has-value'); document.getElementById('slip1plus1').checked = false; updateSlip1plus1Count();
+        ruleSetsData = {}; ruleIdCounter = 0; document.getElementById('rulesContainer').innerHTML = ''; addRuleRow();
+        document.getElementById('globalStatus').innerText = '✅ Сброшено.'; lotterySelect.value = 'vosmerki'; lotterySelect.dispatchEvent(new Event('change'));
+    });
+
+    const helpModal = document.getElementById('helpModal'); document.getElementById('helpBtn').addEventListener('click', () => helpModal.style.display = 'flex'); document.getElementById('closeHelp').addEventListener('click', () => helpModal.style.display = 'none'); helpModal.addEventListener('click', (e) => { if (e.target === helpModal) helpModal.style.display = 'none'; });
+    document.getElementById('btnRecalc').addEventListener('click', () => { clearTimeout(recalcTimer); rebuildPool(); });
+    ['inputN1','inputN2','excN1','excN2','incN1','incN2','incRandCountF1','incRandCountF2','filterSum','filterSpread','filterEven','filterSectors','filterDecades','filterTails','filterCondIf','filterCondThen','filterColorQuota','filterColorPattern','filterSlipManual'].forEach(id => { document.getElementById(id).addEventListener('input', scheduleRecalc); });
+    document.getElementById('filterNoNeighbors').addEventListener('change', scheduleRecalc); document.getElementById('filterEvenGlobal').addEventListener('change', scheduleRecalc);
+
+    const widget = document.getElementById('widget'), header = document.getElementById('header'); let isDragging = false, startX, startY, initialX, initialY;
+    header.addEventListener('mousedown', (e) => { if (e.target.id !== 'closeBtn' && e.target.id !== 'helpBtn' && e.target.id !== 'txtPanelToggle') { isDragging = true; startX = e.clientX; startY = e.clientY; initialX = widget.offsetLeft; initialY = widget.offsetTop; }}); document.addEventListener('mousemove', (e) => { 
+    if (!isDragging) return; 
+    widget.style.left = (initialX + e.clientX - startX) + 'px'; 
+    widget.style.top = (initialY + e.clientY - startY) + 'px'; 
+    if (typeof positionTxtPanel === 'function' && txtPanel.classList.contains('open')) {
+        positionTxtPanel();
+    }
+}); document.addEventListener('mouseup', () => isDragging = false); document.getElementById('closeBtn').addEventListener('click', () => widget.style.display = 'none');
+
+    let ruleSetsData = {}, ruleIdCounter = 0;
+    function addRuleRow() { ruleIdCounter++; let id = ruleIdCounter; ruleSetsData[id] = { target1: true, target2: false, raw: '', count1: null, count2: null }; let d = document.createElement('div'); d.className = 'rule-row'; d.id = 'rule-'+id; d.innerHTML = '<div class="rule-checks"><label class="custom-check"><input type="checkbox" class="rule-cb-f1" checked><span class="checkmark"></span>П1</label><label class="custom-check rule-cb-f2-wrap"><input type="checkbox" class="rule-cb-f2"><span class="checkmark"></span>П2</label></div><div class="rule-top"><input type="text" class="rule-input" placeholder="Разницы: 1-3, 5-1" value=""><button class="btn-count" onclick="countRule('+id+')">✎</button><button class="btn-add" onclick="addRuleRow()" title="+">+</button><button class="btn-del" onclick="removeRuleRow('+id+')" title="x">x</button></div><div class="rule-status" id="status-'+id+'">Ожидание...</div>'; document.getElementById('rulesContainer').appendChild(d); document.getElementById('rulesContainer').scrollTop = document.getElementById('rulesContainer').scrollHeight; if (!currentConfig.hasField2) d.querySelector('.rule-cb-f2-wrap').classList.add('hidden'); }
+    function removeRuleRow(id) { if (Object.keys(ruleSetsData).length <= 1) { alert('Нельзя удалить единственный!'); return; } delete ruleSetsData[id]; document.getElementById('rule-'+id).remove(); }
+    function countRule(id) { let se = document.getElementById('status-'+id), row = document.getElementById('rule-'+id), inp = row.querySelector('.rule-input'); let t1 = row.querySelector('.rule-cb-f1').checked, t2 = row.querySelector('.rule-cb-f2').checked && currentConfig.hasField2; try { if (!t1 && !t2) throw 'Выберите поле!'; if (!inp.value.trim()) throw 'Введите разницы!'; let raw = inp.value, p = [], c1 = null, c2 = null; if (t1) { if (baseEstF1 <= COUNT_LIMIT) { let e1 = parseNumList(document.getElementById('excN1').value); let is1 = getIncSettings(1); let filters = getFilterSettingsSafe(); c1 = countFilteredWithDiffs(parseInt(document.getElementById('inputN1').value), currentConfig.maxNum, e1, is1, filters, raw); p.push('П1: '+c1+' (из ~'+fmtNum(baseEstF1)+')'); } else { c1 = null; p.push('П1: ⚡ отбор на лету'); } } if (t2) { if (baseEstF2 <= COUNT_LIMIT) { let e2 = parseNumList(document.getElementById('excN2').value); let is2 = getIncSettings(2); c2 = countFilteredWithDiffs(parseInt(document.getElementById('inputN2').value), currentConfig.maxNumF2, e2, is2, null, raw); p.push('П2: '+c2+' (из ~'+fmtNum(baseEstF2)+')'); } else { c2 = null; p.push('П2: ⚡ отбор на лету'); } } ruleSetsData[id] = { target1: t1, target2: t2, raw: raw, count1: c1, count2: c2 }; se.innerText = '✅ '+p.join(' | '); se.style.color = '#27ae60'; } catch (e) { ruleSetsData[id] = { target1: false, target2: false, raw: '', count1: null, count2: null }; se.innerText = '❌ '+e; se.style.color = '#e74c3c'; } }
+    function isRuleActive(d) { return d.raw.trim() !== '' && (d.target1 || (d.target2 && currentConfig.hasField2)); }
+
+    function pickEven(pool, segments) { if (segments <= 0) return []; let mode = document.getElementById('evenMode').value; let perSeg = parseInt(document.getElementById('evenPerSegment').value) || 1; let sortedPool = [...pool]; if (mode === 'sum') sortedPool.sort((a, b) => a.reduce((s,v)=>s+v,0) - b.reduce((s,v)=>s+v,0)); else if (mode === 'spread') sortedPool.sort((a, b) => (a[a.length-1]-a[0]) - (b[b.length-1]-b[0])); else if (mode === 'mix') sortedPool.sort(() => Math.random() - 0.5); let cs = Math.floor(sortedPool.length / segments); if (cs < 1) return pickClassic(pool, segments * perSeg); let result = []; for (let i = 0; i < segments; i++) { let start = i * cs; let end = (i === segments - 1) ? sortedPool.length : start + cs; let segmentSlice = sortedPool.slice(start, end); segmentSlice.sort(() => Math.random() - 0.5); let pick = segmentSlice.slice(0, perSeg); result.push(...pick); } return result; }
+    function pickTickets(a, c) { if (a.length <= c) return [...a]; switch(getSelectedAlgo()) { case 'unique': case 'hist': case 'classic': return pickClassic(a,c); case 'even': return pickEven(a,c); case 'anti': return pickAnti(a,c); case 'weight': return pickWeight(a,c); case 'reservoir': return pickReservoir(a,c); default: return pickClassic(a,c); } }
+    function pickClassic(a,c) { return a.sort(() => Math.random() - 0.5).slice(0,c); }
+    function pickAnti(a,c) { let p=[...a].sort(()=>Math.random()-0.5),r=[p.shift()],u=new Set(r[0]); while(r.length<c&&p.length>0){let bi=0,mi=Infinity,l=Math.min(p.length,100); for(let i=0;i<l;i++){let n=p[i].filter(x=>u.has(x)).length;if(n<mi){mi=n;bi=i;if(n===0)break;}} let pk=p.splice(bi,1)[0];r.push(pk);pk.forEach(n=>u.add(n));} return r; }
+    function pickWeight(a,c) { let N1=parseInt(document.getElementById('inputN1').value),av=N1*(currentConfig.maxNum+1)/2,s=[...a].sort((a,b)=>Math.abs(a.reduce((s,v)=>s+v,0)-av)-Math.abs(b.reduce((s,v)=>s+v,0)-av)); return s.slice(0,Math.ceil(s.length*0.2)).sort(()=>Math.random()-0.5).slice(0,c); }
+    function pickReservoir(a,c) { let r=a.slice(0,c); for(let i=c;i<a.length;i++){let j=Math.floor(Math.random()*(i+1));if(j<c)r[j]=a[i];} return r; }
+    function pickHist(a,c) { let h=JSON.parse(localStorage.getItem('lottery_history')||'[]'),hs=new Set(h.map(x=>x.join(','))),f=a.filter(c=>!hs.has(c.join(','))); if(f.length<c){if(!f.length)return pickClassic(a,c);f=a;} let p=pickClassic(f,c); localStorage.setItem('lottery_history',JSON.stringify([...h,...p])); return p; }
+
+    function applyChainFilter(tickets, chainN, field) { if (chainN <= 0 || tickets.length < 2) return { tickets, fail: 0 }; let res = [tickets[0]], used = new Set([0]), fail = 0; for (let i = 1; i < tickets.length; i++) { let prev = res[res.length - 1][field], found = false; for (let j = 0; j < tickets.length; j++) { if (used.has(j)) continue; if (tickets[j][field].filter(x => prev.includes(x)).length === chainN) { res.push(tickets[j]); used.add(j); found = true; break; } } if (!found) { fail++; for (let j = 0; j < tickets.length; j++) { if (!used.has(j)) { res.push(tickets[j]); used.add(j); break; } } } } return { tickets: res, fail }; }
+    function analyzeCoverage(tickets, minCov, field, maxNum) { if (minCov <= 0) return ''; let freq = {}; for (let i = 1; i <= maxNum; i++) freq[i] =0; for (let t of tickets) for (let n of t[field]) freq[n]++; let bad = []; for (let i = 1; i <= maxNum; i++) if (freq[i] < minCov) bad.push(i+'('+freq[i]+')'); return bad.length > 0 ? '⚠️ Покрытие: '+bad.join(', ')+' < '+minCov : ''; }
+    function formatCsvRow(f1, f2) { let s = f1.join(' '); return currentConfig.hasField2 ? s+';'+f2.join(' ')+'\n' : s+'\n'; }
+
+    function generateValidF2(f1Combo, preGeneratedF2, diffRaw, filters) {
+        if (!currentConfig.hasField2) return { f2: [], warning: null }; 
+        let N2 = parseInt(document.getElementById('inputN2').value); 
+        let e2 = parseNumList(document.getElementById('excN2').value); 
+        let is2 = getIncSettings(2);
+        let useGlobalEven = currentConfig.hasField2 && filters.evenGlobal && filters.evenRange && filters.evenRange !== 'err';
+        
+        // Улучшенная обработка: сначала пробуем с разницами, затем с учётом глобальной чётности
+        if (!useGlobalEven) { 
+            if (preGeneratedF2 && preGeneratedF2.length > 0) return { f2: preGeneratedF2, warning: null }; 
+            let f2v; 
+            try { 
+                if (diffRaw && diffRaw.trim()) {
+                    f2v = generateWithDiffs(N2, e2, is2, currentConfig.maxNumF2, null, diffRaw); 
+                } else {
+                    f2v = generateRandomField(N2, e2, is2, currentConfig.maxNumF2); 
+                }
+            } catch(e) { 
+                f2v = generateRandomField(N2, e2, is2, currentConfig.maxNumF2); 
+            } 
+            return { f2: f2v, warning: null }; 
+        }
+        
+        // Режим глобальной чётности
+        let f1Evens = 0; 
+        for(let i=0; i<f1Combo.length; i++) if(f1Combo[i] % 2 === 0) f1Evens++; 
+        let needMinF2 = Math.max(0, filters.evenRange.min - f1Evens); 
+        let needMaxF2 = filters.evenRange.max - f1Evens;
+        
+        // Проверка заранее достижимости чётности
+        let bounds = getF2EvenBounds(N2, e2, is2, currentConfig.maxNumF2);
+        if (bounds.min === -1 || needMinF2 > bounds.max || needMaxF2 < bounds.min) {
+            // Чётность недостижима, возвращаем случайное поле с предупреждением
+            let f2v = generateRandomField(N2, e2, is2, currentConfig.maxNumF2);
+            return { f2: f2v, warning: '⚠️ Глоб. чётность П2 недостижима при данных фильтрах' };
+        }
+        
+        if (preGeneratedF2 && preGeneratedF2.length > 0) { 
+            let f2Evens = 0; 
+            for(let i=0; i<preGeneratedF2.length; i++) if(preGeneratedF2[i] % 2 === 0) f2Evens++; 
+            if (f2Evens >= needMinF2 && f2Evens <= needMaxF2) return { f2: preGeneratedF2, warning: null }; 
+        }
+        
+        let att = 0; 
+        let match = false; 
+        let f2v = [];
+        let maxAttempts = 1500; // Увеличено с 500 до 1500
+        
+        while(att < maxAttempts) { 
+            try { 
+                if (diffRaw && diffRaw.trim()) { 
+                    f2v = generateWithDiffs(N2, e2, is2, currentConfig.maxNumF2, null, diffRaw); 
+                } else { 
+                    f2v = generateRandomField(N2, e2, is2, currentConfig.maxNumF2); 
+                } 
+            } catch(e) { 
+                att++; 
+                continue; 
+            } 
+            let f2Evens = 0; 
+            for(let i=0; i<f2v.length; i++) if(f2v[i] % 2 === 0) f2Evens++; 
+            if (f2Evens >= needMinF2 && f2Evens <= needMaxF2) { 
+                match = true; 
+                break; 
+            } 
+            att++; 
+        }
+        
+        if (!match) { 
+            f2v = generateRandomField(N2, e2, is2, currentConfig.maxNumF2); 
+            return { f2: f2v, warning: diffRaw ? '⚠️ Глоб. чётность/Разницы П2 конфликтуют' : '⚠️ Глоб. чётность П2 не набрана' }; 
+        } 
+        return { f2: f2v, warning: null };
+    }
+    function getF2EvenBounds(N2, e2, is2, maxNumF2) { let pool = []; for(let i=1; i<=maxNumF2; i++) if(!e2.includes(i)) pool.push(i); let mustHave = is2.incList.filter(n => pool.includes(n)); let forcedEvens = mustHave.filter(n => n % 2 === 0).length; let rem = N2 - mustHave.length; if (rem < 0) return { min: -1, max: -1 }; let availEvens = pool.filter(n => n % 2 === 0 && !mustHave.includes(n)).length; let availOdds = pool.filter(n => n % 2 !== 0 && !mustHave.includes(n)).length; return { min: forcedEvens + Math.max(0, rem - availOdds), max: forcedEvens + Math.min(rem, availEvens) }; }
+
+
+    // --- РЕЖИМ ГОТОВЫХ КОМБИНАЦИЙ TXT ---
+    let txtRows = [], txtFileName = '', txtRefreshTimer = null;
+    const txtPanel = document.getElementById('txtPanel');
+    function positionTxtPanel() { const w = document.getElementById('widget'), r = w.getBoundingClientRect(); let left = r.right + 10; if (left + 320 > window.innerWidth - 8) left = Math.max(8, r.left - 330); txtPanel.style.left = left+'px'; txtPanel.style.top = Math.max(8, r.top)+'px'; }
+    function isTxtMode() { return txtRows.length > 0; }
+    function setTxtModeUi() {
+        const disabled = isTxtMode();
+        ['excN1','incN1','incRandF1','incRandCountF1'].forEach(id => document.getElementById(id).closest('.top-group').classList.toggle('txt-mode-disabled', disabled));
+        document.querySelector('.freeze-check').classList.toggle('txt-mode-disabled', disabled);
+    }
+    function txtStructure() { return { n1: parseInt(document.getElementById('txtN1').value), n2: parseInt(document.getElementById('txtN2').value) }; }
+    function setTxtStatus(message, error=false) { const el=document.getElementById('txtLoadStatus'); el.textContent=message; el.classList.toggle('error',error); }
+    function parseTxtRows(raw) {
+        const {n1,n2}=txtStructure();
+        if (!Number.isInteger(n1)||n1<1||!Number.isInteger(n2)||n2<0) throw new Error('Укажите корректные размеры полей.');
+        const expected=n1+n2, valid=[], invalid=[];
+        raw.replace(/^\uFEFF/,'').split(/\r?\n/).forEach((line,index)=>{
+            if(!line.trim()) return;
+            const parts=line.split(',').map(x=>x.trim());
+            const nums=parts.map(x=>Number(x));
+            if(parts.length!==expected || nums.some(n=>!Number.isInteger(n)||n<1)) { invalid.push(index+1); return; }
+            let f1 = nums.slice(0,n1).sort((a,b)=>a-b);
+            f1.f1 = f1;
+            f1.f2 = nums.slice(n1);
+            f1.line = index+1;
+            valid.push(f1);
+        });
+        if(!valid.length) throw new Error('Не найдено корректных строк формата '+n1+':'+n2+'.');
+        return {valid,invalid};
+   
+    }
+    function checkLoadedF2(f2) {
+        const exc=parseNumList(document.getElementById('excN2').value), inc=getIncSettings(2);
+        if(exc.some(n=>f2.includes(n))) return false;
+        const hits=inc.incList.filter(n=>f2.includes(n)).length;
+        return inc.isRandomMode ? hits >= inc.randCount : inc.incList.every(n=>f2.includes(n));
+    }
+    function loadedRulesPass(row) {
+        for(const [,d] of Object.entries(ruleSetsData)) {
+            if(!isRuleActive(d)) continue;
+            if(d.target1 && !checkDiffs(row.f1,d.raw)) return false;
+            if(d.target2 && !checkDiffs([...row.f2].sort((a,b)=>a-b),d.raw)) return false;
+        }
+        return true;
+    }
+    function getLoadedFiltered() {
+        if(!isTxtMode()) return [];
+        let filters;
+        try { filters=getFilterSettings(); validateFilters(filters); } catch(e) { return null; }
+        let rows=txtRows.filter(row=>checkTicketFilters(row.f1,filters) && checkLoadedF2(row.f2) && loadedRulesPass(row));
+        if(filters.chainN>0) rows=applyChainFilter(rows,filters.chainN,'f1').tickets;
+        return rows;
+    }
+    function refreshTxtCount() {
+        if(!isTxtMode()) return;
+        const rows=getLoadedFiltered();
+        if(rows===null) { setTxtStatus('Ошибка в настройках фильтров.',true); return; }
+        setTxtStatus('Загружено: '+txtRows.length+' | После фильтров: '+rows.length+(txtFileName?' | '+txtFileName:''));
+    }
+    function scheduleTxtRefresh() { if(!isTxtMode()) return; clearTimeout(txtRefreshTimer); txtRefreshTimer=setTimeout(refreshTxtCount,180); }
+    document.getElementById('txtPanelToggle').addEventListener('click',()=>{ txtPanel.classList.toggle('open'); if(txtPanel.classList.contains('open')) { positionTxtPanel(); refreshTxtCount(); } });
+    document.getElementById('txtPanelClose').addEventListener('click',()=>txtPanel.classList.remove('open'));
+    window.addEventListener('resize',()=>{if(txtPanel.classList.contains('open'))positionTxtPanel();});
+    document.getElementById('txtFile').addEventListener('change', async function(){
+        const file=this.files[0]; if(!file) return;
+        try { const parsed=parseTxtRows(await file.text()); txtRows=parsed.valid; txtFileName=file.name;
+            const {n1,n2}=txtStructure(); document.getElementById('inputN1').value=n1; document.getElementById('inputN2').value=n2;
+            setTxtModeUi(); refreshTxtCount(); if(parsed.invalid.length) setTxtStatus('Загружено: '+txtRows.length+' | Пропущено строк: '+parsed.invalid.length+' | После фильтров: '+getLoadedFiltered().length,true);
+        } catch(e) { txtRows=[]; txtFileName=''; setTxtModeUi(); setTxtStatus(e.message,true); }
+    });
+    ['txtN1','txtN2'].forEach(id=>document.getElementById(id).addEventListener('change',()=>{ if(document.getElementById('txtFile').files[0]) setTxtStatus('Изменён формат. Загрузите файл повторно.',true); }));
+    document.addEventListener('input',scheduleTxtRefresh,true); document.addEventListener('change',scheduleTxtRefresh,true);
+    document.getElementById('btnGenerate').addEventListener('click', function(e) {
+        if(!isTxtMode()) return;
+        e.stopImmediatePropagation();
+        const gs=document.getElementById('globalStatus');
+        let rows=getLoadedFiltered();
+        if(rows===null) { gs.innerText='❌ Ошибка формата фильтров.'; gs.style.color='#e74c3c'; return; }
+
+        let tt=parseInt(document.getElementById('inputAmount').value); 
+        if(isNaN(tt)||tt<=0){gs.innerText='Кол-во билетов/сегментов!';gs.style.color='#e74c3c';return;}
+
+        let originalCount = rows.length;
+        rows = pickTickets(rows, tt);
+
+        const {n1,n2}=txtStructure();
+        let selectedAlgo = getSelectedAlgo();
+        let algoNameStr = selectedAlgo === 'classic' ? 'Классический' : getAlgoName();
+        if(selectedAlgo === 'even') {
+             let modeMap = {order: 'Порядку', sum: 'Сумме', spread: 'Разбросу', mix: 'Миксу'};
+             let mode = modeMap[document.getElementById('evenMode').value] || 'Порядку';
+             let segs = document.getElementById('inputAmount').value;
+             let perSeg = document.getElementById('evenPerSegment').value;
+             algoNameStr += ` (Охват: ${mode}, ${segs} сегм. × ${perSeg} шт.)`;
+        }
+
+        let formatStr = `Формат: TXT | Алгоритм: ${algoNameStr} | П1: ${n1}${n2 ? ' | П2: '+n2 : ''}\n`;
+        let csv='\uFEFF' + formatStr + (n2?'Поле 1;Поле 2\n':'Поле 1\n');
+
+        rows.forEach(r=>{ csv+=r.f1.join(',')+(n2?';'+r.f2.join(','):'')+'\n'; });
+        const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'}), link=document.createElement('a'); link.href=URL.createObjectURL(blob); link.download='txt_filtered_combinations.csv'; link.click(); URL.revokeObjectURL(link.href);
+        gs.style.color='#27ae60'; gs.innerText='✅ TXT CSV: '+rows.length+' шт. (из '+originalCount+' подх.)'; refreshTxtCount();
+
+    }, true);
+    // --- КОНЕЦ РЕЖИМА TXT ---
+
+    document.getElementById('btnGenerate').addEventListener('click', () => {
+        let gs = document.getElementById('globalStatus');
+        let N1=parseInt(document.getElementById('inputN1').value); if(isNaN(N1)||N1<2||N1>currentConfig.maxN1){gs.innerText='П1: 2..'+currentConfig.maxN1+'!';gs.style.color='#e74c3c';return;}
+        let N2=currentConfig.hasField2?parseInt(document.getElementById('inputN2').value):0; if(currentConfig.hasField2&&(isNaN(N2)||N2<1||N2>currentConfig.maxN2)){gs.innerText='П2: 1..'+currentConfig.maxN2+'!';gs.style.color='#e74c3c';return;}
+        if(N1+N2>currentConfig.maxTotal){gs.innerText='Макс: '+currentConfig.maxTotal+'!';gs.style.color='#e74c3c';return;}
+        let tt=parseInt(document.getElementById('inputAmount').value); if(isNaN(tt)||tt<=0){gs.innerText='Кол-во билетов/сегментов!';gs.style.color='#e74c3c';return;}
+        let filters; try { filters = getFilterSettings(); validateFilters(filters); } catch(err) { gs.innerText = '❌ Фильтры: ' + err; gs.style.color = '#e74c3c'; return; }
+        let e1=parseNumList(document.getElementById('excN1').value), e2=currentConfig.hasField2?parseNumList(document.getElementById('excN2').value):[];
+        let is1=getIncSettings(1), is2=currentConfig.hasField2?getIncSettings(2):{incList:[],isRandomMode:false,randCount:0};
+        let isFrozen = freezeCb.checked && currentConfig.hasField2 && frozenField1 !== null; let useFreeze = freezeCb.checked && currentConfig.hasField2;
+        let frozenArr = []; if (isFrozen) { frozenArr = frozenField1.slice(0, tt); tt = frozenArr.length; if(!tt){gs.innerText='❌ Заморожено 0!';gs.style.color='#e74c3c';return;} }
+        let active = Object.entries(ruleSetsData).filter(([,d]) => isRuleActive(d)); let anyR = false; document.querySelectorAll('.rule-input').forEach(i => { if (i.value.trim()) anyR = true; }); if (!isFrozen && anyR && !active.length) { gs.innerText = '❌ Разницы не прошёл подсчёт.'; gs.style.color = '#e74c3c'; return; }
+        
+        let selectedAlgo = getSelectedAlgo(); let algoDetails = '';
+        if (selectedAlgo === 'even') { let modeMap = {order: 'Порядку', sum: 'Сумме', spread: 'Разбросу', mix: 'Миксу'}; let mode = modeMap[document.getElementById('evenMode').value]; let segs = document.getElementById('inputAmount').value; let perSeg = document.getElementById('evenPerSegment').value; algoDetails = ` (Охват: ${mode}, ${segs} сегм. × ${perSeg} шт.)`; }
+        let algoNameStr = selectedAlgo === 'classic' ? 'Классический' : (getAlgoName() + algoDetails);
+        let lotName = document.getElementById('lotterySelect').selectedOptions[0].text;
+        let formatStr = `Формат: ${lotName} | Алгоритм: ${algoNameStr} | П1: ${N1}${currentConfig.hasField2 ? ' | П2: '+N2 : ''}\n`;
+        let csv = '\uFEFF' + formatStr + (currentConfig.hasField2 ? 'Поле 1;Поле 2\n' : 'Поле 1\n');
+        
+        let rep = [], useAlgo = false; let needPoolForAlgo = (selectedAlgo !== 'classic' && selectedAlgo !== 'hist' && selectedAlgo !== 'unique');
+        let useGlobalEven = currentConfig.hasField2 && filters.evenGlobal && filters.evenRange && filters.evenRange !== 'err'; let f1Filters = filters;
+        if (useGlobalEven) { let f2EvenBounds = getF2EvenBounds(N2, e2, is2, currentConfig.maxNumF2); if (f2EvenBounds.min === -1) { gs.innerText='❌ П2: конфликт включений/исключений!'; gs.style.color='#e74c3c'; return; } let reqMinF1 = Math.max(0, filters.evenRange.min - f2EvenBounds.max); let reqMaxF1 = Math.min(N1, filters.evenRange.max - f2EvenBounds.min); if (reqMinF1 > reqMaxF1) { gs.innerText = '❌ Глобальная чётность недостижима!'; gs.style.color='#e74c3c'; return; } f1Filters = {...filters, evenRange: { min: reqMinF1, max: reqMaxF1 }, evenGlobal: false }; }
+        
+        try {
+            let ticketsData = []; 
+            if (isFrozen) { for (let i = 0; i < frozenArr.length; i++) { let f1v = frozenArr[i]; let resF2 = generateValidF2(f1v, [], null, filters); if(resF2.warning) rep.push(resF2.warning); ticketsData.push({f1: f1v, f2: resF2.f2}); } rep.push('П1: заморожено '+frozenArr.length); }
+            else if (!active.length) {
+                let tempF1 = [];
+                if (needPoolForAlgo && exactCountF1 <= MAX_ALGO_POOL && exactCountF1 > 0) { let tempPool = generateFilteredPool(N1, currentConfig.maxNum, e1, is1, f1Filters); tempF1 = pickTickets(tempPool, tt); rep.push('Из пула: '+tempF1.length+' ('+algoNameStr+')'); }
+                else { 
+                    if (needPoolForAlgo && exactCountF1 > MAX_ALGO_POOL) rep.push('⚠️ Пул велик для алгоритма. Классика.'); 
+                    
+                    // 1+1 Matrix Phase - ИСПРАВЛЕНО: строгий режим без добора обычными билетами
+                    if (filters.slip1plus1 && filters.slipsInc.length > 0) {
+                        let { single, double } = splitSlipsByDigits(filters.slipsInc);
+                        if (single.length > 0 && double.length > 0) {
+                            let pairs = [];
+                            for(let s of single) { for(let d of double) { pairs.push([...s, ...d]); } }
+                            pairs.sort(() => Math.random() - 0.5);
+                            
+                            for (let i = 0; i < pairs.length && tempF1.length < tt; i++) {
+                                let forcedInc = pairs[i].filter(n => !e1.includes(n));
+                                let tempInc = { incList: forcedInc, isRandomMode: false, randCount: 0 };
+                                try { 
+                                    let fld = generateField1plus1(N1, e1, tempInc, currentConfig.maxNum, f1Filters); 
+                                    // Проверка уникальности перед добавлением
+                                    let key = fld.join(',');
+                                    if (!tempF1.some(f => f.join(',') === key)) {
+                                        tempF1.push(fld); 
+                                    }
+                                } catch(e) {}
+                            }
+                            if (tempF1.length > 0) rep.push('1+1 (основа): '+tempF1.length+' шт.');
+                            // УДАЛЕНО сообщение о доборе обычными - теперь это строгий режим
+                            if (tempF1.length < tt) rep.push('⚠️ 1+1: сгенерировано только '+tempF1.length+' из '+tt+' (не хватило пар или конфликт фильтров)');
+                        } else { rep.push('⚠️ 1+1: Нет однозн. и/или двузн. слипов'); }
+                    }
+                    
+                    // Normal Phase
+                    let remaining = tt - tempF1.length;
+                    if (remaining > 0) {
+                        // Если был активен режим 1+1, но не хватило билетов - ошибка, а не добор
+                        if (filters.slip1plus1 && filters.slipsInc.length > 0 && tempF1.length === 0) {
+                            gs.innerText = '❌ 1+1: не удалось сгенерировать ни одного билета. Проверьте слипы и фильтры.';
+                            gs.style.color = '#e74c3c';
+                            return;
+                        }
+                        
+                        if (selectedAlgo === 'unique') { 
+                            let genSet = new Set(tempF1.map(f=>f.join(','))); 
+                            let safetyCounter = 0; 
+                            while (tempF1.length < tt && safetyCounter < tt * 10) { 
+                                try { 
+                                    let fld = generateFilteredField(N1, e1, is1, currentConfig.maxNum, f1Filters); 
+                                    let key = fld.join(','); 
+                                    if (!genSet.has(key)) { 
+                                        genSet.add(key); 
+                                        tempF1.push(fld); 
+                                    } 
+                                } catch(e) {} 
+                                safetyCounter++; 
+                            } 
+                            if (tempF1.length < tt) rep.push('⚠️ Уникальность: только ' + tempF1.length + ' уникальных П1'); 
+                            rep.push('Рандом на лету (Уникальный): '+tempF1.length); 
+                        } 
+                        else if (selectedAlgo === 'even') { 
+                            let perSeg = parseInt(document.getElementById('evenPerSegment').value) || 1; 
+                            let totalNeed = remaining; 
+                            for(let i=0; i<totalNeed; i++) tempF1.push(generateFilteredField(N1, e1, is1, currentConfig.maxNum, f1Filters)); 
+                            rep.push('Рандом на лету (Равномерный): '+totalNeed); 
+                        } 
+                        else { 
+                            for(let i=0; i<remaining; i++) tempF1.push(generateFilteredField(N1, e1, is1, currentConfig.maxNum, f1Filters)); 
+                            rep.push('Рандом на лету: '+remaining); 
+                        }
+                    }
+                }
+                for (let i = 0; i < tempF1.length; i++) { let f1v = tempF1[i]; let resF2 = generateValidF2(f1v, [], null, filters); if(resF2.warning) rep.push(resF2.warning); ticketsData.push({f1: f1v, f2: resF2.f2}); }
+                if (filters.chainN > 0) { let r = applyChainFilter(ticketsData, filters.chainN, 'f1'); ticketsData = r.tickets; if(r.fail) rep.push('Связь П1: '+r.fail+' не выполн.'); }
+                if (useFreeze) { frozenField1 = ticketsData.map(t=>[...t.f1]); rep.push('П1 заморожено!'); }
+            } else {
+                useAlgo = true; let sp = active.length, bq = Math.floor(tt/sp), ex = tt%sp;
+                for (let i = 0; i < sp; i++) { let [, d] = active[i], cq = bq + (i < ex ? 1 : 0); let s1 = [], s2 = [];
+                    if (d.target1) { if (d.count1 !== null && d.count1 <= MAX_ALGO_POOL) { let tempPool = generateFilteredPool(N1, currentConfig.maxNum, e1, is1, f1Filters, d.raw); s1 = pickTickets(tempPool, cq); rep.push('П1: из пула разниц (' + algoNameStr + ')'); } else { let genSet = new Set(); let safetyCounter = 0; while (s1.length < cq && safetyCounter < cq * 500) { try { let fld = generateWithDiffs(N1, e1, is1, currentConfig.maxNum, f1Filters, d.raw); let key = fld.join(','); if (!genSet.has(key)) { genSet.add(key); s1.push(fld); } } catch(e) {} safetyCounter++; } if (s1.length < cq) rep.push('⚠️ П1: только ' + s1.length + ' с разницами'); } } else { for(let j=0; j<cq; j++) s1.push(generateFilteredField(N1, e1, is1, currentConfig.maxNum, f1Filters)); }
+                    if (currentConfig.hasField2) { if (d.target2) { if (d.count2 !== null && d.count2 <= MAX_ALGO_POOL) { let tempPool = generateFilteredPool(N2, currentConfig.maxNumF2, e2, is2, null, d.raw); s2 = pickTickets(tempPool, cq); rep.push('П2: из пула разниц'); } else { let genSet = new Set(); let safetyCounter = 0; while (s2.length < cq && safetyCounter < cq * 500) { try { let fld = generateWithDiffs(N2, e2, is2, currentConfig.maxNumF2, null, d.raw); let key = fld.join(','); if (!genSet.has(key)) { genSet.add(key); s2.push(fld); } } catch(e) {} safetyCounter++; } if (s2.length < cq) rep.push('⚠️ П2: только ' + s2.length + ' с разницами'); } } else { for(let j=0; j<cq; j++) s2.push(generateRandomField(N2, e2, is2, currentConfig.maxNumF2)); } }
+                    rep.push('Набор '+(i+1)+': '+cq+' шт.');
+                    for (let j=0; j<cq; j++) { let f1v = s1[j] || []; let preGenF2 = currentConfig.hasField2 ? (s2[j] || []) : []; let diffRawF2 = (d.target2) ? d.raw : null; let resF2 = generateValidF2(f1v, preGenF2, diffRawF2, filters); if(resF2.warning) rep.push(resF2.warning); ticketsData.push({f1: f1v, f2: resF2.f2}); }
+                }
+                if (filters.chainN > 0) { let r = applyChainFilter(ticketsData, filters.chainN, 'f1'); ticketsData = r.tickets; if(r.fail) rep.push('Связь П1: '+r.fail+' не выполн.'); }
+                if (useFreeze) { frozenField1 = ticketsData.map(t=>[...t.f1]); rep.push('П1 заморожено!'); }
+            }
+            for (let t of ticketsData) csv += formatCsvRow(t.f1, t.f2);
+            let covWarn = ''; if(!isFrozen && ticketsData.length > 0) { covWarn = analyzeCoverage(ticketsData, filters.coverageMin, 'f1', currentConfig.maxNum); if(currentConfig.hasField2) covWarn += (covWarn ? ' | ' : '') + analyzeCoverage(ticketsData, filters.coverageMin, 'f2', currentConfig.maxNumF2); }
+            let blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});let link=document.createElement('a');link.href=URL.createObjectURL(blob);link.download='lottery_export.csv';link.click();
+            let showAlgoName = useAlgo || selectedAlgo !== 'classic'; let fn=isFrozen?' [П1 ЗАМОРОЖЕНО]':(useFreeze&&frozenField1)?' [П1 СОХРАНЕНО]':'';
+            gs.style.color='#27ae60'; gs.innerText='✅ Выгружено: '+ticketsData.length+' шт.'+(showAlgoName?' ('+algoNameStr+')':'')+fn+'\n'+rep.join('\n')+(covWarn?'\n'+covWarn:'');
+        } catch(e) { gs.innerText='❌ '+e; gs.style.color='#e74c3c'; }
+    });
+
+    window.addEventListener('load', () => { setTimeout(() => { let w = document.getElementById('widget'); w.style.left = (window.innerWidth/2-w.offsetWidth/2)+'px'; w.style.top = (window.innerHeight/2-w.offsetHeight/2)+'px'; }, 50); populateSlipDropdowns(); addRuleRow(); rebuildPool(); });
+</script>
+</body>
+</html>
